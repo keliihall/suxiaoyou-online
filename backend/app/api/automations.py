@@ -89,7 +89,7 @@ async def create_from_template(
     await db.flush()
 
     scheduler = _get_scheduler(request)
-    await scheduler.sync_task(task.id)
+    await scheduler.sync_task(task.id, db=db)
 
     # Re-read to get computed next_run_at
     await db.refresh(task)
@@ -139,7 +139,7 @@ async def create_automation(
     await db.flush()
 
     scheduler = _get_scheduler(request)
-    await scheduler.sync_task(task.id)
+    await scheduler.sync_task(task.id, db=db)
 
     await db.refresh(task)
     return AutomationResponse.model_validate(task)
@@ -187,7 +187,7 @@ async def update_automation(
     await db.flush()
 
     scheduler = _get_scheduler(request)
-    await scheduler.sync_task(task.id)
+    await scheduler.sync_task(task.id, db=db)
 
     await db.refresh(task)
     return AutomationResponse.model_validate(task)

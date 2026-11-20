@@ -18,45 +18,34 @@ export function ChatActions({ isBusy, canSend, onSend, onStop, sendLabel, sendHi
   const { t } = useTranslation("chat");
   const resolvedSendLabel = sendLabel ?? t("sendAction");
   const resolvedSendHint = sendHint ?? t("sendActionHint");
+  const actionLabel = isBusy ? t("stopAction") : resolvedSendLabel;
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="flex items-center gap-1">
-        {isBusy && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 rounded-full text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]"
-                onClick={onStop}
-                aria-label={t("stopAction")}
-              >
-                <Square className="h-3.5 w-3.5 fill-current" />
-                <span className="sr-only">{t("stopAction")}</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t("stopAction")}</TooltipContent>
-          </Tooltip>
-        )}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              size="icon"
-              className="h-8 w-8 rounded-full bg-[var(--text-primary)] text-[var(--surface-primary)] hover:bg-[var(--text-primary)]/90 disabled:bg-[var(--text-tertiary)]/30 disabled:text-[var(--surface-primary)] disabled:opacity-100"
-              onClick={onSend}
-              disabled={!canSend}
-              aria-label={resolvedSendLabel}
-            >
-              <ArrowUp className="h-[18px] w-[18px]" />
-              <span className="sr-only">{resolvedSendLabel}</span>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{resolvedSendHint}</TooltipContent>
-        </Tooltip>
-      </div>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            className={`group h-11 min-h-11 w-11 shrink-0 rounded-full bg-transparent p-0 hover:bg-transparent disabled:bg-transparent disabled:opacity-100 ${isBusy ? "[&_svg]:size-3" : "[&_svg]:size-4"}`}
+            onClick={isBusy ? onStop : onSend}
+            disabled={!isBusy && !canSend}
+            aria-label={actionLabel}
+            data-testid="chat-primary-action"
+            data-action={isBusy ? "stop" : "send"}
+          >
+            {/* A compact visual circle retains a full-size touch target. */}
+            <span className="flex size-8 items-center justify-center rounded-full bg-[var(--brand-primary)] text-[var(--brand-primary-text)] transition-colors group-hover:bg-[var(--brand-primary-hover)] group-disabled:bg-[var(--surface-tertiary)] group-disabled:text-[var(--text-tertiary)]" aria-hidden="true">
+              {isBusy
+                ? <Square className="size-3 fill-current" />
+                : <ArrowUp className="size-4" />}
+            </span>
+            <span className="sr-only">{actionLabel}</span>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{isBusy ? actionLabel : resolvedSendHint}</TooltipContent>
+      </Tooltip>
     </TooltipProvider>
   );
 }

@@ -52,7 +52,7 @@ export function InteractionAcknowledgement({
     <div className="px-4 pb-3" role="status" aria-live="polite">
       <div className="mx-auto max-w-3xl xl:max-w-4xl">
         <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-secondary)] px-4 py-3">
-          <div className="flex items-center gap-2.5 text-sm text-[var(--text-secondary)]">
+          <div className="flex min-w-0 flex-wrap items-center gap-2.5 text-sm text-[var(--text-secondary)]">
             {isBusy ? (
               <Loader2 className="h-4 w-4 animate-spin text-[var(--brand-primary)]" />
             ) : needsRecovery ? (
@@ -60,20 +60,20 @@ export function InteractionAcknowledgement({
             ) : (
               <CheckCircle2 className="h-4 w-4 text-[var(--color-success)]" />
             )}
-            <span className="font-medium text-[var(--text-primary)]">{label}</span>
+            <span className="min-w-0 flex-1 break-words font-medium text-[var(--text-primary)]">{label}</span>
             {source === "remote" && (
               <span className="text-xs text-[var(--text-tertiary)]">
                 {t("interactionRemoteSource")}
               </span>
             )}
             {needsRecovery && (
-              <div className="ml-auto flex shrink-0 items-center gap-1.5">
+              <div className="ml-auto flex flex-wrap items-center gap-2">
                 {onRecover && (
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-7 gap-1 text-xs"
+                    className="h-auto min-h-9 gap-1.5 text-xs"
                     onClick={onRecover}
                   >
                     <RefreshCw className="h-3 w-3" />
@@ -85,7 +85,7 @@ export function InteractionAcknowledgement({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-7 gap-1 text-xs"
+                    className="h-auto min-h-9 gap-1.5 text-xs"
                     onClick={onStop}
                   >
                     <Square className="h-3 w-3" />

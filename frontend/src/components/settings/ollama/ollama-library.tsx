@@ -319,7 +319,7 @@ export function ModelLibrary({
               {recommendedInstalled ? "Installed" : "Pull"}
             </Button>
           </div>
-          <div className="mt-2 truncate font-mono text-ui-3xs text-[var(--text-tertiary)]">
+          <div className="mt-2 truncate font-mono text-[12px] text-[var(--text-tertiary)]">
             {recommendedVariant?.ollamaTag}
           </div>
         </div>
@@ -329,7 +329,7 @@ export function ModelLibrary({
             <h4 className="text-xs font-medium text-[var(--text-primary)]">
               Recommended local models
             </h4>
-            <span className="text-ui-3xs text-[var(--text-tertiary)]">
+            <span className="text-[12px] text-[var(--text-tertiary)]">
               Pick above to install
             </span>
           </div>
@@ -352,7 +352,7 @@ export function ModelLibrary({
                   <div className="truncate text-xs font-medium text-[var(--text-primary)]">
                     {model.name}
                   </div>
-                  <div className="truncate text-ui-3xs text-[var(--text-tertiary)]">
+                  <div className="truncate text-[12px] text-[var(--text-tertiary)]">
                   {model.variants.length} precision option
                     {model.variants.length === 1 ? "" : "s"}
                     {" · "}
@@ -364,7 +364,7 @@ export function ModelLibrary({
                     /{model.variants.length} installed
                   </div>
                 </div>
-                <span className="shrink-0 rounded bg-[var(--surface-secondary)] px-1.5 py-0.5 text-ui-3xs text-[var(--text-tertiary)]">
+                <span className="shrink-0 rounded bg-[var(--surface-secondary)] px-1.5 py-0.5 text-[12px] text-[var(--text-tertiary)]">
                   {model.variants.some((variant) =>
                     installedNames.has(variant.ollamaTag),
                   )
@@ -396,7 +396,7 @@ export function ModelLibrary({
                 key={key}
                 onClick={() => setSortBy(key)}
                 className={cn(
-                  "px-2 py-1 text-ui-3xs transition-colors",
+                  "px-2 py-1 text-[12px] transition-colors",
                   sortBy === key
                     ? "bg-[var(--surface-secondary)] text-[var(--text-primary)] font-medium"
                     : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]",
@@ -465,7 +465,7 @@ export function ModelLibrary({
 
       {/* Custom pull */}
       <div className="pt-2 border-t border-[var(--border-default)]">
-        <p className="text-ui-3xs text-[var(--text-tertiary)] mb-1.5">
+        <p className="text-[12px] text-[var(--text-tertiary)] mb-1.5">
           {t("ollamaCustomPull", "Or pull any model by name:")}
         </p>
         <div className="flex items-center gap-2">
@@ -518,19 +518,19 @@ function ModelCard({
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-[var(--text-primary)]">{model.name}</span>
           {(model.pulls_formatted || (model.pulls != null && model.pulls > 0)) && (
-            <span className="text-ui-3xs text-[var(--text-tertiary)]">
+            <span className="text-[12px] text-[var(--text-tertiary)]">
               {model.pulls_formatted || `${model.pulls?.toLocaleString()}`} pulls
             </span>
           )}
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
           {model.provider && (
-            <span className="text-ui-3xs text-[var(--text-tertiary)]">{model.provider}</span>
+            <span className="text-[12px] text-[var(--text-tertiary)]">{model.provider}</span>
           )}
           {model.capabilities?.map((cap) => (
             <span
               key={cap}
-              className="text-ui-3xs px-1 py-px rounded bg-[var(--surface-tertiary)] text-[var(--text-tertiary)]"
+              className="text-[12px] px-1 py-px rounded bg-[var(--surface-tertiary)] text-[var(--text-tertiary)]"
             >
               {cap}
             </span>
@@ -538,7 +538,7 @@ function ModelCard({
         </div>
       </div>
       {model.desc && (
-        <p className="text-ui-3xs text-[var(--text-secondary)] line-clamp-2">{model.desc}</p>
+        <p className="text-[12px] text-[var(--text-secondary)] line-clamp-2">{model.desc}</p>
       )}
       <div className="flex items-center gap-1 flex-wrap">
         {model.sizes.map((size) => {
@@ -552,13 +552,13 @@ function ModelCard({
               onClick={() => !isInstalled && !isPulling && !isCloud && onPull(fullName)}
               disabled={isInstalled || isPulling || isCloud}
               className={cn(
-                "px-1.5 py-0.5 text-ui-3xs rounded border transition-colors",
+                "px-1.5 py-0.5 text-[12px] rounded border transition-colors",
                 isInstalled
                   ? "border-[var(--color-success)]/30 bg-[var(--color-success)]/10 text-[var(--color-success)] cursor-default"
                   : isCloud
                     ? "border-[var(--border-default)] bg-[var(--surface-tertiary)] text-[var(--text-tertiary)] cursor-not-allowed"
                     : "border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] cursor-pointer",
-                isPulling && !isInstalled && !isCloud && "opacity-50 cursor-not-allowed",
+                isPulling && !isInstalled && !isCloud && "cursor-not-allowed bg-[var(--surface-secondary)] text-[var(--text-tertiary)]",
               )}
               title={
                 isInstalled

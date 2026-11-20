@@ -3,6 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { API, queryKeys } from "@/lib/constants";
+import { IS_CLOUD } from "@/lib/cloud-session";
+import { base64ToBlob, downloadBlob } from "@/lib/browser-files";
 import type {
   WorkspaceMemoryResponse,
   WorkspaceMemoryListItem,
@@ -78,9 +80,19 @@ export function useRefreshWorkspaceMemory() {
 
 export function useExportWorkspaceMemory() {
   return useMutation({
-    mutationFn: (workspacePath: string) =>
-      api.post<{ exported_to: string }>(
+    mutationFn: async (workspacePath: string) => {
+      const result = await api.post<{ exported_to: string }>(
         `${API.WORKSPACE_MEMORY.EXPORT}?workspace_path=${encodeURIComponent(workspacePath)}`,
-      ),
+      );
+      if (IS_CLOUD) {
+        // The original export writes into the tenant workspace. Retrieve that
+        // exact file through the authenticated API for a real browser download.
+        const file = await api.post<{ content_base64: string; mime_type: string; name?: string }>(
+          API.FILES.CONTENT_BINARY, { path: result.exported_to, workspace: workspacePath },
+        );
+        downloadBlob(base64ToBlob(file.content_base64, file.mime_type), file.name || "memory.md");
+      }
+      return result;
+    },
   });
 }

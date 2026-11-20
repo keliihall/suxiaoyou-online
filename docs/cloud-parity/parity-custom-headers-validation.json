@@ -1,0 +1,65 @@
+{
+  "kind": "custom-endpoint-write-only-header-credentials",
+  "date": "2026-11-15",
+  "schema_revision": "cloud_0007",
+  "contract": {
+    "write": "custom_headers omitted/null preserves; nonempty dictionary replaces all; {} explicitly clears",
+    "supported": "custom_* and direct openai compatible chat routes",
+    "public_mode": "allow_unauthenticated=true only for custom_* chat with no retained key, key environment or headers",
+    "response": "only custom_headers_configured and authentication mode/readiness flags; no names, values or ciphertext"
+  },
+  "storage": {
+    "fernet_encrypted_column": "custom_headers_encrypted",
+    "private_and_shared_same_authorization_as_api_key": true,
+    "rotations_increment_credential_version": true,
+    "no_desktop_vault_reference_resolution": true
+  },
+  "actual_http_protocol": {
+    "transport": "real localhost TCP listener + original compatible SDK + cloud inference gateway + real database ledger; no MockTransport",
+    "cases": 10,
+    "scope": [
+      "shared",
+      "private_BYOK"
+    ],
+    "authentication": [
+      "header_only",
+      "authorization_header_only",
+      "api_key_and_headers",
+      "explicit_none",
+      "vendor_401_echo"
+    ],
+    "requests_per_case": 1,
+    "success_receipt_tokens_per_case": 5,
+    "error_state": "unknown with reservation retained",
+    "placeholder_authorization_absent": true,
+    "plaintext_absent_from_configuration_responses_audit_price_snapshot_and_sdk_debug_logs": true,
+    "local_destination": "only test fixture DB substitution; public API HTTPS/global destination validation unchanged"
+  },
+  "negative_tests": [
+    "CRLF/NUL/nonASCII/empty/leading whitespace",
+    "malformed nested/list values and invalid header names return safe422",
+    "host/framing/proxy/forwarded headers rejected",
+    "case-insensitive duplicates rejected",
+    "desktop credential reference rejected",
+    "corrupt encrypted value fails closed",
+    "private credential cannot reference platform environment",
+    "other owner/admin cannot overwrite private credential",
+    "clearing last credential while enabled rejected",
+    "public unauthenticated requires explicit choice and no credentials"
+  ],
+  "migrations": {
+    "sqlite": "actual cloud_0006 existing credential row -> cloud_0007 preserved ciphertext and credential_version",
+    "postgresql": "same actual upgrade in dedicated temporary database on local server; dropped after test",
+    "live_development_database": "not modified by this verification"
+  },
+  "verification": {
+    "command": "PYTHONPATH=backend backend/.venv-cloud-check/bin/python -m pytest backend/tests/test_cloud -q",
+    "passed": 351,
+    "skipped": 4,
+    "seconds": 42.88,
+    "dedicated_postgresql_enabled": true,
+    "diff_check": "passed",
+    "paid_model_calls": 0
+  },
+  "live_release": "cloud_0007 migrated; API/Worker restarted; production Web .next-parity-delivery built and served; 19 controlled-API browser regressions passed. No new paid external-model calls for this configuration feature."
+}

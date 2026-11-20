@@ -10,6 +10,7 @@ import {
 import { api } from "@/lib/api";
 import { API, queryKeys } from "@/lib/constants";
 import type { ProviderInfo, LocalProviderStatus } from "@/types/usage";
+import { IS_CLOUD } from "@/lib/cloud-session";
 
 interface OllamaRuntimeStatus {
   binary_installed: boolean;
@@ -58,17 +59,17 @@ export function useAutoDetectProvider(): { hasProvider: boolean } {
   const ollamaConnected = !!ollamaRuntimeStatus?.running;
   const rapidMlxConnected = !!rapidMlxRuntimeStatus?.running;
   const hasConfiguredByokProvider = (providers ?? []).some(
-    (p) => p.is_configured && !p.id.startsWith("custom_"),
+    (p) => p.is_configured && (!p.id.startsWith("custom_") || (IS_CLOUD && p.id === "custom_cloud")),
   );
   const hasCustomEndpoint = (providers ?? []).some(
-    (p) => p.is_configured && p.id.startsWith("custom_"),
+    (p) => p.is_configured && p.id.startsWith("custom_") && !(IS_CLOUD && p.id === "custom_cloud"),
   );
   const customEndpointConnected =
     !!localStatus?.is_connected || hasCustomEndpoint;
 
   useEffect(() => {
     if (!settingsHydrated) return;
-    if (activeProvider === "chatgpt") {
+    if (activeProvider === "chatgpt" && !IS_CLOUD) {
       setActiveProvider(null);
       return;
     }

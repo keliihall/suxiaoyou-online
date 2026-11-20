@@ -1,24 +1,27 @@
 "use client";
 
-import { useMemo, useCallback, useState, memo } from "react";
-import ReactMarkdown from "react-markdown";
+import { useMemo, useCallback, useState, memo, createContext, useContext } from "react";
+import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
-import { Copy, Check, PanelRight, FileText, ExternalLink } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { Copy, Check, PanelRight, FileText } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { api } from "@/lib/api";
-import { API } from "@/lib/constants";
 import { useArtifactStore } from "@/stores/artifact-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 import {
   classifyCodeBlock,
-  isPreviewableFile,
   artifactTypeFromExtension,
   languageFromExtension,
-  looksLikeFilePath,
-  isAbsoluteFilePath,
 } from "@/lib/artifacts";
+import {
+  createFilePreviewReferenceResolver,
+  isLocalFileReference,
+  type FilePreviewReference,
+  type FilePreviewReferenceResolver,
+  type ResolvedFilePreviewReference,
+} from "@/lib/file-preview-references";
 import type { TextPart as TextPartType } from "@/types/message";
 import type { Source } from "@/lib/sources";
 import { MermaidBlock } from "./mermaid-block";
@@ -27,7 +30,12 @@ interface TextPartProps {
   data: TextPartType;
   isStreaming?: boolean;
   sources?: Source[];
+  /** Paths recorded by completed tools in this conversation turn. */
+  fileReferences?: FilePreviewReference[];
 }
+
+const NO_FILE_REFERENCES: FilePreviewReference[] = [];
+const FilePreviewAllowedContext = createContext(true);
 
 // Extract plain text from React children (handles nested elements)
 function extractText(node: React.ReactNode): string {
@@ -65,13 +73,39 @@ function ProseParagraph({ children, ...props }: React.HTMLAttributes<HTMLParagra
   );
 }
 
-function CodeBlock({ className, children, ...props }: React.HTMLAttributes<HTMLElement> & { children?: React.ReactNode }) {
+function FilePreviewLink({ file }: { file: ResolvedFilePreviewReference }) {
+  const { t } = useTranslation("chat");
+  const openArtifact = useArtifactStore((s) => s.openArtifact);
+  return (
+    <button
+      type="button"
+      data-testid="file-preview-link"
+      aria-label={`${t("previewFile")} ${file.name}`}
+      onClick={() => openArtifact({
+        id: `file-preview-${file.path}`,
+        title: file.name,
+        type: artifactTypeFromExtension(file.path) || "file-preview",
+        content: "",
+        language: languageFromExtension(file.path),
+        filePath: file.path,
+      })}
+      className="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-secondary)] px-2 py-1 align-middle text-left text-[0.9em] font-medium text-[var(--text-primary)] no-underline transition-colors hover:bg-[var(--surface-tertiary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)]"
+    >
+      <FileText className="h-3.5 w-3.5 shrink-0 text-[var(--text-tertiary)]" aria-hidden="true" />
+      <span className="truncate">{file.name}</span>
+    </button>
+  );
+}
+
+function CodeBlock({ className, children, fileResolver, ...props }: React.HTMLAttributes<HTMLElement> & { children?: React.ReactNode; fileResolver: FilePreviewReferenceResolver }) {
+  const filePreviewAllowed = useContext(FilePreviewAllowedContext);
+  const { t } = useTranslation("chat");
   const [copied, setCopied] = useState(false);
   const match = /language-(\w+)/.exec(className || "");
   const lang = match?.[1] ?? "";
-  const code = extractText(children).replace(/\n$/, "");
+  const rawCode = extractText(children);
+  const code = rawCode.replace(/\n$/, "");
   const openArtifact = useArtifactStore((s) => s.openArtifact);
-  const workspaceFiles = useWorkspaceStore((s) => s.workspaceFiles);
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(code);
@@ -93,118 +127,9 @@ function CodeBlock({ className, children, ...props }: React.HTMLAttributes<HTMLE
     });
   }, [artifactType, code, lang, openArtifact]);
 
-  if (!match) {
-    // Check if inline code looks like a file path
-    const text = String(children).trim();
-    const isFilePath = looksLikeFilePath(text);
-    const fileName = text.split(/[\\/]/).pop() || text;
-
-    if (isFilePath) {
-      const hasPathSegments = /[/\\]/.test(text);
-      const isAbsolutePath = isAbsoluteFilePath(text);
-      const canPreview = isPreviewableFile(text);
-
-      // Path-like reference + previewable → clickable with artifact preview.
-      // Relative paths are allowed here because the backend preview endpoint
-      // can resolve them against the active workspace or backend cwd.
-      if (hasPathSegments && canPreview) {
-        const artifacts = useArtifactStore.getState().artifacts;
-        const existing = artifacts.find(
-          (a) => a.filePath?.endsWith(fileName) || a.title === fileName,
-        );
-
-        const handleOpen = () => {
-          if (existing) {
-            openArtifact(existing);
-          } else {
-            const type = artifactTypeFromExtension(text) || "code";
-            openArtifact({
-              id: `file-preview-${text}`,
-              title: fileName,
-              type: type === "react" || type === "html" || type === "svg" || type === "mermaid" || type === "markdown" ? type : "file-preview",
-              content: "",
-              language: languageFromExtension(text),
-              filePath: text,
-            });
-          }
-        };
-
-        return (
-          <button
-            type="button"
-            onClick={handleOpen}
-            className="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--surface-tertiary)] px-2 py-1 align-middle text-left transition-colors hover:bg-[var(--surface-secondary)] hover:border-[var(--border-hover)] cursor-pointer"
-            title={text}
-          >
-            <FileText className="h-3.5 w-3.5 shrink-0 text-[var(--text-tertiary)]" />
-            <span className="truncate text-[0.9em] font-medium text-[var(--text-primary)]">
-              {fileName}
-            </span>
-          </button>
-        );
-      }
-
-      // Absolute non-previewable paths can still be opened with the OS.
-      if (isAbsolutePath) {
-        const handleSystemOpen = () => {
-          api.post(API.FILES.OPEN_SYSTEM, { path: text }).catch(() => {});
-        };
-
-        return (
-          <button
-            type="button"
-            onClick={handleSystemOpen}
-            className="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--surface-tertiary)] px-2 py-1 align-middle text-left transition-colors hover:bg-[var(--surface-secondary)] hover:border-[var(--border-hover)] cursor-pointer"
-            title={text}
-          >
-            <ExternalLink className="h-3.5 w-3.5 shrink-0 text-[var(--text-tertiary)]" />
-            <span className="truncate text-[0.9em] font-medium text-[var(--text-primary)]">
-              {fileName}
-            </span>
-          </button>
-        );
-      }
-
-      // Bare filename (no path separator) → clickable when we can uniquely
-      // match it to a tracked session file; otherwise keep it as a passive badge.
-      const matchingFiles = workspaceFiles.filter((file) => file.name === text);
-      if (matchingFiles.length === 1 && isPreviewableFile(matchingFiles[0].path)) {
-        const matchedFile = matchingFiles[0];
-        const handleOpenTrackedFile = () => {
-          const type = artifactTypeFromExtension(matchedFile.path) || "code";
-          openArtifact({
-            id: `tracked-file-preview-${matchedFile.path}`,
-            title: matchedFile.name,
-            type:
-              type === "react" || type === "html" || type === "svg" || type === "mermaid" || type === "markdown"
-                ? type
-                : "file-preview",
-            content: "",
-            language: languageFromExtension(matchedFile.path),
-            filePath: matchedFile.path,
-          });
-        };
-
-        return (
-          <button
-            type="button"
-            onClick={handleOpenTrackedFile}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--surface-tertiary)] px-2 py-1 text-[0.85em] font-mono text-left transition-colors hover:bg-[var(--surface-secondary)] hover:border-[var(--border-hover)] cursor-pointer"
-            title="Open file preview"
-          >
-            <FileText className="h-3 w-3 text-[var(--text-tertiary)] shrink-0" />
-            <span className="truncate max-w-[16rem]">{children}</span>
-          </button>
-        );
-      }
-
-      return (
-        <span className="inline-flex items-center gap-1 rounded-md bg-[var(--surface-tertiary)] px-1.5 py-0.5 text-[0.85em] font-mono border border-[var(--border-default)]">
-          <FileText className="h-3 w-3 text-[var(--text-tertiary)] shrink-0" />
-          <span>{children}</span>
-        </span>
-      );
-    }
+  if (!match && !rawCode.endsWith("\n")) {
+    const file = filePreviewAllowed ? fileResolver.resolve(rawCode.trim()) : null;
+    if (file) return <FilePreviewLink file={file} />;
 
     // Regular inline code
     return (
@@ -236,20 +161,22 @@ function CodeBlock({ className, children, ...props }: React.HTMLAttributes<HTMLE
           </svg>
           <span className="text-xs font-sans text-[var(--code-block-text)] select-none">{langDisplay}</span>
         </div>
-        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 [@media(hover:none)]:opacity-100">
           {artifactType && (
             <button
               onClick={handleOpenInPanel}
-              className="p-1.5 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 text-[var(--code-block-text)] hover:text-[var(--code-block-text-hover)] transition-colors"
-              title="Open in panel"
+              className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-black/10 dark:hover:bg-white/10 text-[var(--code-block-text)] hover:text-[var(--code-block-text-hover)] transition-colors lg:h-9 lg:w-9 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:min-w-11"
+              aria-label={t("previewFile")}
+              title={t("previewFile")}
             >
               <PanelRight className="h-4 w-4" />
             </button>
           )}
           <button
             onClick={handleCopy}
-            className="p-1.5 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 text-[var(--code-block-text)] hover:text-[var(--code-block-text-hover)] transition-colors"
-            title={copied ? "Copied!" : "Copy code"}
+            className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-black/10 dark:hover:bg-white/10 text-[var(--code-block-text)] hover:text-[var(--code-block-text-hover)] transition-colors lg:h-9 lg:w-9 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:min-w-11"
+            aria-label={copied ? t("copied") : t("copy")}
+            title={copied ? t("copied") : t("copy")}
           >
             {copied ? (
               <Check className="h-4 w-4 text-[var(--code-block-success)]" />
@@ -270,7 +197,13 @@ function CodeBlock({ className, children, ...props }: React.HTMLAttributes<HTMLE
   );
 }
 
-export const TextPart = memo(function TextPart({ data, isStreaming, sources = [] }: TextPartProps) {
+export const TextPart = memo(function TextPart({ data, isStreaming, sources = [], fileReferences = NO_FILE_REFERENCES }: TextPartProps) {
+  const workspaceFiles = useWorkspaceStore((s) => s.workspaceFiles);
+  const workspace = useWorkspaceStore((s) => s.activeWorkspacePath);
+  const fileResolver = useMemo(
+    () => createFilePreviewReferenceResolver([...fileReferences, ...workspaceFiles], workspace),
+    [fileReferences, workspaceFiles, workspace],
+  );
   // Build a URL→Source lookup for inline citation matching
   const sourceMap = useMemo(() => {
     const map = new Map<string, Source>();
@@ -282,7 +215,7 @@ export const TextPart = memo(function TextPart({ data, isStreaming, sources = []
 
   const components = useMemo(
     () => ({
-      code: CodeBlock,
+      code: (props: React.HTMLAttributes<HTMLElement>) => <CodeBlock {...props} fileResolver={fileResolver} />,
       p: ProseParagraph,
       // Wrap tables in a rounded, scrollable container
       table: ({ children }: { children?: React.ReactNode }) => (
@@ -290,8 +223,19 @@ export const TextPart = memo(function TextPart({ data, isStreaming, sources = []
           <table>{children}</table>
         </div>
       ),
+      img: ({ src, alt, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) => {
+        const file = typeof src === "string" ? fileResolver.resolve(src) : null;
+        if (file) return <FilePreviewLink file={file} />;
+        if (!src || (typeof src === "string" && isLocalFileReference(src, workspace))) return <span>{alt}</span>;
+        // Keep ordinary remote Markdown images at their natural aspect ratio.
+        // eslint-disable-next-line @next/next/no-img-element
+        return <img src={src} alt={alt || ""} {...props} />;
+      },
       // Render matched links as citation badges, otherwise open in new tab
       a: ({ children, href, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { children?: React.ReactNode }) => {
+        const file = href ? fileResolver.resolve(href) : null;
+        if (file) return <FilePreviewLink file={file} />;
+        if (isLocalFileReference(href, workspace) || !href) return <span><FilePreviewAllowedContext.Provider value={false}>{children}</FilePreviewAllowedContext.Provider></span>;
         const source = href ? sourceMap.get(href) : undefined;
         if (source) {
           return (
@@ -321,12 +265,12 @@ export const TextPart = memo(function TextPart({ data, isStreaming, sources = []
         }
         return (
           <a target="_blank" rel="noopener noreferrer" href={href} {...props}>
-            {children}
+            <FilePreviewAllowedContext.Provider value={false}>{children}</FilePreviewAllowedContext.Provider>
           </a>
         );
       },
     }),
-    [sourceMap],
+    [fileResolver, sourceMap, workspace],
   );
 
   // Skip expensive syntax highlighting during streaming — code blocks are
@@ -345,7 +289,8 @@ export const TextPart = memo(function TextPart({ data, isStreaming, sources = []
       isStreaming && "streaming-cursor",
     )}>
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm, fileResolver.remarkFilePreviews]}
+        urlTransform={(url) => fileResolver.resolve(url) ? url : defaultUrlTransform(url)}
         rehypePlugins={rehypePlugins}
         components={components}
       >

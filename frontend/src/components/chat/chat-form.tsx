@@ -2,9 +2,10 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, Check, ChevronDown, CircleEllipsis, CornerUpLeft, GitBranch, GripVertical, ListPlus, MoreHorizontal, Play, Plus, RotateCcw, Trash2, X } from "lucide-react";
+import { AlertTriangle, CircleEllipsis, CornerUpLeft, GripVertical, ListPlus, MoreHorizontal, Play, Plus, RotateCcw, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Popover, PopoverContent } from "@/components/ui/popover";
+import { Anchor as PopoverAnchor } from "@radix-ui/react-popover";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,8 +17,8 @@ import { ChatTextarea } from "./chat-textarea";
 import { ChatActions } from "./chat-actions";
 import { ContextIndicator } from "./context-indicator";
 import { HeaderModelDropdown } from "@/components/selectors/header-model-dropdown";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { WorkspaceToggle } from "./workspace-toggle";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ComposerOverflow, type ComposerStarter } from "./composer-overflow";
 import { FileChip } from "./file-chip";
 import { FileMentionPopup } from "./file-mention-popup";
 import { useAutoResize } from "@/hooks/use-auto-resize";
@@ -36,6 +37,7 @@ import { useIndexStatus } from "@/hooks/use-index-status";
 import { useAgents } from "@/hooks/use-agents";
 import { hasImageAttachments, selectedModelSupportsVision } from "@/hooks/use-chat";
 import { IS_DESKTOP } from "@/lib/constants";
+import { IS_CLOUD, userStorage } from "@/lib/cloud-session";
 import type { TaskBatchMode, TaskBatchTask } from "@/types/chat";
 
 interface ChatFormProps {
@@ -61,6 +63,7 @@ interface ChatFormProps {
   className?: string;
   sessionId?: string;
   directory?: string | null;
+  starters?: ComposerStarter[];
 }
 
 /** Persistent per-session draft cache backed by localStorage. */
@@ -88,7 +91,7 @@ let draftMirror: Map<string, Draft> | null = null;
 function loadDrafts(): Map<string, Draft> {
   if (draftMirror) return draftMirror;
   try {
-    const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+    const raw = userStorage.getItem(DRAFT_STORAGE_KEY);
     if (!raw) { draftMirror = new Map(); return draftMirror; }
     const parsed: Record<string, Draft> = JSON.parse(raw);
     const now = Date.now();
@@ -116,7 +119,7 @@ function deleteDraft(key: string) {
 
 function flushDrafts(map: Map<string, Draft>) {
   try {
-    localStorage.setItem(
+    userStorage.setItem(
       DRAFT_STORAGE_KEY,
       JSON.stringify(Object.fromEntries(map)),
     );
@@ -263,6 +266,7 @@ export function ChatForm({
   className,
   sessionId,
   directory,
+  starters,
 }: ChatFormProps) {
   const { t, i18n } = useTranslation('chat');
   const [input, setInput] = useState("");
@@ -277,6 +281,9 @@ export function ChatForm({
   const { ref, resize } = useAutoResize();
   const dropTargetRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const directoryInputRef = useRef<HTMLInputElement>(null);
+  const moreTriggerRef = useRef<HTMLButtonElement>(null);
+  const batchInteractedOutsideRef = useRef(false);
   const { data: providerModels, activeProvider } = useProviderModels();
   const { data: agents } = useAgents();
   const selectedAgent = useSettingsStore((s) => s.selectedAgent);
@@ -452,19 +459,22 @@ export function ChatForm({
   }, [addAttachments, t]);
 
   const handleFiles = useCallback(async (files: FileList | File[]) => {
+    if (IS_CLOUD && files.length > 5000) {
+      toast.error("一次最多上传 5000 个文件。");
+      return;
+    }
     setUploading(true);
+    const results: FileAttachment[] = [];
     try {
-      const results = await Promise.all(
-        Array.from(files).map((f) => uploadFile(f))
-      );
-      addAttachments(results);
+      for (const file of Array.from(files)) results.push(await uploadFile(file, effectiveWorkspace));
     } catch (err) {
       console.error("Upload failed:", err);
       toast.error(t('failedUpload'));
     } finally {
+      if (results.length) addAttachments(results);
       setUploading(false);
     }
-  }, [addAttachments, t]);
+  }, [addAttachments, t, effectiveWorkspace]);
 
   const handleDropDataTransfer = useCallback((dataTransfer: DataTransfer) => {
     const paths = pathsFromDataTransfer(dataTransfer);
@@ -690,7 +700,7 @@ export function ChatForm({
   const handleBrowse = useCallback(async () => {
     setUploading(true);
     try {
-      const results = await browseFiles();
+      const results = await browseFiles(effectiveWorkspace);
       if (results.length > 0) {
         addAttachments(results);
       }
@@ -700,7 +710,7 @@ export function ChatForm({
     } finally {
       setUploading(false);
     }
-  }, [addAttachments]);
+  }, [addAttachments, effectiveWorkspace]);
 
   const handleRemoveAttachment = useCallback((fileId: string) => {
     setAttachments((prev) => prev.filter((a) => a.file_id !== fileId));
@@ -848,12 +858,13 @@ export function ChatForm({
       );
 
   return (
-    <div className={cn("px-4 pb-4", className)}>
+    <TooltipProvider delayDuration={150}>
+    <div className={cn("shrink-0 px-3 pb-4 sm:px-6 sm:pb-6", className)}>
       <div className="mx-auto max-w-3xl xl:max-w-4xl">
         {isGenerating && isProgressStalled && (
           <div className="mb-2 flex">
             <div
-              className="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--surface-secondary)] px-2.5 py-1.5 text-[11px] leading-relaxed text-[var(--text-tertiary)]"
+              className="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--surface-secondary)] px-2.5 py-1.5 text-[12px] leading-relaxed text-[var(--text-tertiary)]"
               data-testid="progress-stalled-notice"
             >
               <CircleEllipsis className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -886,12 +897,12 @@ export function ChatForm({
                 <span className="text-xs font-medium text-[var(--text-primary)]">
                   {t("pendingInputsTitle")}
                 </span>
-                <span className="text-[10px] tabular-nums text-[var(--text-tertiary)]">
+                <span className="text-[12px] tabular-nums text-[var(--text-tertiary)]">
                   {pendingInputs.length}
                 </span>
               </div>
               <p
-                className="mt-1 pl-[22px] text-[11px] leading-relaxed text-[var(--text-tertiary)]"
+                className="mt-1 pl-[22px] text-[12px] leading-relaxed text-[var(--text-tertiary)]"
                 data-testid="pending-inputs-guidance"
               >
                 {t(isGenerating ? "pendingInputsRunningHint" : "pendingInputsIdleHint")}
@@ -953,7 +964,7 @@ export function ChatForm({
                         aria-hidden="true"
                       />
                     )}
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[10px] tabular-nums text-[var(--text-tertiary)]">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[12px] tabular-nums text-[var(--text-tertiary)]">
                       {index + 1}
                     </span>
                     <span
@@ -963,31 +974,36 @@ export function ChatForm({
                       {summary}
                     </span>
                     {item.attachments.length > 0 && (
-                      <span className="shrink-0 text-[10px] text-[var(--text-tertiary)]">
+                      <span className="shrink-0 text-[12px] text-[var(--text-tertiary)]">
                         {t("pendingInputFiles", { count: item.attachments.length })}
                       </span>
                     )}
                     {item.mode === "steer" && (
-                      <span className="shrink-0 rounded-full bg-[var(--surface-tertiary)] px-2 py-0.5 text-[10px] text-[var(--text-secondary)]">
+                      <span className="shrink-0 rounded-full bg-[var(--surface-tertiary)] px-2 py-0.5 text-[12px] text-[var(--text-secondary)]">
                         {t("inputModeSteerShort")}
                       </span>
                     )}
                     {item.status !== "queued" && (
-                      <span className="shrink-0 text-[10px] text-[var(--text-tertiary)]">
+                      <span className="shrink-0 text-[12px] text-[var(--text-tertiary)]">
                         {t(`inputStatus_${item.status}`)}
                       </span>
                     )}
                     {canCancel && (
                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button
-                            type="button"
-                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[var(--text-tertiary)] opacity-70 transition-colors hover:bg-[var(--surface-tertiary)] hover:text-[var(--text-primary)] group-hover:opacity-100 data-[state=open]:bg-[var(--surface-tertiary)] data-[state=open]:opacity-100"
-                            aria-label={t("inputMoreActionsAria", { position: index + 1 })}
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </button>
-                        </DropdownMenuTrigger>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-tertiary)] hover:text-[var(--text-primary)] data-[state=open]:bg-[var(--surface-tertiary)]"
+                                aria-label={t("inputMoreActionsAria", { position: index + 1 })}
+                              >
+                                <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+                              </button>
+                            </DropdownMenuTrigger>
+                          </TooltipTrigger>
+                          <TooltipContent>{t("inputMoreActionsAria", { position: index + 1 })}</TooltipContent>
+                        </Tooltip>
                         <DropdownMenuContent align="end" className="w-48">
                           {canSteer && (
                             <DropdownMenuItem
@@ -1029,7 +1045,7 @@ export function ChatForm({
         <div
           ref={dropTargetRef}
           className={cn(
-            "relative rounded-3xl bg-[var(--surface-secondary)] shadow-[var(--shadow-sm)] transition-all duration-200 focus-within:shadow-[var(--shadow-md)]",
+            "composer-shell relative",
             isDragOver && "ring-1 ring-[var(--border-heavy)]",
           )}
           onDragOver={(e) => {
@@ -1054,12 +1070,10 @@ export function ChatForm({
             />
           )}
 
-          {/* Inner panel — lighter pill holding textarea + action bar.
-              Fully rounded so the bottom corners curve inward, letting the
-              darker outer frame the pill on all sides. */}
-          <div className="rounded-3xl bg-[var(--surface-tertiary)]">
+          {/* One composed surface keeps input and tools in the same hierarchy. */}
+          <div className="rounded-[20px]">
           {/* Top section: file chips + textarea */}
-          <div className="px-4 pt-3 pb-2">
+          <div className="px-4 pb-2 pt-3 sm:px-5 sm:pb-3 sm:pt-5">
             {/* File chips */}
             {(attachments.length > 0 || uploading) && (
               <div className="flex flex-wrap gap-1.5 pb-2">
@@ -1103,14 +1117,16 @@ export function ChatForm({
                       ? t("placeholder") + t("placeholderMention")
                       : t("placeholder")
               }
-              className="min-h-[28px] max-h-[200px] py-1"
+              className="min-h-[48px] max-h-[200px] py-0 placeholder-shown:!h-12 sm:min-h-[56px] sm:py-1 sm:placeholder-shown:!h-14"
               disabled={isInputDisabled}
             />
 
           </div>
 
-          {/* Bottom action bar */}
-          <div className="flex items-center gap-2 px-3 pb-1.5">
+          {compactingStatusText && <div role="status" className="px-4 pb-2 text-xs text-[var(--text-secondary)]">{compactingStatusText}</div>}
+
+          {/* Keep only frequent controls visible; additional tools live in More. */}
+          <div className="flex min-w-0 items-center gap-1 px-2 pb-2 sm:gap-2 sm:px-3 sm:pb-3">
             {/* Hidden file input */}
             <input
               ref={fileInputRef}
@@ -1125,35 +1141,68 @@ export function ChatForm({
               }}
             />
 
-            <button
+            {IS_CLOUD && <input
+              ref={element => { directoryInputRef.current = element; if (element) element.webkitdirectory = true; }}
+              type="file" multiple className="hidden" aria-label="选择上传文件夹"
+              onChange={event => {
+                if (event.target.files?.length) void handleFiles(event.target.files);
+                event.target.value = "";
+              }}
+            />}
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+              <button
                 type="button"
                 disabled={isInputDisabled}
-                className="shrink-0 flex items-center justify-center h-8 w-8 rounded-full hover:bg-[var(--surface-tertiary)] transition-colors text-[var(--text-secondary)]"
+                className="icon-action shrink-0 flex items-center justify-center h-11 w-11 rounded-xl hover:bg-[var(--surface-secondary)] transition-colors text-[var(--text-secondary)]"
                 aria-label={t('attachFile')}
-                title={t('attachFile')}
                 onClick={handleBrowse}
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-4 w-4" aria-hidden="true" />
               </button>
+              </TooltipTrigger>
+              <TooltipContent>{t('attachFile')}</TooltipContent>
+            </Tooltip>
 
-            <div className={cn(isInputDisabled && "pointer-events-none opacity-50")}>
-              <AgentToggle />
-            </div>
-
-            {onSendTaskBatch && (
-              <Popover open={batchOpen} onOpenChange={handleBatchOpenChange}>
-                <PopoverTrigger asChild>
-                  <button
-                    type="button"
-                    disabled={isBatchDisabled}
-                    className="shrink-0 flex items-center justify-center h-8 w-8 rounded-full hover:bg-[var(--surface-tertiary)] transition-colors text-[var(--text-secondary)] disabled:opacity-50"
-                    aria-label={t("taskBatchButton")}
-                    title={t("taskBatchButton")}
-                  >
-                    <GitBranch className="h-4 w-4" />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent align="start" sideOffset={8} className="w-[min(720px,calc(100vw-32px))] p-3">
+            <Popover open={batchOpen} onOpenChange={handleBatchOpenChange}>
+              <PopoverAnchor asChild>
+                <div className="shrink-0">
+                  <ComposerOverflow
+                    triggerRef={moreTriggerRef}
+                    disabled={isInputDisabled}
+                    batchDisabled={isBatchDisabled}
+                    onOpenBatch={onSendTaskBatch ? () => handleBatchOpenChange(true) : undefined}
+                    onUploadFolder={IS_CLOUD ? () => directoryInputRef.current?.click() : undefined}
+                    onSelectStarter={prompt => useArtifactStore.getState().requestFix(prompt)}
+                    starters={starters}
+                    sessionId={sessionId}
+                    directory={directory}
+                    isIndexing={isIndexing}
+                    context={sessionId ? <ContextIndicator sessionId={sessionId} compact /> : undefined}
+                  />
+                </div>
+              </PopoverAnchor>
+              {onSendTaskBatch && <PopoverContent
+                  aria-label={t("taskBatchButton")}
+                  align="start"
+                  side="top"
+                  sideOffset={8}
+                  collisionPadding={16}
+                  style={{ maxHeight: "min(680px, var(--radix-popover-content-available-height))" }}
+                  className="w-[min(720px,calc(100vw-32px))] overflow-y-auto p-3"
+                  onOpenAutoFocus={() => {
+                    batchInteractedOutsideRef.current = false;
+                  }}
+                  onInteractOutside={() => {
+                    batchInteractedOutsideRef.current = true;
+                  }}
+                  onCloseAutoFocus={event => {
+                    event.preventDefault();
+                    if (!batchInteractedOutsideRef.current) moreTriggerRef.current?.focus();
+                    batchInteractedOutsideRef.current = false;
+                  }}
+                >
                   <div className="flex flex-col gap-3">
                     <div className="flex flex-wrap items-center gap-2">
                       <div className="flex rounded-full bg-[var(--surface-secondary)] p-0.5">
@@ -1177,7 +1226,7 @@ export function ChatForm({
                         type="button"
                         onClick={useInputForFirstTask}
                         disabled={!input.trim()}
-                        className="rounded-full px-3 py-1.5 text-[12px] font-medium text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] disabled:opacity-40"
+                        className="rounded-full px-3 py-1.5 text-[12px] font-medium text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] disabled:cursor-not-allowed disabled:bg-[var(--surface-secondary)] disabled:text-[var(--text-tertiary)]"
                       >
                         {t("taskBatchUseInput")}
                       </button>
@@ -1207,30 +1256,35 @@ export function ChatForm({
                                 value={task.title}
                                 onChange={(e) => updateBatchTask(task.id, { title: e.target.value })}
                                 placeholder={t("taskBatchTaskTitlePlaceholder")}
-                                className="min-w-0 flex-1 rounded-md border border-[var(--border-default)] bg-[var(--surface-primary)] px-2.5 py-1.5 text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--border-heavy)]"
+                                className="ui-control min-w-0 flex-1 rounded-md border border-[var(--control-border)] bg-[var(--surface-primary)] px-2.5 py-1.5 text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--ring)] focus:ring-1 focus:ring-[var(--ring)]"
                               />
-                              <button
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                <button
                                 type="button"
                                 onClick={() => removeBatchTask(task.id)}
                                 disabled={batchTasks.length <= 1}
-                                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[var(--text-tertiary)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)] disabled:opacity-35"
+                                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[var(--text-tertiary)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)] disabled:cursor-not-allowed disabled:bg-[var(--surface-secondary)] disabled:text-[var(--text-tertiary)]"
                                 aria-label={t("taskBatchRemoveTask")}
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-4 w-4" aria-hidden="true" />
                               </button>
+                                </TooltipTrigger>
+                                <TooltipContent>{t("taskBatchRemoveTask")}</TooltipContent>
+                              </Tooltip>
                             </div>
                             <textarea
                               value={task.prompt}
                               onChange={(e) => updateBatchTask(task.id, { prompt: e.target.value })}
                               placeholder={t("taskBatchPromptPlaceholder")}
                               rows={3}
-                              className="mt-2 w-full resize-none rounded-md border border-[var(--border-default)] bg-[var(--surface-primary)] px-2.5 py-2 text-[13px] leading-relaxed text-[var(--text-primary)] outline-none placeholder:text-[var(--text-tertiary)] focus:border-[var(--border-heavy)]"
+                              className="ui-control mt-2 w-full resize-none rounded-md border border-[var(--control-border)] bg-[var(--surface-primary)] px-2.5 py-2 text-[13px] leading-relaxed text-[var(--text-primary)] outline-none placeholder:text-[var(--text-tertiary)] focus:border-[var(--ring)] focus:ring-1 focus:ring-[var(--ring)]"
                             />
                             <div className="mt-2 grid gap-2 sm:grid-cols-2">
                               <select
                                 value={task.agent}
                                 onChange={(e) => updateBatchTask(task.id, { agent: e.target.value })}
-                                className="min-w-0 rounded-md border border-[var(--border-default)] bg-[var(--surface-primary)] px-2.5 py-1.5 text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--border-heavy)]"
+                                className="ui-control min-w-0 rounded-md border border-[var(--control-border)] bg-[var(--surface-primary)] px-2.5 py-1.5 text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--ring)] focus:ring-1 focus:ring-[var(--ring)]"
                               >
                                 {visibleAgents.length === 0 && (
                                   <option value={task.agent}>{task.agent}</option>
@@ -1250,7 +1304,7 @@ export function ChatForm({
                                     model: modelId || "",
                                   });
                                 }}
-                                className="min-w-0 rounded-md border border-[var(--border-default)] bg-[var(--surface-primary)] px-2.5 py-1.5 text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--border-heavy)]"
+                                className="ui-control min-w-0 rounded-md border border-[var(--control-border)] bg-[var(--surface-primary)] px-2.5 py-1.5 text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--ring)] focus:ring-1 focus:ring-[var(--ring)]"
                               >
                                 <option value="">{t("taskBatchCurrentModel")}</option>
                                 {providerModels.map((model) => (
@@ -1277,133 +1331,46 @@ export function ChatForm({
                         type="button"
                         onClick={handleSendTaskBatch}
                         disabled={!canStartTaskBatch}
-                        className="inline-flex items-center gap-1.5 rounded-full bg-[var(--text-primary)] px-3 py-1.5 text-[13px] font-medium text-[var(--surface-primary)] transition-opacity disabled:opacity-40"
+                        className="inline-flex items-center gap-1.5 rounded-full bg-[var(--text-primary)] px-3 py-1.5 text-[13px] font-medium text-[var(--surface-primary)] transition-opacity disabled:cursor-not-allowed disabled:bg-[var(--surface-secondary)] disabled:text-[var(--text-tertiary)]"
                       >
                         <Play className="h-3.5 w-3.5" />
                         {t("taskBatchStart")}
                       </button>
                     </div>
                   </div>
-                </PopoverContent>
-              </Popover>
-            )}
+                </PopoverContent>}
+            </Popover>
 
-            <div className="flex-1" />
-
-            {compactingStatusText && (
-              <div className="mr-1 max-w-[220px] truncate text-[12px] font-medium text-[var(--text-secondary)]">
-                {compactingStatusText}
+            <div className="flex min-w-0 flex-1 items-center justify-end gap-1">
+              <div className="flex min-w-0 flex-1 justify-end [&>button]:max-w-full [&>button]:min-h-11">
+                <HeaderModelDropdown compact />
               </div>
-            )}
 
-            <div className="flex min-w-0 shrink items-center gap-0.5">
-              <HeaderModelDropdown compact />
-              {sessionId && (
-                <TooltipProvider delayDuration={200}>
-                  <ContextIndicator sessionId={sessionId} compact />
-                </TooltipProvider>
-              )}
+              <div className="shrink-0">
+                <ChatActions
+                  isBusy={isGenerating || isCompacting}
+                  canSend={
+                    (input.trim().length > 0 || attachments.length > 0) &&
+                    !isIndexing &&
+                    !isInputDisabled &&
+                    !imageNeedsVisionModel
+                  }
+                  onSend={handleSend}
+                  onStop={onStop}
+                  sendLabel={isGenerating
+                    ? t("inputQueueAction")
+                    : t("sendAction")}
+                  // The longer inputQueueActionHint/sendActionHint stays in source.
+                  sendHint={isGenerating ? t("inputQueueAction") : t("sendAction")}
+                />
+              </div>
             </div>
-
-            <ChatActions
-              isBusy={isGenerating || isCompacting}
-              canSend={
-                (input.trim().length > 0 || attachments.length > 0) &&
-                !isIndexing &&
-                !isInputDisabled &&
-                !imageNeedsVisionModel
-              }
-              onSend={handleSend}
-              onStop={onStop}
-              sendLabel={isGenerating
-                ? t("inputQueueAction")
-                : t("sendAction")}
-              sendHint={isGenerating
-                ? t("inputQueueActionHint")
-                : t("sendActionHint")}
-            />
           </div>
           </div>
 
-          {/* Context row — outer layer, lighter bg, visually wraps the inner panel */}
-          <div className={cn(
-            "flex items-center gap-2 px-3 py-2",
-            isInputDisabled && "pointer-events-none opacity-50",
-          )}>
-            <WorkspaceToggle sessionId={sessionId} directory={directory} isIndexing={isIndexing} />
-          </div>
         </div>
       </div>
     </div>
-  );
-}
-
-/** Dropdown mode selector: Plan / Ask / Auto — inspired by Claude Code VS Code extension. */
-function AgentToggle() {
-  const { t } = useTranslation('chat');
-  const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const workMode = useSettingsStore((s) => s.workMode);
-  const setWorkMode = useSettingsStore((s) => s.setWorkMode);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const modes = [
-    { key: "plan" as const, label: t("modePlan"), desc: t("modeDesc_plan") },
-    { key: "ask" as const, label: t("modeAsk"), desc: t("modeDesc_ask") },
-    { key: "auto" as const, label: t("modeAuto"), desc: t("modeDesc_auto") },
-  ];
-
-  const active = modes.find((m) => m.key === workMode) ?? modes[2];
-
-  if (!mounted) {
-    return (
-      <button
-        type="button"
-        disabled
-        className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-medium bg-[var(--surface-tertiary)] text-[var(--text-primary)] opacity-70"
-      >
-        <span>{active.label}</span>
-        <ChevronDown className="h-3 w-3 opacity-50 shrink-0" />
-      </button>
-    );
-  }
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors bg-[var(--surface-tertiary)] text-[var(--text-primary)] hover:bg-[var(--surface-tertiary)]/80"
-        >
-          <span>{active.label}</span>
-          <ChevronDown className="h-3 w-3 opacity-50 shrink-0" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="start" sideOffset={6} className="w-72 p-1.5">
-        {modes.map((m) => {
-          const isActive = workMode === m.key;
-          return (
-            <button
-              key={m.key}
-              type="button"
-              onClick={() => { setWorkMode(m.key); setOpen(false); }}
-              className={cn(
-                "w-full flex items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-colors",
-                isActive ? "bg-[var(--surface-secondary)]" : "hover:bg-[var(--surface-secondary)]",
-              )}
-            >
-              <div className="flex-1 min-w-0">
-                <div className="text-[13px] font-medium text-[var(--text-primary)]">{m.label}</div>
-                <div className="text-[12px] text-[var(--text-tertiary)] mt-0.5 leading-snug">{m.desc}</div>
-              </div>
-              {isActive && <Check className="h-4 w-4 shrink-0 mt-0.5 text-[var(--text-primary)]" />}
-            </button>
-          );
-        })}
-      </PopoverContent>
-    </Popover>
+    </TooltipProvider>
   );
 }

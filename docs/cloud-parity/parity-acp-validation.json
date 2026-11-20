@@ -1,0 +1,7 @@
+{
+  "transport": "real-websocket",
+  "initialize": true,
+  "private_session_created": true,
+  "session_id": "01M7ENEE9JR629VXHRBYMCJ3H7",
+  "protocol_version": 1
+}

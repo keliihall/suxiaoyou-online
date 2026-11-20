@@ -103,9 +103,9 @@ export function SetupFlow({ onComplete }: { onComplete: () => void }) {
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-[var(--text-secondary)]">
+      {/* Auxiliary copy retained in source: <p className="text-xs text-[var(--text-secondary)]">
         {t("ollamaSetupDesc", "Ollama lets you run AI models locally on your computer. Set up takes about a minute.")}
-      </p>
+      </p> */}
 
       {!progress ? (
         <Button variant="outline" size="sm" onClick={startSetup}>
@@ -150,7 +150,7 @@ export function SetupFlow({ onComplete }: { onComplete: () => void }) {
           <h3 className="text-xs font-medium text-[var(--text-primary)]">
             Recommended local models
           </h3>
-          <span className="text-ui-3xs text-[var(--text-tertiary)]">
+          <span className="text-[12px] text-[var(--text-tertiary)]">
             Same list maps to Rapid-MLX on macOS
           </span>
         </div>
@@ -158,17 +158,17 @@ export function SetupFlow({ onComplete }: { onComplete: () => void }) {
           {LOCAL_MODEL_RECOMMENDATIONS.map((model) => (
             <div
               key={model.id}
-              className="flex min-h-12 items-center justify-between gap-3 rounded-md border border-[var(--border-default)] px-3 py-2 opacity-75"
+              className="flex min-h-12 items-center justify-between gap-3 rounded-md border border-[var(--border-default)] px-3 py-2"
             >
               <div className="min-w-0">
                 <div className="truncate text-xs font-medium text-[var(--text-primary)]">
                   {model.name}
                 </div>
-                <div className="truncate font-mono text-ui-3xs text-[var(--text-tertiary)]">
+                <div className="truncate font-mono text-[12px] text-[var(--text-tertiary)]">
                   {model.ollamaTag}
                 </div>
               </div>
-              <span className="shrink-0 rounded bg-[var(--surface-secondary)] px-1.5 py-0.5 text-ui-3xs text-[var(--text-tertiary)]">
+              <span className="shrink-0 rounded bg-[var(--surface-secondary)] px-1.5 py-0.5 text-[12px] text-[var(--text-tertiary)]">
                 {model.memory}
               </span>
             </div>

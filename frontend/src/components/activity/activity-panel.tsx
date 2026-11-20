@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 import {
   X,
   CheckCircle2,
@@ -30,10 +30,7 @@ import { useIsDesktop, useIsMacOS } from "@/hooks/use-platform";
 import {
   Sheet,
   SheetContent,
-  SheetTitle,
-  SheetDescription,
 } from "@/components/ui/sheet";
-import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { useActivityStore, computeDuration, type ChainItem } from "@/stores/activity-store";
 import { ACTIVITY_PANEL_WIDTH } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -177,7 +174,7 @@ function ThinkingGroup({ texts }: { texts: string[] }) {
           <button
             type="button"
             onClick={() => setShowAll(!showAll)}
-            className="text-[11px] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors ml-3"
+            className="text-xs text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors ml-3"
           >
             {showAll ? t("showLess") : t("showMore", { count: thoughts.length - VISIBLE_COUNT })}
           </button>
@@ -274,7 +271,7 @@ function ToolRow({
         {issueLabel && (
           <span
             className={cn(
-              "shrink-0 rounded-full px-1.5 py-0.5 text-[10px] leading-none",
+              "shrink-0 rounded-full px-1.5 py-0.5 text-xs leading-none",
               isIssue
                 ? "bg-[var(--tool-adjusted)]/10 text-[var(--tool-adjusted)]"
                 : "bg-[var(--surface-secondary)] text-[var(--text-tertiary)]",
@@ -284,7 +281,7 @@ function ToolRow({
           </span>
         )}
         {elapsed && (
-          <span className="text-[10px] text-[var(--text-tertiary)] shrink-0">
+          <span className="text-xs text-[var(--text-tertiary)] shrink-0">
             {elapsed}
           </span>
         )}
@@ -307,7 +304,7 @@ function ToolRow({
           {visibleSources.map((source) => (
             <span
               key={source.url}
-              className="inline-flex items-center gap-1 rounded-full bg-[var(--surface-secondary)] border border-[var(--border-default)] px-2 py-0.5 text-[10px] text-[var(--text-tertiary)]"
+              className="inline-flex items-center gap-1 rounded-full bg-[var(--surface-secondary)] border border-[var(--border-default)] px-2 py-0.5 text-xs text-[var(--text-tertiary)]"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={source.favicon} alt="" className="h-3 w-3 rounded-sm" />
@@ -315,7 +312,7 @@ function ToolRow({
             </span>
           ))}
           {moreCount > 0 && (
-            <span className="text-[10px] text-[var(--text-tertiary)] self-center">
+            <span className="text-xs text-[var(--text-tertiary)] self-center">
               {t("moreItems", { count: moreCount })}
             </span>
           )}
@@ -335,10 +332,10 @@ function ToolRow({
             <div className="ml-5 mt-1.5 mb-1 rounded-lg border border-[var(--border-default)] bg-[var(--surface-secondary)] overflow-hidden">
               {Object.keys(tool.state.input).length > 0 && (
                 <div className="border-b border-[var(--border-default)]">
-                  <p className="px-3 py-1 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider bg-[var(--surface-tertiary)]">
+                  <p className="px-3 py-1 text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-wider bg-[var(--surface-tertiary)]">
                     {t("input")}
                   </p>
-                  <pre className="p-2 text-[11px] text-[var(--text-secondary)] overflow-x-auto font-mono leading-relaxed max-h-[150px] overflow-y-auto">
+                  <pre className="p-2 text-xs text-[var(--text-secondary)] overflow-x-auto font-mono leading-relaxed max-h-[150px] overflow-y-auto">
                     {JSON.stringify(tool.state.input, null, 2)}
                   </pre>
                 </div>
@@ -346,7 +343,7 @@ function ToolRow({
               {output && (
                 <div>
                   <p className={cn(
-                    "px-3 py-1 text-[10px] font-semibold uppercase tracking-wider bg-[var(--surface-tertiary)]",
+                    "px-3 py-1 text-xs font-semibold uppercase tracking-wider bg-[var(--surface-tertiary)]",
                     isIssue
                       ? "text-[var(--tool-adjusted)]"
                       : isUnreported
@@ -355,7 +352,7 @@ function ToolRow({
                   )}>
                     {isIssue || isUnreported ? t("details") : t("output")}
                   </p>
-                  <pre className="p-2 text-[11px] text-[var(--text-secondary)] overflow-x-auto font-mono leading-relaxed max-h-[200px] overflow-y-auto">
+                  <pre className="p-2 text-xs text-[var(--text-secondary)] overflow-x-auto font-mono leading-relaxed max-h-[200px] overflow-y-auto">
                     {output.length > 3000
                       ? output.slice(0, 3000) + "\n" + t("truncated")
                       : output}
@@ -401,9 +398,9 @@ function AdjustmentGroup({ tools }: { tools: ToolPart[] }) {
           )}
         />
       </button>
-      <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-tertiary)]">
+      {/* Auxiliary copy retained in source: <p className="mt-1 text-xs leading-relaxed text-[var(--text-tertiary)]">
         {t("activityAdjustmentGroupDesc")}
-      </p>
+      </p> */}
 
       <AnimatePresence initial={false}>
         {isOpen && (
@@ -479,7 +476,7 @@ function ActivityPanelContent() {
   const hasRunningTools = hasRunningActivityTools(activeData);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex min-h-0 flex-col h-full">
       {/* Header */}
       <div className="flex items-center justify-between h-12 px-4 shrink-0">
         <div className="flex items-center gap-2">
@@ -487,7 +484,7 @@ function ActivityPanelContent() {
             {t("activity")}
           </h2>
           {durationLabel && (
-            <span className="text-[11px] text-[var(--text-tertiary)]">
+            <span className="text-xs text-[var(--text-tertiary)]">
               · {durationLabel}
             </span>
           )}
@@ -495,7 +492,8 @@ function ActivityPanelContent() {
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7"
+          className="h-9 w-9"
+          aria-label={t("panelClose")}
           onClick={close}
         >
           <X className="h-4 w-4" />
@@ -503,7 +501,7 @@ function ActivityPanelContent() {
       </div>
 
       {/* Scrollable chain timeline */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 scrollbar-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 scrollbar-auto">
         <div className="relative space-y-4">
           {timelineItems.map((item, i) => {
             if (item.kind === "thinking-group") {
@@ -538,7 +536,7 @@ function ActivityPanelContent() {
                 />
               </div>
               {durationLabel && (
-                <p className="text-[11px] text-[var(--text-tertiary)]">
+                <p className="text-xs text-[var(--text-tertiary)]">
                   {t("thoughtFor", { duration: durationLabel })}
                 </p>
               )}
@@ -552,7 +550,7 @@ function ActivityPanelContent() {
                 <CheckCircle2 aria-hidden="true" className="h-3.5 w-3.5 text-[var(--tool-completed)]" />
               </div>
               {durationLabel && (
-                <p className="text-[11px] text-[var(--text-tertiary)]">
+                <p className="text-xs text-[var(--text-tertiary)]">
                   {t("thoughtFor", { duration: durationLabel })}
                 </p>
               )}
@@ -580,9 +578,7 @@ function ActivityPanelContent() {
             <h3 className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider mb-2">
               {t("currentResponseMetrics")}
             </h3>
-            <p className="mb-2 text-[10px] leading-relaxed text-[var(--text-quaternary)]">
-              {t("currentResponseMetricsScope")}
-            </p>
+            {/* These metrics describe only the current response/activity, not goal totals. */}
             <div className="grid grid-cols-2 gap-2 text-xs">
               {totalContextTokens > 0 && (
                 <div className="col-span-2 flex justify-between rounded-lg bg-[var(--surface-secondary)] px-3 py-2">
@@ -643,6 +639,7 @@ function ActivityPanelContent() {
 }
 
 export function ActivityPanel() {
+  const previousFocusRef = useRef<HTMLElement | null>(null);
   const { t } = useTranslation("chat");
   const isOpen = useActivityStore((s) => s.isOpen);
   const close = useActivityStore((s) => s.close);
@@ -669,13 +666,17 @@ export function ActivityPanel() {
   // Mobile: Sheet overlay from right
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
-      <SheetContent side="right" className="w-[85vw] sm:max-w-[380px] p-0">
-        <VisuallyHidden.Root asChild>
-          <SheetTitle>{t("activity")}</SheetTitle>
-        </VisuallyHidden.Root>
-        <VisuallyHidden.Root asChild>
-          <SheetDescription>{t("activityDesc")}</SheetDescription>
-        </VisuallyHidden.Root>
+      <SheetContent
+        title={t("activity")}
+        showCloseButton={false}
+        onOpenAutoFocus={() => {
+          previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        }}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          previousFocusRef.current?.focus();
+        }}
+        aria-describedby={undefined} side="right" className="w-full sm:max-w-[380px] p-0">
         <ActivityPanelContent />
       </SheetContent>
     </Sheet>

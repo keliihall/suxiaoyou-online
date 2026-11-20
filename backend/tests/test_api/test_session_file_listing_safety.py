@@ -85,10 +85,17 @@ async def test_session_files_reject_tracked_and_output_paths_outside_workspace(
                         tool_id="write",
                         file_type="generated",
                     ),
+                    SessionFile(
+                        session_id=session_id,
+                        file_path=str(output_inside),
+                        file_name=output_inside.name,
+                        tool_id="bash",
+                        file_type="working",
+                    ),
                 ]
             )
 
-    response = await app_client.get(f"/api/sessions/{session_id}/files")
+    response = await app_client.get(f"/api/sessions/{session_id}/files?scope=all")
 
     assert response.status_code == 200
     files = response.json()["files"]
@@ -131,15 +138,16 @@ async def test_session_files_reject_final_intermediate_and_broken_symlinks(
     session_id = await _create_workspace_session(app_client, workspace)
     async with session_factory() as db:
         async with db.begin():
-            db.add(
+            db.add_all([
                 SessionFile(
                     session_id=session_id,
-                    file_path=str(intermediate / real_file.name),
-                    file_name=real_file.name,
+                    file_path=str(path),
+                    file_name=path.name,
                     tool_id="write",
-                    file_type="generated",
+                    file_type="deliverable",
                 )
-            )
+                for path in (intermediate / real_file.name, final_link, escape_link, broken_link)
+            ])
 
     response = await app_client.get(f"/api/sessions/{session_id}/files")
 
@@ -174,6 +182,7 @@ async def test_session_files_reject_symlinked_output_directory(
 
 async def test_one_output_stat_failure_is_skipped_without_failing_listing(
     app_client,
+    session_factory,
     tmp_path,
     monkeypatch,
 ) -> None:
@@ -185,6 +194,13 @@ async def test_one_output_stat_failure_is_skipped_without_failing_listing(
     stable.write_text("stable", encoding="utf-8")
     racing.write_text("racing", encoding="utf-8")
     session_id = await _create_workspace_session(app_client, workspace)
+    async with session_factory() as db:
+        async with db.begin():
+            db.add_all([
+                SessionFile(session_id=session_id, file_path=str(path), file_name=path.name,
+                            tool_id="present_file", file_type="deliverable")
+                for path in (stable, racing)
+            ])
     original_lstat = Path.lstat
 
     def lstat_with_concurrent_delete(path: Path):
@@ -200,8 +216,8 @@ async def test_one_output_stat_failure_is_skipped_without_failing_listing(
         {
             "name": stable.name,
             "path": str(stable.resolve()),
-            "type": "generated",
-            "tool": "artifact",
+            "type": "deliverable",
+            "tool": "present_file",
         }
     ]
 
@@ -226,7 +242,7 @@ async def test_output_directory_enumeration_error_keeps_safe_tracked_files(
                     file_path=str(tracked),
                     file_name=tracked.name,
                     tool_id="write",
-                    file_type="generated",
+                    file_type="deliverable",
                 )
             )
     original_iterdir = Path.iterdir

@@ -725,9 +725,6 @@ def test_v100_audit_database_adds_nullable_invocation_provenance(
 def test_workspace_identity_v2_revision_is_a_noop_release_boundary(
     tmp_path: Path,
 ) -> None:
-    assert migrations.CURRENT_HEAD_REVISION == (
-        migrations.V110_WORKSPACE_IDENTITY_V2_REVISION
-    )
     assert {
         migrations.V110_USER_OFFICE_TEMPLATES_REVISION,
         migrations.V110_WORKSPACE_IDENTITY_V2_REVISION,
@@ -754,8 +751,10 @@ def test_workspace_identity_v2_revision_is_a_noop_release_boundary(
         ).fetchall()
         connection.commit()
 
-    result = upgrade_sqlite_database(
-        f"sqlite+aiosqlite:///{database}"
+    # Pin the revision under test: later migrations may legitimately add tables.
+    migrations._run_alembic_revision(
+        database, stamp_revision=None,
+        target_revision=migrations.V110_WORKSPACE_IDENTITY_V2_REVISION,
     )
 
     with sqlite3.connect(database) as connection:
@@ -767,14 +766,6 @@ def test_workspace_identity_v2_revision_is_a_noop_release_boundary(
             "SELECT id, workspace_path, content FROM workspace_memory"
         ).fetchall()
 
-    assert result is not None
-    assert result.previous_revision == (
-        migrations.V110_USER_OFFICE_TEMPLATES_REVISION
-    )
-    assert result.current_revision == (
-        migrations.V110_WORKSPACE_IDENTITY_V2_REVISION
-    )
-    assert result.backup_path is not None
     assert _revision(database) == migrations.V110_WORKSPACE_IDENTITY_V2_REVISION
     assert schema_after == schema_before
     assert data_after == data_before

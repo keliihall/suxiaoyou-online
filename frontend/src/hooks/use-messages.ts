@@ -3,18 +3,23 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   keepPreviousData,
-  useInfiniteQuery,
   useQuery,
+  useQueryClient,
 } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { API, queryKeys } from "@/lib/constants";
 import { conversationHistoryWindowOffsets } from "@/lib/conversation-outline";
+import {
+  fetchPreviousMessagePage,
+  messageHistoryQueryOptions,
+  MESSAGE_PAGE_SIZE,
+} from "@/lib/message-history";
 import type {
   ConversationTurnIndex,
   PaginatedMessages,
 } from "@/types/message";
 
-export const MESSAGE_PAGE_SIZE = 50;
+export { MESSAGE_PAGE_SIZE } from "@/lib/message-history";
 
 interface HistoryWindow {
   id: number;
@@ -50,13 +55,14 @@ function flattenPages(pages: PaginatedMessages[] | undefined) {
 }
 
 /**
- * Hook to fetch messages with reverse infinite scroll.
+ * Hook to fetch a latest-anchored message window with reverse scrolling.
  *
  * Initial load fetches the latest page (offset=-1).
  * `fetchPreviousPage()` loads older messages.
  * Pages are stored oldest-first: pages[0] = oldest loaded, pages[last] = newest.
  */
 export function useMessages(sessionId: string | undefined) {
+  const queryClient = useQueryClient();
   const activeSessionRef = useRef(sessionId);
   activeSessionRef.current = sessionId;
   const historyRequestRef = useRef(0);
@@ -68,22 +74,18 @@ export function useMessages(sessionId: string | undefined) {
     useState(false);
   const [isFetchingHistoryNextPage, setIsFetchingHistoryNextPage] =
     useState(false);
+  const [isFetchingMainPreviousPage, setIsFetchingMainPreviousPage] = useState(false);
+  const mainPreviousAbortRef = useRef<AbortController | null>(null);
+  const mainPreviousRequestRef = useRef(0);
 
-  const query = useInfiniteQuery({
-    queryKey: queryKeys.messages.list(sessionId!),
-    queryFn: ({ pageParam }: { pageParam: number }) =>
-      api.get<PaginatedMessages>(
-        API.MESSAGES.LIST(sessionId!, MESSAGE_PAGE_SIZE, pageParam),
+  const query = useQuery({
+    ...messageHistoryQueryOptions(
+      queryClient,
+      queryKeys.messages.list(sessionId!),
+      (limit, offset, signal) => api.get<PaginatedMessages>(
+        API.MESSAGES.LIST(sessionId!, limit, offset), { signal },
       ),
-    initialPageParam: -1 as number,
-    getPreviousPageParam: (firstPage: PaginatedMessages) => {
-      if (firstPage.offset <= 0) return undefined;
-      return Math.max(0, firstPage.offset - MESSAGE_PAGE_SIZE);
-    },
-    // The live cache always ends at the latest page. Directed history pages
-    // live in an isolated local window below so stream reconciliation can
-    // safely keep treating pages.at(-1) as authoritative latest state.
-    getNextPageParam: (): undefined => undefined,
+    ),
     enabled: !!sessionId,
     refetchOnWindowFocus: true,
     staleTime: 5_000, // Refetch if data is older than 5s (catches remote-generated sessions)
@@ -110,13 +112,21 @@ export function useMessages(sessionId: string | undefined) {
 
   useEffect(() => {
     cancelHistoryNavigation();
+    mainPreviousRequestRef.current += 1;
+    mainPreviousAbortRef.current?.abort();
+    mainPreviousAbortRef.current = null;
+    setIsFetchingMainPreviousPage(false);
     setHistoryWindow(null);
     setIsFetchingHistoryPreviousPage(false);
     setIsFetchingHistoryNextPage(false);
   }, [cancelHistoryNavigation, sessionId]);
 
   useEffect(
-    () => () => cancelHistoryNavigation(),
+    () => () => {
+      cancelHistoryNavigation();
+      mainPreviousRequestRef.current += 1;
+      mainPreviousAbortRef.current?.abort();
+    },
     [cancelHistoryNavigation],
   );
 
@@ -374,7 +384,28 @@ export function useMessages(sessionId: string | undefined) {
   const hasHistoryNextPage = !!lastHistoryPage
     && lastHistoryPage.messages.length > 0
     && lastHistoryPage.offset + lastHistoryPage.messages.length < historySnapshotTotal;
-  const fetchMainPreviousPage = query.fetchPreviousPage;
+  const fetchMainPreviousPage = useCallback(async (): Promise<void> => {
+    if (!sessionId || mainPreviousAbortRef.current) return;
+    const requestId = ++mainPreviousRequestRef.current;
+    const controller = new AbortController();
+    mainPreviousAbortRef.current = controller;
+    setIsFetchingMainPreviousPage(true);
+    try {
+      await fetchPreviousMessagePage(
+        queryClient,
+        queryKeys.messages.list(sessionId),
+        (limit, offset, signal) => api.get<PaginatedMessages>(
+          API.MESSAGES.LIST(sessionId, limit, offset), { signal },
+        ),
+        controller.signal,
+      );
+    } finally {
+      if (requestId === mainPreviousRequestRef.current) {
+        mainPreviousAbortRef.current = null;
+        setIsFetchingMainPreviousPage(false);
+      }
+    }
+  }, [queryClient, sessionId]);
 
   const fetchDisplayPreviousPage = useCallback(async (): Promise<void> => {
     if (isHistoryWindow) {
@@ -390,10 +421,10 @@ export function useMessages(sessionId: string | undefined) {
     total: knownTotal,
     hasPreviousPage: isHistoryWindow
       ? hasHistoryPreviousPage
-      : query.hasPreviousPage,
+      : (query.data?.pages[0]?.offset ?? 0) > 0,
     isFetchingPreviousPage: isHistoryWindow
       ? isFetchingHistoryPreviousPage
-      : query.isFetchingPreviousPage,
+      : isFetchingMainPreviousPage,
     fetchPreviousPage: fetchDisplayPreviousPage,
     hasNextPage: isHistoryWindow && hasHistoryNextPage,
     isFetchingNextPage: isHistoryWindow && isFetchingHistoryNextPage,

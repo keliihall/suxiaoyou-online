@@ -43,16 +43,16 @@ export function PermissionsTab() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="settings-section space-y-6">
       <section>
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-ui-title-sm font-semibold text-[var(--text-primary)]">
               {t("permissionsRemembered")}
             </h2>
-            <p className="mt-1 text-xs text-[var(--text-secondary)]">
+            {/* Auxiliary copy retained in source: <p className="mt-1 text-xs text-[var(--text-secondary)]">
               {t("permissionsDesc")}
-            </p>
+            </p> */}
           </div>
           <Button
             variant="outline"
@@ -68,17 +68,17 @@ export function PermissionsTab() {
       </section>
 
       {savedPermissions.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-[var(--border-default)] px-4 py-8 text-center">
+        <div className="surface-card rounded-2xl border border-dashed border-[var(--border-default)] px-4 py-8 text-center">
           <ShieldCheck className="mx-auto h-5 w-5 text-[var(--text-tertiary)]" />
           <p className="mt-3 text-sm font-medium text-[var(--text-primary)]">
             {t("permissionsEmpty")}
           </p>
-          <p className="mt-1 text-xs text-[var(--text-secondary)]">
+          {/* Auxiliary copy retained in source: <p className="mt-1 text-xs text-[var(--text-secondary)]">
             {t("permissionsEmptyDesc")}
-          </p>
+          </p> */}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-[var(--border-default)]">
+        <div className="surface-card overflow-hidden rounded-2xl border border-[var(--border-default)]">
           {savedPermissions.map((rule, index) => {
             const Icon = rule.allow ? ShieldCheck : ShieldX;
             return (
@@ -93,8 +93,8 @@ export function PermissionsTab() {
                   className={cn(
                     "flex h-8 w-8 shrink-0 items-center justify-center rounded-md",
                     rule.allow
-                      ? "bg-[var(--brand-primary)]/10 text-[var(--brand-primary)]"
-                      : "bg-[var(--color-destructive)]/10 text-[var(--color-destructive)]",
+                      ? "bg-[var(--status-success-bg)] text-[var(--status-success-text)]"
+                      : "bg-[var(--status-danger-bg)] text-[var(--status-danger-text)]",
                   )}
                 >
                   <Icon className="h-4 w-4" />
@@ -106,10 +106,10 @@ export function PermissionsTab() {
                     </p>
                     <span
                       className={cn(
-                        "rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase",
+                        "rounded px-1.5 py-0.5 text-[12px] font-semibold uppercase",
                         rule.allow
-                          ? "bg-[var(--brand-primary)]/10 text-[var(--brand-primary)]"
-                          : "bg-[var(--color-destructive)]/10 text-[var(--color-destructive)]",
+                          ? "bg-[var(--status-success-bg)] text-[var(--status-success-text)]"
+                          : "bg-[var(--status-danger-bg)] text-[var(--status-danger-text)]",
                       )}
                     >
                       {rule.allow ? t("permissionsAllow") : t("permissionsDeny")}
@@ -127,7 +127,7 @@ export function PermissionsTab() {
                     )}
                   </p>
                   <p
-                    className="mt-0.5 truncate text-[11px] text-[var(--text-tertiary)]"
+                    className="mt-0.5 truncate text-[12px] text-[var(--text-tertiary)]"
                     title={rule.workspace ?? rule.sessionId ?? undefined}
                   >
                     {t("permissionsSourceDesktop")}

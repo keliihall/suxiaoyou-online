@@ -288,6 +288,13 @@ def _generation_failure_kind(
 
     if message is None and result.exception is None:
         return "none"
+    from app.schemas.provider import SAFE_PROVIDER_ERRORS
+    if result.agent_error_code in SAFE_PROVIDER_ERRORS:
+        # These cloud categories all carry retryable=False. A settled or
+        # uncertain paid attempt must not be replayed merely because its
+        # localized explanation contains "connection" or "timeout". Known
+        # context rejection is absorbed by SessionProcessor's compact branch.
+        return "terminal"
     if result.agent_error_code in _TERMINAL_GOAL_ERROR_TYPES:
         return "terminal"
 

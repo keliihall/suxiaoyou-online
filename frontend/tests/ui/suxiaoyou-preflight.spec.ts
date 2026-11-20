@@ -20,7 +20,7 @@ async function openNewChat(page: Page, workspace = false) {
   await expect(
     page
       .getByRole("heading", {
-        name: /What should (suyo help you do|we do in)/i,
+        name: "What would you like to do?",
       })
       .first(),
   ).toBeVisible();
@@ -232,11 +232,13 @@ test.describe("苏小有 UI preflight", () => {
   }) => {
     await openNewChat(page, true);
 
-    await page.getByRole("button", { name: /Auto-edit/i }).click();
+    await page.getByTestId("composer-more").click();
     await page.getByRole("button", { name: /Plan first/i }).click();
+    await page.getByTestId("composer-more").click();
     await expect(
       page.getByRole("button", { name: /Plan first/i }),
-    ).toBeVisible();
+    ).toHaveAttribute("aria-pressed", "true");
+    await page.keyboard.press("Escape");
 
     await page.locator('input[type="file"]').setInputFiles({
       name: "sample-preflight.csv",
@@ -682,7 +684,7 @@ test.describe("苏小有 UI preflight", () => {
     page,
   }) => {
     await openNewChat(page);
-    await page.getByRole("button", { name: /Auto-edit/i }).click();
+    await page.getByTestId("composer-more").click();
     await page.getByRole("button", { name: /Ask first/i }).click();
 
     await sendPrompt(page, "Trigger permission flow for the preflight");
@@ -710,7 +712,7 @@ test.describe("苏小有 UI preflight", () => {
     page,
   }) => {
     await openNewChat(page);
-    await page.getByRole("button", { name: /Auto-edit/i }).click();
+    await page.getByTestId("composer-more").click();
     await page.getByRole("button", { name: /Ask first/i }).click();
 
     await sendPrompt(page, "Trigger permission flow for allow once");
@@ -742,7 +744,7 @@ test.describe("苏小有 UI preflight", () => {
     page,
   }) => {
     await openNewChat(page);
-    await page.getByRole("button", { name: /Auto-edit/i }).click();
+    await page.getByTestId("composer-more").click();
     await page.getByRole("button", { name: /Ask first/i }).click();
 
     await sendPrompt(page, "Trigger permission flow for always allow");
@@ -827,7 +829,7 @@ test.describe("苏小有 UI preflight", () => {
     page,
   }) => {
     await openNewChat(page);
-    await page.getByRole("button", { name: /Auto-edit/i }).click();
+    await page.getByTestId("composer-more").click();
     await page.getByRole("button", { name: /Ask first/i }).click();
 
     await sendPrompt(page, "Trigger permission flow for deny once");
@@ -859,7 +861,7 @@ test.describe("苏小有 UI preflight", () => {
     page,
   }) => {
     await openNewChat(page);
-    await page.getByRole("button", { name: /Auto-edit/i }).click();
+    await page.getByTestId("composer-more").click();
     await page.getByRole("button", { name: /Ask first/i }).click();
 
     await sendPrompt(page, "Trigger permission flow for always deny");
@@ -1180,15 +1182,18 @@ test.describe("苏小有 UI preflight", () => {
       page.getByRole("heading", { name: "Edit Automation" }),
     ).toBeHidden();
 
-    const card = page
-      .locator("div.rounded-lg")
-      .filter({ hasText: "Morning brief" })
-      .filter({ hasText: "Summarize overnight" })
-      .first();
-    await card.locator("button").nth(3).click();
-    await expect(page.getByText("Delete this automation?")).toBeVisible();
-    await page.getByRole("button", { name: "Cancel" }).click();
-    await expect(page.getByText("Delete this automation?")).toBeHidden();
+    await expect(
+      page.getByRole("button", { name: "Morning brief updated", exact: true }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Delete", exact: true }).click();
+    const deleteDialog = page.getByRole("dialog");
+    await expect(deleteDialog).toContainText("Delete this automation?");
+    await expect(deleteDialog).toContainText("Morning brief updated");
+    await deleteDialog.getByRole("button", { name: "Cancel", exact: true }).click();
+    await expect(deleteDialog).toBeHidden();
+    await expect(
+      page.getByRole("button", { name: "Morning brief updated", exact: true }),
+    ).toBeVisible();
   });
 
   test("plugins path: connector, plugin, skill tabs and add custom connector", async ({
@@ -1211,7 +1216,9 @@ test.describe("苏小有 UI preflight", () => {
       .locator("#main-content")
       .getByRole("button", { name: "Plugins" })
       .click();
-    await expect(page.getByText("GitHub workflows")).toBeVisible();
+    await expect(
+      page.getByRole("switch", { name: "github", exact: true }),
+    ).toBeChecked();
 
     await page
       .locator("#main-content")

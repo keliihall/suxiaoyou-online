@@ -27,7 +27,12 @@ export function AppearanceInjector() {
     };
     apply();
 
-    return useAppearanceStore.subscribe(apply);
+    const unsubscribe = useAppearanceStore.subscribe(apply);
+    return () => {
+      unsubscribe();
+      // Per-user styling must not outlive its authenticated provider tree.
+      el?.remove();
+    };
   }, []);
 
   return null;

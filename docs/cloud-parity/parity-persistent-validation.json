@@ -1,0 +1,447 @@
+{
+  "kind": "real-private-runtime-deepseek-persistent-capabilities",
+  "workspace": "/tenant/workspaces/persistent-4c357bcf82",
+  "runtime_image": "sha256:c18f546bc41655f6250b851c9a9fb6580c51188981b67bff9dfce6939dcfc5b2",
+  "accounting": {
+    "total_tokens": 230342,
+    "reserved_tokens": 0,
+    "states": {
+      "settled": 30
+    },
+    "requests": 30,
+    "sources": {
+      "agent": 30
+    },
+    "request_ids": [
+      "7f8277c65e234cf29f3e45cea0a73bd6",
+      "6a12547ab1e14ab5a8d765729810f1e0",
+      "01fb9bbffe114796ac210a88ad50c0fb",
+      "53c77c7eb05c45bf92a27f80e7f331c7",
+      "0603a98dad0448af905582bd86447c3a",
+      "64fd0baa1992417b8ab4db286a8dd5e2",
+      "29e8baa379f4420caeab4386a8d5e464",
+      "0374e456eaec42b38dcc4e18ccd59595",
+      "cde86347d17d4ea6b9e5da702c65b06a",
+      "b40982dd77ee4798be9f5ac7d6fe82aa",
+      "fc1ef10337a14fcaade44f632b1b19ae",
+      "cf2353235a4947108758535e6ae3a48a",
+      "d01da32c950a4aa0a8182e29d13b6d1c",
+      "9c9ea5a7ee1e4c66a132e3e985abd191",
+      "58bbd9cd1c264df29c4f5316d7222301",
+      "e7cdbffad603423f9444c391eded913c",
+      "59609b5e11664047ac1404d688f59632",
+      "904cc1eab0134c78b60c928782dc4388",
+      "2485c337a87b41029fe94d2cf7c4fd93",
+      "a2bfa997ca574facae6bc5cc7ecc91b7",
+      "8d70ccedcb894aaea05ace6a69ecab82",
+      "f7cf7dbd07034dc6a97e5581074d7885",
+      "6e641c28f85e41859eae1c0030d3eeeb",
+      "04a150bcd113486099339e19db827c8b",
+      "24736c2602b24f608162e42c02bc9b96",
+      "27d52a812a53491ea946a7fe2f4a2405",
+      "d3b11bd26a7c4c19af7ff6a464c35bce",
+      "599636ac1f77429e915b77bf96ddb9aa",
+      "b1909f2d72e54a9880f56fb9194c3b37",
+      "2db916273fda46b69d3a60ce52574dca"
+    ]
+  },
+  "phases": {
+    "prepare": {
+      "passed": true,
+      "dedicated_runtime_restarted": true,
+      "npm_package": "@modelcontextprotocol/server-filesystem",
+      "version": "2.3.0"
+    },
+    "plugins": {
+      "passed": true,
+      "plugin_enable_adds_skill": true,
+      "plugin_disable_removes_skill": true,
+      "skill_disable_enable_verified": true
+    },
+    "goal": {
+      "passed": false,
+      "error": "POST /api/sessions/01M7EQBQFZJC0JS19T4HJQXEVT/goal/resume HTTP 409 (goal_invalid_transition)",
+      "superseded_by": "goal-resume"
+    },
+    "mcp-connect": {
+      "passed": true,
+      "connected": true,
+      "tools_count": 16,
+      "explicit_confirmation_rejected": true,
+      "changed_fingerprint_rejected": true,
+      "fingerprint": "sha256:7ef272d3569e339efb25758ed010842170cd7b78cb665f185421feb72a62fa5b"
+    },
+    "quota-blocked": {
+      "passed": true,
+      "blocked_code": "quota_exceeded",
+      "before_limit_tokens": 100000,
+      "side_effects_started": false,
+      "provider_requests": 0,
+      "status_sequence": [
+        "active",
+        "paused",
+        "active",
+        "blocked"
+      ]
+    },
+    "memory": {
+      "passed": true,
+      "authenticated_download_matches": true,
+      "bytes": 2280,
+      "sha256": "869dccc1c94056464fe8e2c74ddf705d6a8632a33fb39536172d536109e2afb4",
+      "persistent_memory_receipts": [
+        {
+          "message_id": "01M7EQX6HDQZKM1WRWQQB4CCRX",
+          "tokens": {
+            "input": 732,
+            "output": 503,
+            "reasoning": 88,
+            "cache_read": 128,
+            "cache_write": 0,
+            "total": 1451
+          },
+          "time_created": "2026-11-15T04:37:04.177409"
+        }
+      ]
+    },
+    "mcp": {
+      "passed": true,
+      "connected": true,
+      "tools_count": 16,
+      "explicit_confirmation_rejected": true,
+      "changed_fingerprint_rejected": true,
+      "fingerprint": "sha256:7ef272d3569e339efb25758ed010842170cd7b78cb665f185421feb72a62fa5b",
+      "actual_agent_call": {
+        "session_id": "01M7EQNBKKBBDJY4FV0VRMD1MX",
+        "stream_id": "01M7EQNBKKBBDJY4FV0VRMD1MY",
+        "tools": [
+          "tool_search",
+          "qa-filesystem-4c357bcf82_read_text_file"
+        ],
+        "events": {
+          "step-start": 3,
+          "tool-call": 2,
+          "tool_metadata": 1,
+          "tool-result": 2,
+          "step-finish": 3,
+          "permission-request": 1,
+          "permission-resolved": 1,
+          "text-delta": 1,
+          "title-update": 1,
+          "done": 1
+        },
+        "permissions": [
+          {
+            "tool": "qa-filesystem-4c357bcf82_read_text_file",
+            "allowed": true
+          }
+        ],
+        "errors": []
+      }
+    },
+    "batch": {
+      "passed": true,
+      "actual_token_delta": 14328,
+      "children": [
+        {
+          "session_id": "01M7ES329QDMNP16T68823YNNP",
+          "marker_in_persisted_messages": true
+        },
+        {
+          "session_id": "01M7ES329QDMNP16T68823YNNR",
+          "marker_in_persisted_messages": true
+        }
+      ],
+      "mode": "parallel",
+      "durable_turns": [
+        {
+          "id": "01M7ES329QDMNP16T68823YNNK",
+          "session_id": "01M7ES329MF5X69H1K2VRBCK08",
+          "workspace_instance_id": "01M7EPT88TWCN64NSE73TA6D84",
+          "root_turn_id": "01M7ES329QDMNP16T68823YNNK",
+          "parent_turn_id": null,
+          "depth": 0,
+          "status": "completed",
+          "time_finished": "2026-11-15 04:57:47.511596"
+        },
+        {
+          "id": "01M7ES32B87MKH7TB9ZP18W1B2",
+          "session_id": "01M7ES329QDMNP16T68823YNNP",
+          "workspace_instance_id": "01M7EPT88TWCN64NSE73TA6D84",
+          "root_turn_id": "01M7ES329QDMNP16T68823YNNK",
+          "parent_turn_id": "01M7ES329QDMNP16T68823YNNK",
+          "depth": 1,
+          "status": "completed",
+          "time_finished": "2026-11-15 04:57:47.195642"
+        },
+        {
+          "id": "01M7ES32BB10SJ3W1HXV612EFT",
+          "session_id": "01M7ES329QDMNP16T68823YNNR",
+          "workspace_instance_id": "01M7EPT88TWCN64NSE73TA6D84",
+          "root_turn_id": "01M7ES329QDMNP16T68823YNNK",
+          "parent_turn_id": "01M7ES329QDMNP16T68823YNNK",
+          "depth": 1,
+          "status": "completed",
+          "time_finished": "2026-11-15 04:57:47.501649"
+        }
+      ],
+      "actual_agent_call": {
+        "session_id": "01M7ES329MF5X69H1K2VRBCK08",
+        "stream_id": "01M7ES329QDMNP16T68823YNNK",
+        "tools": [],
+        "events": {
+          "task-batch-start": 1,
+          "task-batch-update": 4,
+          "text-delta": 1,
+          "task-batch-finish": 1,
+          "done": 1
+        },
+        "permissions": [],
+        "errors": []
+      }
+    },
+    "goal-resume": {
+      "passed": true,
+      "actual_token_delta": 32195,
+      "file_verified": true,
+      "actual_agent_call": {
+        "session_id": "01M7EQBQFZJC0JS19T4HJQXEVT",
+        "stream_id": "01M7EQVJ107VR81JWKSKJ6TJ6W",
+        "tools": [
+          "get_goal",
+          "read",
+          "update_goal"
+        ],
+        "events": {
+          "goal-run-started": 1,
+          "goal-updated": 2,
+          "step-start": 2,
+          "tool-call": 3,
+          "tool-result": 3,
+          "step-finish": 3,
+          "text-delta": 1,
+          "goal-run-finished": 1,
+          "done": 1
+        },
+        "permissions": [],
+        "errors": []
+      },
+      "statuses": [
+        "active",
+        "paused",
+        "active",
+        "complete"
+      ]
+    },
+    "automation": {
+      "passed": true,
+      "actual_token_delta": 15543,
+      "task_id": "01M7ER1X1FR87ZS3X5HQN5AS0A",
+      "no_browser_or_sse_attached": true,
+      "history": [
+        {
+          "id": "01M7ER3RHBZJDV9GA87W0KAJEC",
+          "task_id": "01M7ER1X1FR87ZS3X5HQN5AS0A",
+          "session_id": "01M7ER3RHBZJDV9GA87W0KAJEB",
+          "status": "success",
+          "error_message": null,
+          "started_at": "2026-11-15T04:40:39.211491",
+          "finished_at": "2026-11-15T04:40:41.901940",
+          "triggered_by": "schedule",
+          "time_created": "2026-11-15T04:40:39.212699",
+          "marker_in_persisted_messages": true
+        },
+        {
+          "id": "01M7ER1X37YJAS83ZMP0M7SSSW",
+          "task_id": "01M7ER1X1FR87ZS3X5HQN5AS0A",
+          "session_id": "01M7ER1X37YJAS83ZMP0M7SSSV",
+          "status": "success",
+          "error_message": null,
+          "started_at": "2026-11-15T04:39:38.343352",
+          "finished_at": "2026-11-15T04:39:42.816673",
+          "triggered_by": "manual",
+          "time_created": "2026-11-15T04:39:38.344178",
+          "marker_in_persisted_messages": true
+        }
+      ],
+      "disabled_after_probe": true
+    },
+    "restart-persistence": {
+      "passed": true,
+      "plugin_reloaded_after_restart": true,
+      "skill_reloaded_after_restart": true,
+      "sentinel_sha256": "dd05dc77a99eb8c8dc477b0ed290a142e55ff7946349d00bce7d8c940719b80b"
+    },
+    "final-image-persistence": {
+      "passed": true,
+      "runtime_image": "sha256:d2a754e0528386f7e3c6a6ec2a91417f626fb236629a3f38cc6899ff26d5eb86",
+      "goal_status": "complete",
+      "parent_session_id": "01M7ES329MF5X69H1K2VRBCK08",
+      "children": [
+        {
+          "session_id": "01M7ES329QDMNP16T68823YNNP",
+          "marker_in_persisted_messages": true,
+          "completed_read_tool_parts": 1
+        },
+        {
+          "session_id": "01M7ES329QDMNP16T68823YNNR",
+          "marker_in_persisted_messages": true,
+          "completed_read_tool_parts": 1
+        }
+      ],
+      "plugin_reloaded_after_restart": true,
+      "skill_reloaded_after_restart": true,
+      "sentinel_sha256": "dd05dc77a99eb8c8dc477b0ed290a142e55ff7946349d00bce7d8c940719b80b",
+      "automation_remained_disabled": true,
+      "durable_turns": [
+        {
+          "id": "01M7ES329QDMNP16T68823YNNK",
+          "parent_turn_id": null,
+          "root_turn_id": "01M7ES329QDMNP16T68823YNNK",
+          "workspace_instance_id": "01M7EPT88TWCN64NSE73TA6D84",
+          "status": "completed",
+          "time_finished": "2026-11-15 04:57:47.511596"
+        },
+        {
+          "id": "01M7ES32B87MKH7TB9ZP18W1B2",
+          "parent_turn_id": "01M7ES329QDMNP16T68823YNNK",
+          "root_turn_id": "01M7ES329QDMNP16T68823YNNK",
+          "workspace_instance_id": "01M7EPT88TWCN64NSE73TA6D84",
+          "status": "completed",
+          "time_finished": "2026-11-15 04:57:47.195642"
+        },
+        {
+          "id": "01M7ES32BB10SJ3W1HXV612EFT",
+          "parent_turn_id": "01M7ES329QDMNP16T68823YNNK",
+          "root_turn_id": "01M7ES329QDMNP16T68823YNNK",
+          "workspace_instance_id": "01M7EPT88TWCN64NSE73TA6D84",
+          "status": "completed",
+          "time_finished": "2026-11-15 04:57:47.501649"
+        }
+      ],
+      "no_new_model_calls": true,
+      "accounting": {
+        "total_tokens": 230342,
+        "reserved_tokens": 0,
+        "states": {
+          "settled": 30
+        },
+        "requests": 30,
+        "sources": {
+          "agent": 30
+        },
+        "request_ids": [
+          "7f8277c65e234cf29f3e45cea0a73bd6",
+          "6a12547ab1e14ab5a8d765729810f1e0",
+          "01fb9bbffe114796ac210a88ad50c0fb",
+          "53c77c7eb05c45bf92a27f80e7f331c7",
+          "0603a98dad0448af905582bd86447c3a",
+          "64fd0baa1992417b8ab4db286a8dd5e2",
+          "29e8baa379f4420caeab4386a8d5e464",
+          "0374e456eaec42b38dcc4e18ccd59595",
+          "cde86347d17d4ea6b9e5da702c65b06a",
+          "b40982dd77ee4798be9f5ac7d6fe82aa",
+          "fc1ef10337a14fcaade44f632b1b19ae",
+          "cf2353235a4947108758535e6ae3a48a",
+          "d01da32c950a4aa0a8182e29d13b6d1c",
+          "9c9ea5a7ee1e4c66a132e3e985abd191",
+          "58bbd9cd1c264df29c4f5316d7222301",
+          "e7cdbffad603423f9444c391eded913c",
+          "59609b5e11664047ac1404d688f59632",
+          "904cc1eab0134c78b60c928782dc4388",
+          "2485c337a87b41029fe94d2cf7c4fd93",
+          "a2bfa997ca574facae6bc5cc7ecc91b7",
+          "8d70ccedcb894aaea05ace6a69ecab82",
+          "f7cf7dbd07034dc6a97e5581074d7885",
+          "6e641c28f85e41859eae1c0030d3eeeb",
+          "04a150bcd113486099339e19db827c8b",
+          "24736c2602b24f608162e42c02bc9b96",
+          "27d52a812a53491ea946a7fe2f4a2405",
+          "d3b11bd26a7c4c19af7ff6a464c35bce",
+          "599636ac1f77429e915b77bf96ddb9aa",
+          "b1909f2d72e54a9880f56fb9194c3b37",
+          "2db916273fda46b69d3a60ce52574dca"
+        ]
+      }
+    }
+  },
+  "failed_attempts": [
+    {
+      "phase": "batch",
+      "error": "GET /api/sessions/01M7EQQ30YW6HFCPYTTMPTJJ97/children HTTP 404 (http_error)",
+      "actual_token_delta": null
+    }
+  ],
+  "negative_cases": [
+    {
+      "kind": "quota_rejected_before_provider",
+      "session_id": "01M7EPT82EMAAN69Z0TD8TWPGS",
+      "code": "quota_exceeded",
+      "actual_tokens": 0,
+      "side_effects_started": false,
+      "initial_monthly_quota": 100000
+    },
+    {
+      "kind": "test_harness_incorrect_empty_session_goal_snapshot",
+      "actual_tokens": 92752,
+      "attempts": 2,
+      "observed": "tools denied fail-closed; corrected to original POST /chat/goal protocol, no repeat"
+    },
+    {
+      "kind": "manual_resume_continuation_gate",
+      "session_id": "01M7EQBQFZJC0JS19T4HJQXEVT",
+      "observed": "409 with max_continuations=0",
+      "fixed": "explicit resume keeps Token/Cost/Time/revision budgets; same session completed"
+    },
+    {
+      "kind": "task_batch_missing_parent_checkpoint",
+      "session_id": "01M7EQQ30YW6HFCPYTTMPTJJ97",
+      "child_sessions": [
+        "01M7EQQ3118KVW5A3CGZWJ7CK7",
+        "01M7EQQ3118KVW5A3CGZWJ7CK9"
+      ],
+      "observed": "CheckpointNotFoundError: Parent turn not found before child provider request",
+      "status": "fixed_and_real_retest_passed",
+      "superseded_by_session": "01M7ES329MF5X69H1K2VRBCK08"
+    }
+  ],
+  "accounting_checkpoints": [
+    {
+      "after": "incorrect empty-snapshot goal attempts and background memory",
+      "actual_cumulative_tokens": 94197
+    },
+    {
+      "after": "real MCP and initial safely paused Goal",
+      "actual_cumulative_tokens": 161005
+    },
+    {
+      "after": "failed task-batch and prior background memory",
+      "actual_cumulative_tokens": 162438
+    },
+    {
+      "after": "same Goal resumed/completed",
+      "actual_cumulative_tokens": 194633
+    },
+    {
+      "after": "real memory refresh and authenticated export/download",
+      "actual_cumulative_tokens": 197528
+    },
+    {
+      "after": "manual and interval automation",
+      "actual_cumulative_tokens": 213071
+    },
+    {
+      "after": "automation deferred memory settled",
+      "actual_cumulative_tokens": 214508
+    },
+    {
+      "after": "final image real parallel two Agents",
+      "actual_cumulative_tokens": 228836
+    },
+    {
+      "after": "final task-batch deferred memory settled",
+      "actual_cumulative_tokens": 230342
+    }
+  ],
+  "internal_actual_token_limit": 300000
+}

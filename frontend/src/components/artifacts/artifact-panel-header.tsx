@@ -1,9 +1,13 @@
 "use client";
 
-import { X, ChevronLeft, ChevronRight, Code, FileText, FileSpreadsheet, Globe, Image, LayoutDashboard, GitBranch, Music, Presentation, Video } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
+import { X, ChevronLeft, ChevronRight, Code, Download, FileText, FileSpreadsheet, Globe, Image, LayoutDashboard, GitBranch, Loader2, Music, Presentation, Video } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { downloadWorkspaceFile } from "@/lib/workspace-file-download";
 import { useArtifactStore } from "@/stores/artifact-store";
+import { useWorkspaceStore } from "@/stores/workspace-store";
 import type { ArtifactType } from "@/types/artifact";
 
 const TYPE_CONFIG: Record<ArtifactType, { icon: React.ComponentType<{ className?: string }>; labelKey: string }> = {
@@ -35,6 +39,25 @@ export function ArtifactPanelHeader() {
   const versionHistory = useArtifactStore((s) => s.versionHistory);
   const activeVersionIndex = useArtifactStore((s) => s.activeVersionIndex);
   const goToVersion = useArtifactStore((s) => s.goToVersion);
+  const workspace = useWorkspaceStore((s) => s.activeWorkspacePath);
+  const [downloading, setDownloading] = useState(false);
+  const downloadInFlight = useRef(false);
+  const filePath = activeArtifact?.filePath;
+
+  const handleDownload = useCallback(async () => {
+    if (!filePath || downloadInFlight.current) return;
+    downloadInFlight.current = true;
+    setDownloading(true);
+    try {
+      await downloadWorkspaceFile(filePath, workspace);
+    } catch (error) {
+      console.error("Failed to download preview file:", error);
+      toast.error(t("fileSaveFailed"));
+    } finally {
+      downloadInFlight.current = false;
+      setDownloading(false);
+    }
+  }, [filePath, t, workspace]);
 
   if (!activeArtifact) return null;
 
@@ -50,77 +73,63 @@ export function ArtifactPanelHeader() {
   const hasVersions = versions.length > 1;
 
   return (
-    <div className="flex items-center justify-between h-12 px-4 shrink-0 border-b border-[var(--border-default)]">
-      <div className="flex items-center gap-2 min-w-0">
-        {/* Type badge */}
-        <span className="flex items-center gap-1 rounded-md bg-[var(--surface-tertiary)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-secondary)] uppercase tracking-wide shrink-0">
-          <TypeIcon className="h-3 w-3" />
+    <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-[var(--border-default)] bg-[var(--surface-primary)] px-4 py-2">
+      <div className="flex min-w-0 flex-1 items-center gap-2">
+        <span className="flex shrink-0 items-center gap-1.5 rounded-md bg-[var(--surface-secondary)] px-2 py-1 text-xs font-medium text-[var(--text-secondary)]">
+          <TypeIcon className="h-3.5 w-3.5" aria-hidden="true" />
           {t(config.labelKey)}
         </span>
-        {/* Title */}
-        <span className="text-sm font-medium text-[var(--text-primary)] truncate">
+        <span className="min-w-0 truncate text-sm font-medium text-[var(--text-primary)]" title={activeArtifact.title}>
           {activeArtifact.title}
         </span>
-        {/* Version selector */}
-        {hasVersions && (
-          <div className="flex items-center gap-0.5 shrink-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6"
-              onClick={() => goToVersion(activeVersionIndex - 1)}
-              disabled={activeVersionIndex <= 0}
-            >
-              <ChevronLeft className="h-3 w-3" />
-            </Button>
-            <span className="text-[10px] text-[var(--text-tertiary)] tabular-nums whitespace-nowrap">
-              {t("artifactVersionPosition", { current: activeVersionIndex + 1, total: versions.length })}
-            </span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6"
-              onClick={() => goToVersion(activeVersionIndex + 1)}
-              disabled={activeVersionIndex >= versions.length - 1}
-            >
-              <ChevronRight className="h-3 w-3" />
-            </Button>
-          </div>
-        )}
       </div>
-
-      <div className="flex items-center gap-1 shrink-0">
-        {/* Prev/Next navigation */}
-        {artifacts.length > 1 && (
-          <>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={goPrev}
-              disabled={!hasPrev}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-[10px] text-[var(--text-tertiary)] tabular-nums">
-              {activeIndex + 1}/{artifacts.length}
-            </span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={goNext}
-              disabled={!hasNext}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </>
-        )}
-        {/* Close */}
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={close}>
-          <X className="h-4 w-4" />
+      {filePath && (
+        <Button
+          data-testid="file-preview-download"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 shrink-0"
+          onClick={() => void handleDownload()}
+          disabled={downloading}
+          aria-busy={downloading}
+          aria-label={t("download")}
+          title={t("download")}
+        >
+          {downloading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Download className="h-4 w-4" aria-hidden="true" />}
         </Button>
-      </div>
+      )}
+      <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={close} aria-label={t("artifactClosePreview")}>
+        <X className="h-4 w-4" aria-hidden="true" />
+      </Button>
+
+      {(hasVersions || artifacts.length > 1) && (
+        <div className="flex w-full flex-wrap items-center justify-between gap-2">
+          {hasVersions && (
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => goToVersion(activeVersionIndex - 1)} disabled={activeVersionIndex <= 0} aria-label={t("artifactPreviousVersion")}>
+                <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+              </Button>
+              <span className="whitespace-nowrap text-xs tabular-nums text-[var(--text-secondary)]">
+                {t("artifactVersionPosition", { current: activeVersionIndex + 1, total: versions.length })}
+              </span>
+              <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => goToVersion(activeVersionIndex + 1)} disabled={activeVersionIndex >= versions.length - 1} aria-label={t("artifactNextVersion")}>
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </div>
+          )}
+          {artifacts.length > 1 && (
+            <div className="ml-auto flex items-center gap-1">
+              <Button variant="ghost" size="icon" className="h-9 w-9" onClick={goPrev} disabled={!hasPrev} aria-label={t("artifactPrevious")}>
+                <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+              </Button>
+              <span className="text-xs tabular-nums text-[var(--text-secondary)]">{activeIndex + 1}/{artifacts.length}</span>
+              <Button variant="ghost" size="icon" className="h-9 w-9" onClick={goNext} disabled={!hasNext} aria-label={t("artifactNext")}>
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

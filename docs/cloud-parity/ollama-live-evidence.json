@@ -1,0 +1,232 @@
+{
+  "user_id": "943a5a82a3c74cbf8510751dcf41e2e8",
+  "production_http": true,
+  "real_docker": true,
+  "setup_elapsed_seconds": 458.5,
+  "setup_terminal": {
+    "status": "ready",
+    "base_url": "http://127.0.0.1:11434"
+  },
+  "server_status": {
+    "binary_installed": true,
+    "running": true,
+    "port": 11434,
+    "base_url": "http://127.0.0.1:11434",
+    "version": "0.40.16",
+    "models_dir": "/tenant/state/ollama-models",
+    "disk_usage_bytes": 0
+  },
+  "pull_terminal": {
+    "status": "success"
+  },
+  "installed_models": {
+    "models": [
+      {
+        "name": "qwen2.5:0.5b",
+        "model": "qwen2.5:0.5b",
+        "modified_at": "2026-11-15T04:41:23.594276126Z",
+        "size": 397821319,
+        "digest": "a8b0c51577010a279d933d14c2a8ab4b268079d44c5c8830c0a93900f1827c67",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen2",
+          "families": [
+            "qwen2"
+          ],
+          "parameter_size": "494.03M",
+          "quantization_level": "Q4_K_M",
+          "context_length": 32768,
+          "embedding_length": 896,
+          "runner": "ggml"
+        },
+        "capabilities": [
+          "completion",
+          "tools"
+        ]
+      }
+    ]
+  },
+  "constraints": {
+    "uid": 10001,
+    "server_processes": [
+      "231"
+    ],
+    "forbidden_environment_names": [],
+    "disk_free_GiB": 4.12,
+    "release": {
+      "source": "https://github.com/ollama/ollama/releases/latest/download/ollama-linux-arm64.tar.zst",
+      "sha256": "e45b8e6dcb86cb9f3057396351655079c9a4879b4ced2678c9350d375dcbc224",
+      "verified": "official HTTPS origins",
+      "vendor_checksum": "not supplied"
+    }
+  },
+  "model_capabilities": [
+    "completion",
+    "tools"
+  ],
+  "actual_metered_sdk": {
+    "answer": "5",
+    "provider_usage": {
+      "input": 32,
+      "output": 2,
+      "reasoning": 0,
+      "cache_read": 0,
+      "cache_write": 0,
+      "total": 34
+    },
+    "errors": []
+  },
+  "sdk_usage_records": [
+    {
+      "id": "5fc3a930af0d43c8b8a7504bcc1f9d28",
+      "user_id": "943a5a82a3c74cbf8510751dcf41e2e8",
+      "job_id": null,
+      "model_id": "tenant/ollama/qwen2.5:0.5b",
+      "source": "tenant-provider",
+      "state": "settled",
+      "reserved_tokens": 437,
+      "total_tokens": 34,
+      "cost_microusd": 0,
+      "price_snapshot": {
+        "version": 1,
+        "status": "unknown",
+        "route_id": "tenant/ollama/qwen2.5:0.5b",
+        "currency": "USD",
+        "calculation": "input_output_total_ceil_microusd_v1"
+      },
+      "normalized_usage": {
+        "input_total": 32,
+        "output_total": 2,
+        "cache_read": 0,
+        "cache_write": 0,
+        "reasoning": 0,
+        "total_tokens": 34,
+        "usage_status": "complete",
+        "normalization_version": 1,
+        "provider_total": 34,
+        "input_uncached": 32,
+        "output_visible": 2,
+        "cost_status": "unknown"
+      },
+      "error": "",
+      "created_at": "2026-11-15T04:42:58.336611+00:00",
+      "dispatched_at": "2026-11-15T04:42:58.341304+00:00",
+      "settled_at": "2026-11-15T04:43:00.459197+00:00"
+    }
+  ],
+  "original_agent": {
+    "stream_id": "01M7ER82SQGA2GEQ36QX0JQ2WQ",
+    "session_id": "01M7ER82SQGA2GEQ36QX0JQ2WP",
+    "events": {
+      "step-start": 1,
+      "model-loading": 1,
+      "heartbeat": 25,
+      "text-delta": 1,
+      "step-finish": 1,
+      "title-update": 1,
+      "done": 1
+    },
+    "answer": "4",
+    "errors": [],
+    "usage_records": [
+      {
+        "id": "763ffa7e88be4917b507c0d5b2a31337",
+        "user_id": "943a5a82a3c74cbf8510751dcf41e2e8",
+        "job_id": null,
+        "model_id": "tenant/ollama/ollama/qwen2.5:0.5b",
+        "source": "tenant-provider",
+        "state": "settled",
+        "reserved_tokens": 64727,
+        "total_tokens": 11339,
+        "cost_microusd": 0,
+        "price_snapshot": {
+          "version": 1,
+          "status": "unknown",
+          "route_id": "tenant/ollama/ollama/qwen2.5:0.5b",
+          "currency": "USD",
+          "calculation": "input_output_total_ceil_microusd_v1"
+        },
+        "normalized_usage": {
+          "input_total": 11337,
+          "output_total": 2,
+          "cache_read": 10244,
+          "cache_write": 0,
+          "reasoning": 0,
+          "total_tokens": 11339,
+          "usage_status": "complete",
+          "normalization_version": 1,
+          "provider_total": 11339,
+          "input_uncached": 1093,
+          "output_visible": 2,
+          "cost_status": "unknown"
+        },
+        "error": "",
+        "created_at": "2026-11-15T04:43:00.903316+00:00",
+        "dispatched_at": "2026-11-15T04:43:00.906536+00:00",
+        "settled_at": "2026-11-15T04:49:18.329761+00:00"
+      }
+    ]
+  },
+  "historical_attempt_observation": {
+    "scope": "Original Agent run before owned SDK retry fix",
+    "observed_first_attempt": "Ollama log returned HTTP500 after five minutes during CPU prefill",
+    "successful_final_receipt_tokens": 11339,
+    "failed_attempt_native_usage": null,
+    "failed_attempt_separate_ledger_record": false,
+    "reconciliation_status": "Unresolved historical observation; do not infer zero failed-attempt usage or rewrite recorded success as complete attempt coverage",
+    "before_fix_development_test": true,
+    "historical_usage_reconstructed": false,
+    "successful_final_receipt_scope": "11,339 tokens refer only to the successful final native receipt, not all hidden attempts"
+  },
+  "retry_fix_verification": {
+    "code": "backend/app/cloud/tenant_provider_bridge.py:register",
+    "policy": "Set real owned-provider AsyncOpenAI.max_retries=0 before wrapping and registering; processor retry requires a new metered stream invocation",
+    "test": "tests/test_cloud/test_tenant_provider_metering.py::test_owned_sdk_has_one_http_attempt_per_admission",
+    "independent_result": "1 passed in 0.37s",
+    "transport": "Real AsyncOpenAI SDK with HTTP MockTransport returning500; no model called",
+    "assertions": {
+      "http_attempts": 1,
+      "central_admit_calls": 1,
+      "central_finish_calls": 1,
+      "final_usage": null
+    },
+    "historical_receipt_replaced": false,
+    "full_cloud_suite": "317 passed, 1 skipped (root run before later parity additions)"
+  },
+  "quality": {
+    "small_sdk_arithmetic_correct": true,
+    "full_agent_arithmetic_correct": false,
+    "full_agent_expected": "5",
+    "full_agent_actual": "4",
+    "conclusion": "Real execution and final usage receipt verified; 0.5B semantic quality in the full Agent context failed"
+  },
+  "automatic_restart_recovery": {
+    "operation": "Authenticated original-engine runtime restart with persisted tenant volume; no setup/start/pull or chat request",
+    "runtime": {
+      "status": "ready",
+      "ready": true,
+      "workspace": "/tenant/workspaces"
+    },
+    "automatic_recovery_seconds": 3.34,
+    "server_status": {
+      "binary_installed": true,
+      "running": true,
+      "port": 11434,
+      "base_url": "http://127.0.0.1:11434",
+      "version": "0.40.16",
+      "models_dir": "/tenant/state/ollama-models",
+      "disk_usage_bytes": 397828195
+    },
+    "preserved_models": [
+      "qwen2.5:0.5b"
+    ],
+    "original_catalog_has_ollama": true,
+    "new_ledger_requests": 0,
+    "chat_generation_requested_by_verifier": false,
+    "startup_warmup": "Original lifecycle may load saved last-model weights using /api/generate with empty prompt; verifier sends no chat/generation request",
+    "actual_container_image": "sha256:d2a754e0528386f7e3c6a6ec2a91417f626fb236629a3f38cc6899ff26d5eb86",
+    "configuration_tests": "10 passed in 3.19s, including actual create_app default true and persisted true/false",
+    "binary_ownership": "Existing private tenant manager; no host/global binary adoption"
+  }
+}

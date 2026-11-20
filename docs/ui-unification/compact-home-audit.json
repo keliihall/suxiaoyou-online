@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-11-15T10:13:25.413683+00:00",
+  "scope": "苏小有 Online 极简首页、统一更多操作与可折叠导航",
+  "status": "complete",
+  "implemented": [
+    "默认首页仅标题与输入框，输入框下不铺开推荐或工作区信息",
+    "输入工具区保留附件、更多、当前模型、发送或停止四个入口",
+    "推荐、执行模式、文件夹上传、多智能体任务、工作区及历史上下文用量收进一个更多菜单；保留原业务回调",
+    "Web工作台与设置共用64px折叠栏，账户管理页68px折叠栏；刷新恢复，偏好按用户隔离",
+    "移动端保留完整导航抽屉；图标保持可访问名称、提示与44px触摸尺寸",
+    "搜索、目录和批量面板关闭后正确回焦；点击菜单外输入框可直接继续输入"
+  ],
+  "validation": {
+    "typescript": "passed",
+    "targeted_eslint": "passed",
+    "git_diff_check": "passed",
+    "production_web_build": "passed",
+    "browser_regression": {
+      "unique_tests_passed": 55,
+      "cloud": 40,
+      "desktop_workbench": 15,
+      "new_compact_navigation_tests": 10,
+      "flaky": 0,
+      "browser": "Playwright Chromium",
+      "data_mode": "isolated API fixtures; business operations were exercised only against fixtures"
+    },
+    "contrast": {
+      "state_snapshots": 94,
+      "style_samples": 1345,
+      "failures": 0,
+      "manual_review_samples": 0,
+      "minimum_ratio_by_theme": {
+        "light": 4.56,
+        "dark": 4.55
+      },
+      "scope": "默认深浅主题、已覆盖HTML文字与表单状态的浏览器计算颜色；非完整WCAG认证"
+    },
+    "live_browser": {
+      "tool": "Orca embedded browser",
+      "url": "http://localhost:3018",
+      "actual_backend": true,
+      "widths_px": [
+        320,
+        1192
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "result": "真实账户首页、64px工作台刷新、64px设置导航、68px后台刷新、云端目录加载、320px More和多智能体面板、Escape回焦及一次点击输入框均通过；无横向溢出",
+      "mobile_composer_height_px": 127.6875,
+      "composer_button_count": 4,
+      "touch_target_height_px": 44,
+      "preferences_restored_after_checks": true,
+      "tasks_or_configurations_submitted": false,
+      "api_worker_or_tenant_restart": false,
+      "health": {
+        "web_page_http": 200,
+        "build_asset_http": 200,
+        "cloud_livez_http": 200,
+        "cloud_readyz_http": 200,
+        "authenticated_tenant_health_http": 200
+      }
+    }
+  },
+  "runtime": {
+    "url": "http://localhost:3018",
+    "web_dist": ".next-ui-compact-final",
+    "build_id": "GUYeZmCcvea6lbmh58BCF",
+    "build_exit_code": 0,
+    "build_asset_http_status": 200,
+    "status": "running",
+    "api_and_worker_restarted": false,
+    "preview_3318_stopped": true,
+    "existing_tenant_containers": {
+      "before": 5,
+      "after": 5,
+      "all_previous_still_running": true,
+      "modified": false
+    },
+    "docker_image": {
+      "status": "not_updated",
+      "reason": "构建宿主4GB内存限制；两次构建编译worker遭global OOM / SIGKILL，保留五个运行用户容器，未进一步重试",
+      "current_tag_image": {
+        "tag": "suxiaoyou-cloud-web:local",
+        "id": "sha256:b12e5edf418110c01aa682c31066bd513d0fd51fd1c1e228e004cf14183c67f6",
+        "size_bytes": 2416459651,
+        "platform": "linux/arm64",
+        "runtime_node_options_present": false,
+        "contains_this_ui_revision": false
+      },
+      "deployed_container": false
+    },
+    "docker_build_attempts": [
+      {
+        "attempt": 1,
+        "heap_mib": 640,
+        "exit_code": 130,
+        "reason": "为纳入最终外部点击焦点修复，主动取消构建"
+      },
+      {
+        "attempt": 2,
+        "heap_mib": 640,
+        "exit_code": 1,
+        "reason": "global OOM / SIGKILL",
+        "node_anon_rss_kib": 919536
+      },
+      {
+        "attempt": 3,
+        "heap_mib": 600,
+        "semi_space_mib": 8,
+        "exit_code": 1,
+        "reason": "global OOM / SIGKILL；有界重试后停止",
+        "node_anon_rss_kib": 883088
+      }
+    ]
+  },
+  "implementation": {
+    "sha256": {
+      "frontend/src/components/layout/sidebar.tsx": "f9244657bd664263fb816e345f9b0a04ef64238af71807498d2cdf7a57abdbe4",
+      "frontend/src/components/layout/sidebar-header.tsx": "959c69e48a3e628a848789c077ed10c5ae07a2ee5b4b0c440e1df4e5ebfda8f8",
+      "frontend/src/components/layout/sidebar-nav.tsx": "a8680570197290b938ae51bbd069f5e03f5a2f08f19de02626e15735abd172e7",
+      "frontend/src/components/layout/sidebar-footer.tsx": "44d9ea20b9a84291f83ace9d0a529056d5a94399a432b580200aecee73891e82",
+      "frontend/src/components/layout/projects-toolbar.tsx": "9570771c1256e7ff4137e88c9e76da39b04a8812f6f33e2c31f490c729c20a1c",
+      "frontend/src/components/layout/search-command-dialog.tsx": "9b6fa8cb1cbd365cea84a648a2b0882206d5e5b245f8c73e41aacf3e452089ea",
+      "frontend/src/stores/sidebar-store.ts": "6cae68a22f161b935e58ff54916fd3d121417816ee023a5b52f43de5c28a44af",
+      "frontend/src/app/(main)/desktop-main-layout.tsx": "3efb1d5e767d4a380e84a98f2e02f72a4c5ad9d0af01fd8afebf4c34d39fada9",
+      "frontend/src/components/chat/chat-header.tsx": "ff9af042e6165ea01a41af134ed9369e7acded7453ee737d26c7370d199fe220",
+      "frontend/src/components/settings/settings-sidebar.tsx": "aaeeb3283500685e5c03863b411cc4bc6660844c4e1a7bb8967f177f28696139",
+      "frontend/src/app/cloud/cloud-app.tsx": "8a6accc979f5ff1182b3d472e8a8875c2ba83a3f986a333c415f3f907f2e65aa",
+      "frontend/src/app/cloud/cloud.css": "e5bf43a17bde3d1c1185541aba450c30795ab004a458015149a6462ec62cd5c7",
+      "frontend/src/components/chat/landing.tsx": "365bd8c0d2f9516956fd490d71b13a332bac2fd99b4d4251bedfc3a869292c98",
+      "frontend/src/components/chat/chat-form.tsx": "9ff8fff75ee7ab06677dbd4f2e6e11b70795f38863bd379e370a89072b8acd54",
+      "frontend/src/components/chat/chat-actions.tsx": "554f578ac69f2a700b91e81df345f59668f4be63a9c4c87908015957d44f12b3",
+      "frontend/src/components/chat/workspace-toggle.tsx": "e1e5676ca00347a2bd8fe0aeef0b472444201262c6d4bfbb8031238ac1fe5e9a",
+      "frontend/src/components/chat/composer-overflow.tsx": "0d35eb0f3432b7b2d972671842e07bf8c466de5d3c1429196d284160acfdf3fe",
+      "frontend/src/i18n/locales/zh/chat.json": "078b0485aeff4b6df48bf27d7702f30680e8e7f20dc98a5f0870c0c7e4d546a6",
+      "frontend/src/i18n/locales/en/chat.json": "d3e67133c00585c2c3f5fa713f27813609d9f9a9ab765d2017d5d5277ea6a113"
+    }
+  },
+  "private_evidence": "frontend/test-results/ui-compact (git ignored; screenshots may contain real account data; not published)",
+  "limitations": [
+    "新版本地Web已真实运行；当前Docker标签仍是旧镜像，本轮镜像打包因宿主内存不足未完成。"
+  ]
+}

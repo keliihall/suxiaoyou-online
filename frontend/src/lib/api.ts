@@ -9,6 +9,7 @@ import {
 import { getRemoteConfig } from "./remote-connection";
 import { networkRetryLimit } from "./api-retry-policy";
 import i18n from "@/i18n/config";
+import { IS_CLOUD, cloudAuthHeaders, leaveCloudWorkspace, trackCloudRequest } from "./cloud-session";
 
 class ApiError extends Error {
   constructor(
@@ -38,6 +39,7 @@ export type ApiRequestInit = RequestInit & {
 };
 
 async function resolveRequestUrl(url: string): Promise<string> {
+  if (IS_CLOUD) return url;
   const remoteConfig = getRemoteConfig();
   if (remoteConfig) {
     return url.startsWith("http") ? url : `${remoteConfig.url}${url}`;
@@ -77,8 +79,10 @@ export async function apiFetch(
   for (const [key, value] of Object.entries(authHeaders)) {
     if (!headers.has(key)) headers.set(key, value);
   }
+  for (const [key, value] of Object.entries(cloudAuthHeaders(method))) headers.set(key, value);
 
   const controller = new AbortController();
+  const untrack = trackCloudRequest(controller);
   let didTimeout = false;
   const timeout = setTimeout(() => {
     didTimeout = true;
@@ -95,9 +99,11 @@ export async function apiFetch(
   try {
     const res = await fetch(resolvedUrl, {
       ...fetchOptions,
+      ...(IS_CLOUD ? { credentials: "same-origin" as const, cache: "no-store" as const } : {}),
       headers,
       signal: controller.signal,
     });
+    if (IS_CLOUD && res.status === 401) void leaveCloudWorkspace();
     return res;
   } catch (err) {
     if (didTimeout) {
@@ -105,6 +111,7 @@ export async function apiFetch(
     }
     throw err;
   } finally {
+    untrack();
     clearTimeout(timeout);
     callerSignal?.removeEventListener("abort", abortFromCaller);
   }
@@ -124,7 +131,9 @@ async function request<T>(
   const remoteConfig = getRemoteConfig();
 
   let resolvedUrl: string;
-  if (remoteConfig) {
+  if (IS_CLOUD) {
+    resolvedUrl = url;
+  } else if (remoteConfig) {
     resolvedUrl = url.startsWith("http") ? url : `${remoteConfig.url}${url}`;
   } else if (IS_DESKTOP) {
     const backend = await getBackendUrl();
@@ -148,6 +157,7 @@ async function request<T>(
   // calls, so no header is needed.
   for (let attempt = 0; attempt <= retryLimit; attempt++) {
     const controller = new AbortController();
+    const untrack = trackCloudRequest(controller);
     let didTimeout = false;
     const abortFromCaller = () => controller.abort();
     if (callerSignal) {
@@ -164,21 +174,22 @@ async function request<T>(
       // both its port and per-run bearer token; reusing either stale value
       // makes an otherwise safe GET retry fail with an authentication error.
       const authHeaders = await buildAuthHeaders();
+      const headers = new Headers(fetchOptions.headers);
+      if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+      if (!headers.has("Accept-Language")) headers.set("Accept-Language", i18n.language || "en");
+      for (const [key, value] of Object.entries({ ...authHeaders, ...cloudAuthHeaders(method) })) headers.set(key, value);
       if (callerSignal?.aborted) {
         throw callerSignal.reason ?? new DOMException("The operation was aborted", "AbortError");
       }
       const res = await fetch(resolvedUrl, {
-        headers: {
-          "Content-Type": "application/json",
-          "Accept-Language": i18n.language || "en",
-          ...authHeaders,
-          ...fetchOptions.headers,
-        },
         ...fetchOptions,
+        ...(IS_CLOUD ? { credentials: "same-origin" as const, cache: "no-store" as const } : {}),
+        headers,
         signal: controller.signal,
       });
 
       if (!res.ok) {
+        if (IS_CLOUD && res.status === 401) void leaveCloudWorkspace();
         const raw = await res.text();
         let body: unknown;
         try {
@@ -217,6 +228,7 @@ async function request<T>(
       }
       throw err;
     } finally {
+      untrack();
       clearTimeout(timeout);
       callerSignal?.removeEventListener("abort", abortFromCaller);
     }

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { defaultWorkModeSettings } from "../../src/lib/work-mode.ts";
 
 const onboardingSource = readFileSync("src/components/onboarding/onboarding-screen.tsx", "utf8");
 const settingsStoreSource = readFileSync("src/stores/settings-store.ts", "utf8");
@@ -28,12 +29,11 @@ test("first-run onboarding renders copy through i18n", () => {
   assert.match(onboardingSource, /disabled=\{!hasWorkspace\}/);
 });
 
-test("v0.9 first-run defaults to Ask and requires a workspace", () => {
-  assert.match(settingsStoreSource, /workMode: "ask" as WorkMode/);
-  assert.match(
-    settingsStoreSource,
-    /permissionPresets: \{ fileChanges: false, runCommands: false \}/,
-  );
+test("desktop first-run defaults to Ask and requires a workspace", () => {
+  assert.deepEqual(defaultWorkModeSettings(false), {
+    workMode: "ask", selectedAgent: "build", safeMode: false,
+    permissionPresets: { fileChanges: false, runCommands: false },
+  });
   assert.match(
     settingsStoreSource,
     /const normalizedWorkspace = workspace\?\.trim\(\);[\s\S]*if \(!normalizedWorkspace \|\| normalizedWorkspace === "\."\) return/,

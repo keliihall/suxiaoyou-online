@@ -21,6 +21,8 @@ from app.i18n import Language, localize
 from app.models.message import Message, Part
 from app.models.idempotency_record import IdempotencyRecord
 from app.models.session import Session
+from app.models.session_context_projection import SessionContextProjection
+from app.session.context_projection import SOURCE_MESSAGE_ID, pruned_part_ids, select_context_messages
 from app.provider.registry import ProviderRegistry
 from app.schemas.session import (
     SessionCompactionRequest,
@@ -529,6 +531,7 @@ async def get_message_history_for_llm(
     model_id: str | None = None,
     process_language: Language | None = None,
     turn_run_id: str | None = None,
+    include_source_ids: bool = False,
 ) -> list[dict[str, Any]]:
     """Load message history formatted for LLM consumption.
 
@@ -551,30 +554,10 @@ async def get_message_history_for_llm(
     skipped — see ``_provider_uses_reasoning_content``.
     """
     messages = await get_messages(db, session_id)
-    llm_messages = []
-
-    # After a compaction summary is written, that summary becomes the new
-    # history anchor. Everything before it has already been summarized and
-    # should not be fed back to the model again.
-    compaction_anchor = 0
-    for i, msg in enumerate(messages):
-        has_compaction_part = any(
-            p.data and p.data.get("type") == "compaction"
-            for p in msg.parts
-        )
-        has_summary_text = any(
-            p.data
-            and p.data.get("type") == "text"
-            and str(p.data.get("text", "")).startswith(
-                ("[Context Summary]", "[上下文摘要]")
-            )
-            for p in msg.parts
-        )
-        if has_compaction_part and has_summary_text:
-            compaction_anchor = i
-
-    if compaction_anchor:
-        messages = messages[compaction_anchor:]
+    projection = await db.get(SessionContextProjection, session_id)
+    messages, boundary_text = select_context_messages(messages, projection)
+    pruned_ids = pruned_part_ids(projection)
+    llm_messages = [{"role": "user", "content": boundary_text}] if boundary_text else []
 
     echo_reasoning = _provider_uses_reasoning_content(provider_id, model_id)
     lineage_guard_enabled = bool(echo_reasoning and provider_id and model_id)
@@ -613,6 +596,7 @@ async def get_message_history_for_llm(
         return f"{head}\n\n{marker}\n\n{tail}"
 
     for message_index, msg in enumerate(messages):
+        frame_start = len(llm_messages)
         data = msg.data or {}
         role = data.get("role", "user")
 
@@ -696,7 +680,7 @@ async def get_message_history_for_llm(
 
                     # Tool result
                     output = state.get("output", "")
-                    if state.get("time_compacted"):
+                    if state.get("time_compacted") or part.id in pruned_ids:
                         output = localize(
                             process_language or "en",
                             "[已截断]",
@@ -771,6 +755,12 @@ async def get_message_history_for_llm(
 
             # Append tool results
             llm_messages.extend(tool_results)
+
+        # Only collapse planning opts into provenance. Ordinary Provider-bound
+        # history, including tool frames, never contains these private keys.
+        if include_source_ids:
+            for frame in llm_messages[frame_start:]:
+                frame[SOURCE_MESSAGE_ID] = msg.id
 
     return llm_messages
 

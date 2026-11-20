@@ -1,0 +1,90 @@
+{
+  "kind": "final-online-development-delivery-validation",
+  "checked_at": "2026-11-15T05:27:04.282054+00:00",
+  "desktop_baseline_commit": "aef0a6f145222c3e5ccdf65c434f9fb0b4e48f5c",
+  "architecture": "original full frontend and engine isolated per user, with central identity, managed credentials and usage admission",
+  "running_web": "http://localhost:3018/c/new",
+  "administration": "http://localhost:3018/cloud?manage=1",
+  "frontend_dist": ".next-parity-delivery",
+  "cloud_schema_revision": "cloud_0007",
+  "private_backup_before_schema_upgrade": true,
+  "images": {
+    "suxiaoyou-online-runtime:local": "sha256:d2a754e0528386f7e3c6a6ec2a91417f626fb236629a3f38cc6899ff26d5eb86",
+    "suxiaoyou-cloud-api:local": "sha256:a48cb0518e83e529c20782dd95fed761607079cb40cf597f4b36d9ccca48de29",
+    "suxiaoyou-cloud-web:local": "sha256:4ac180fb993387fcf02d1e006a1279975fe24f8c4c35ed8ab6e06d1c762f3ac5"
+  },
+  "checks": {
+    "api_readyz": true,
+    "web_http_200": true,
+    "production_browser_model_and_composer": true,
+    "production_browser_persisted_history": true,
+    "production_browser_no_horizontal_overflow": true,
+    "running_engine_matches_workspace_critical_source_files": 7,
+    "managed_deepseek_route_preserved": true,
+    "office_final_image_revision_upgrade": "approved revision 2 to revision 3, real PNG, explicit approval, stale CAS 409, no model calls"
+  },
+  "regression": {
+    "cloud": {
+      "passed": 358,
+      "skipped": 4,
+      "seconds": 43.62,
+      "database": "SQLite and dedicated real PostgreSQL",
+      "skip_reason": "original engine imports unavailable in lean cloud virtualenv"
+    },
+    "full_runtime_supplement": {
+      "passed": 12,
+      "seconds": 3.35,
+      "covers_all_four_lean_skips": true,
+      "note": "overlaps main suite; do not add counts"
+    },
+    "frontend_ui": {
+      "passed": 19,
+      "kind": "real browser with controlled API fixtures, distinct from live model evidence"
+    },
+    "original_core": {
+      "passed": 564,
+      "skipped": 2
+    },
+    "original_task_and_checkpoint": {
+      "passed": 63
+    },
+    "original_office": {
+      "passed": 163
+    }
+  },
+  "live_evidence": [
+    "parity-browser-validation.json",
+    "parity-persistent-validation.json",
+    "parity-subagent-checkpoint-validation.json",
+    "parity-runtime-validation.json",
+    "parity-runtime-control-validation.json",
+    "parity-office-validation.json",
+    "parity-deployment-validation.json",
+    "parity-acp-validation.json",
+    "ollama-live-evidence.json",
+    "mlx-live-http-evidence.json",
+    "mlx-live-agent-evidence.json"
+  ],
+  "protocol_evidence": [
+    "parity-custom-headers-validation.json",
+    "parity-route-inventory.json"
+  ],
+  "source_sha256": {
+    "backend/app/cloud/runtime_entry.py": "36b7c30ef8b172434dc29f593175954a5c46e0a0b3bb65f8aaf3099788330d85",
+    "backend/app/cloud/tenant_provider_bridge.py": "4daf50be00ce0fed70610b1658eb2ccc2a38ffcb5ebec46fff75f4fa22323335",
+    "backend/app/cloud/mlx_nodes.py": "fa0f92a089f11dc9df077dd4f1660b7c4bbd4236452e3c2c267e735f6f75dba2",
+    "backend/app/cloud/mlx_node_server.py": "250667508a6168c06266494c1257501a28e601205125482e6702898e075345fc",
+    "backend/app/cloud/custom_headers.py": "24904f4065611081c08a9cdadd0bd8a1b71a277b24084049733adf13b582b97e",
+    "backend/app/cloud/providers.py": "7c6b3c5eb6eb6dfa26289b41f4c012a224a77699c7765a982673668c3ed25dbb",
+    "backend/app/session/task_batch.py": "60ee423ba1420071bc181eae325869c8251d13e3fe8d7732e6b9905603f1dd45",
+    "backend/app/tool/builtin/task.py": "87ade778068581038a96fc51b93de79125aeb458134555ebea0fe4999c62f978",
+    "frontend/src/app/cloud/cloud-model-dialog.tsx": "18c6174c22769c649756e2e62f5f9463734fb2ef2986283b8e590622f8f66616"
+  },
+  "acceptance_limits": [
+    "External ChatGPT/Google OAuth and real SiliconFlow image billing require their own account credentials and remain explicitly unaccepted",
+    "Not every failure, concurrency, cancellation and long-context combination has live acceptance; see per-item matrix",
+    "Browser local filesystem/native window controls use web upload, preview/download and cloud runtime equivalents",
+    "User local compatible model services require an operator-configured cloud-reachable HTTPS endpoint",
+    "Tiny 0.5B model quality failures and the pre-fix Ollama implicit retry observation remain disclosed in evidence"
+  ]
+}

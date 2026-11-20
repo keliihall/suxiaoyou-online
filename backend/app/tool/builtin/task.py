@@ -120,6 +120,7 @@ class TaskTool(ToolDefinition):
             # Try to resume an existing child session
             async with session_factory() as db:
                 existing = await get_session(db, task_id)
+                parent = await get_session(db, ctx.session_id)
                 existing_workspace = (
                     str(Path(existing.directory).resolve())
                     if existing and existing.directory and existing.directory != "."
@@ -128,6 +129,7 @@ class TaskTool(ToolDefinition):
                 if (
                     existing
                     and existing.parent_id == ctx.session_id
+                    and existing.project_id == (parent.project_id if parent else None)
                     and existing_workspace == parent_workspace
                 ):
                     child_session_id = task_id
@@ -144,9 +146,11 @@ class TaskTool(ToolDefinition):
             child_session_id = generate_ulid()
             async with session_factory() as db:
                 async with db.begin():
+                    parent = await get_session(db, ctx.session_id)
                     await create_session(
                         db,
                         id=child_session_id,
+                        project_id=parent.project_id if parent else None,
                         parent_id=ctx.session_id,
                         directory=parent_workspace,
                         title=description,

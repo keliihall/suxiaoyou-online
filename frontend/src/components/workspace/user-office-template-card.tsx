@@ -536,6 +536,30 @@ export function UserOfficeTemplateCard({ sessionId }: { sessionId: string | null
     [t],
   );
 
+  const revalidateTemplate = useCallback(async (template: UserOfficeTemplate) => {
+    if (!sessionId || !context) return;
+    setBusyAction(actionKey("revalidate", template));
+    try {
+      const result = await api.post<UserTemplateMutationResponse>(
+        API.OFFICE_V2.USER_TEMPLATES.REVALIDATE(template.template_ref), {
+          session_id: sessionId,
+          workspace_instance_id: context.workspace_instance_id,
+          revision: template.revision,
+          expected_state_version: template.state_version,
+          expected_source_sha256: template.source.sha256,
+          expected_render_cache_key: template.render_evidence.cache_key,
+        });
+      await load();
+      setPreviewSelection({ templateRef: result.template.template_ref,
+        revision: result.template.revision, pageNumber: 1 });
+      toast.success(t("userOfficeTemplateRevalidated"));
+    } catch (error) {
+      toast.error(templateErrorMessage(error, t("userOfficeTemplateRevalidateFailed")));
+    } finally {
+      setBusyAction(null);
+    }
+  }, [context, load, sessionId, t, templateErrorMessage]);
+
   const statusLabel = useCallback(
     (status: UserOfficeTemplate["status"]) => {
       if (status === "needs_confirmation") {
@@ -554,16 +578,16 @@ export function UserOfficeTemplateCard({ sessionId }: { sessionId: string | null
     return (
       <section
         aria-label={t("userOfficeTemplateTitle")}
-        className="rounded-3xl border border-amber-500/30 bg-amber-500/5 p-4"
+        className="rounded-[var(--radius-card)] border border-[var(--border-default)] bg-[var(--surface-primary)] p-4"
       >
         <p className="flex items-center gap-2 text-[13px] font-medium text-[var(--text-primary)]">
-          <AlertTriangle className="h-4 w-4 text-amber-500" />
+          <AlertTriangle className="h-4 w-4 text-[var(--color-warning)]" />
           {t("userOfficeTemplateTitle")}
-          <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-500">
+          <span className="rounded-full bg-[var(--surface-secondary)] px-2 py-0.5 text-xs font-medium text-[var(--color-warning)]">
             {t("userOfficeTemplatePreviewFeature")}
           </span>
         </p>
-        <p role="alert" className="mt-2 break-words text-[11px] text-[var(--text-secondary)]">
+        <p role="alert" className="mt-2 break-words text-xs text-[var(--text-secondary)]">
           {failure}
         </p>
         <Button
@@ -586,26 +610,26 @@ export function UserOfficeTemplateCard({ sessionId }: { sessionId: string | null
       data-testid="user-office-template-card"
       aria-label={t("userOfficeTemplateTitle")}
       aria-busy={busyAction !== null}
-      className="overflow-hidden rounded-3xl border border-amber-500/20 bg-amber-500/[0.035] shadow-[0_0_0_1px_rgba(245,158,11,0.04)_inset] backdrop-blur-sm"
+      className="surface-card overflow-hidden"
     >
       <button
         type="button"
         aria-expanded={!collapsed}
-        className="flex w-full items-start justify-between px-4 py-4 text-left transition-colors hover:bg-amber-500/[0.035]"
+        className="flex w-full items-start justify-between px-4 py-4 text-left transition-colors hover:bg-[var(--surface-secondary)]"
         onClick={() => setCollapsed((value) => !value)}
       >
         <span className="flex min-w-0 flex-1 items-start gap-3">
-          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/10">
-            <FileStack className="h-4 w-4 text-amber-500" />
+          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[var(--border-default)] bg-[var(--surface-secondary)]">
+            <FileStack className="h-4 w-4 text-[var(--color-warning)]" />
           </span>
           <span className="min-w-0">
             <span className="flex flex-wrap items-center gap-2 text-[13px] font-medium text-[var(--text-primary)]">
               {t("userOfficeTemplateTitle")}
-              <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-500">
+              <span className="rounded-full bg-[var(--surface-secondary)] px-2 py-0.5 text-xs font-medium text-[var(--color-warning)]">
                 {t("userOfficeTemplatePreviewFeature")}
               </span>
             </span>
-            <span className="mt-1 block text-[11px] text-[var(--text-tertiary)]">
+            <span className="mt-1 block text-xs text-[var(--text-tertiary)]">
               {t("userOfficeTemplateCount", { count: templates.length })}
             </span>
           </span>
@@ -619,8 +643,8 @@ export function UserOfficeTemplateCard({ sessionId }: { sessionId: string | null
       </button>
 
       {!collapsed && (
-        <div className="space-y-3 border-t border-amber-500/10 px-4 py-3">
-          <div className="rounded-xl border border-amber-500/15 bg-amber-500/[0.04] p-2.5 text-[11px] text-[var(--text-secondary)]">
+        <div className="space-y-3 border-t border-[var(--border-default)] px-4 py-3">
+          <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-secondary)] p-2.5 text-xs text-[var(--text-secondary)]">
             {t("userOfficeTemplateBetaNotice")}
           </div>
 
@@ -641,12 +665,12 @@ export function UserOfficeTemplateCard({ sessionId }: { sessionId: string | null
           {showImport && (
             <form
               aria-label={t("userOfficeTemplateImportForm")}
-              className="space-y-3 rounded-xl border border-white/8 bg-white/[0.025] p-3"
+              className="surface-card space-y-3 p-3"
               onSubmit={(event) => void importTemplate(event)}
             >
               <div className="space-y-1.5">
                 <label
-                  className="text-[11px] font-medium text-[var(--text-secondary)]"
+                  className="text-xs font-medium text-[var(--text-secondary)]"
                   htmlFor={nameId}
                 >
                   {t("userOfficeTemplateName")}
@@ -663,7 +687,7 @@ export function UserOfficeTemplateCard({ sessionId }: { sessionId: string | null
 
               <div className="space-y-1.5">
                 <label
-                  className="text-[11px] font-medium text-[var(--text-secondary)]"
+                  className="text-xs font-medium text-[var(--text-secondary)]"
                   htmlFor={fileId}
                 >
                   {t("userOfficeTemplateFile")}
@@ -674,17 +698,17 @@ export function UserOfficeTemplateCard({ sessionId }: { sessionId: string | null
                   type="file"
                   accept=".docx,.xlsx,.pptx"
                   disabled={busyAction !== null}
-                  className="block w-full rounded-lg border border-[var(--border-default)] px-2 py-2 text-[11px] text-[var(--text-secondary)] file:mr-2 file:rounded-md file:border-0 file:bg-[var(--surface-secondary)] file:px-2 file:py-1 file:text-[11px] file:text-[var(--text-primary)]"
+                  className="block w-full rounded-lg border border-[var(--border-default)] px-2 py-2 text-xs text-[var(--text-secondary)] file:mr-2 file:rounded-md file:border-0 file:bg-[var(--surface-secondary)] file:px-2 file:py-1 file:text-xs file:text-[var(--text-primary)]"
                   onChange={(event) => chooseFile(event.target.files?.[0] ?? null)}
                 />
-                <p className="text-[10px] text-[var(--text-quaternary)]">
+                {/* Auxiliary copy retained in source: <p className="text-xs text-[var(--text-tertiary)]">
                   {t("userOfficeTemplateFileHelp")}
-                </p>
+                </p> */}
               </div>
 
               <div className="space-y-1.5">
                 <label
-                  className="text-[11px] font-medium text-[var(--text-secondary)]"
+                  className="text-xs font-medium text-[var(--text-secondary)]"
                   htmlFor={schemaId}
                 >
                   {t("userOfficeTemplateSchema")}
@@ -695,12 +719,12 @@ export function UserOfficeTemplateCard({ sessionId }: { sessionId: string | null
                   spellCheck={false}
                   value={placeholderSchema}
                   disabled={busyAction !== null}
-                  className="w-full resize-y rounded-lg border border-[var(--border-default)] bg-transparent px-2.5 py-2 font-mono text-[10px] leading-relaxed text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ring)] disabled:opacity-50"
+                  className="w-full resize-y rounded-lg border border-[var(--border-default)] bg-transparent px-2.5 py-2 font-mono text-xs leading-relaxed text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ring)] disabled:bg-[var(--surface-tertiary)] disabled:text-[var(--text-secondary)] disabled:cursor-not-allowed"
                   onChange={(event) => setPlaceholderSchema(event.target.value)}
                 />
-                <p className="text-[10px] leading-relaxed text-[var(--text-quaternary)]">
+                {/* Auxiliary copy retained in source: <p className="text-xs leading-relaxed text-[var(--text-tertiary)]">
                   {t("userOfficeTemplateSchemaHelp")}
-                </p>
+                </p> */}
               </div>
 
               <Button
@@ -725,7 +749,7 @@ export function UserOfficeTemplateCard({ sessionId }: { sessionId: string | null
           )}
 
           {templates.length === 0 ? (
-            <p className="py-2 text-center text-[11px] text-[var(--text-quaternary)]">
+            <p className="py-2 text-center text-xs text-[var(--text-tertiary)]">
               {t("userOfficeTemplateEmpty")}
             </p>
           ) : (
@@ -733,6 +757,7 @@ export function UserOfficeTemplateCard({ sessionId }: { sessionId: string | null
               {templates.map((template) => {
                 const approveKey = actionKey("approve", template);
                 const deleteKey = actionKey("delete", template);
+                const revalidateKey = actionKey("revalidate", template);
                 const isPreviewSelected =
                   previewSelection?.templateRef === template.template_ref &&
                   previewSelection.revision === template.revision;
@@ -741,33 +766,36 @@ export function UserOfficeTemplateCard({ sessionId }: { sessionId: string | null
                   <li
                     key={`${template.template_ref}:${template.revision}`}
                     data-testid={`user-office-template-${template.template_ref}`}
-                    className="space-y-3 rounded-xl border border-white/8 bg-white/[0.025] p-3"
+                    className="surface-card space-y-3 p-3"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <p className="truncate text-xs font-medium text-[var(--text-primary)]">
                           {template.display_name}
                         </p>
-                        <div className="mt-1.5 flex flex-wrap gap-1.5 text-[9px] font-medium uppercase tracking-wide">
-                          <span className="rounded-full border border-white/10 px-1.5 py-0.5 text-[var(--text-tertiary)]">
+                        <div className="mt-1.5 flex flex-wrap gap-1.5 text-xs font-medium">
+                          <span className="rounded-full border border-[var(--border-default)] px-1.5 py-0.5 text-[var(--text-tertiary)]">
                             {template.format}
                           </span>
-                          <span className="rounded-full border border-white/10 px-1.5 py-0.5 text-[var(--text-tertiary)]">
+                          <span className="rounded-full border border-[var(--border-default)] px-1.5 py-0.5 text-[var(--text-tertiary)]">
+                            {t("userOfficeTemplateRevision", { revision: template.revision })}
+                          </span>
+                          <span className="rounded-full border border-[var(--border-default)] px-1.5 py-0.5 text-[var(--text-tertiary)]">
                             {statusLabel(template.status)}
                           </span>
                           <span
                             className={cn(
                               "rounded-full border px-1.5 py-0.5",
                               template.render_evidence.quality === "authoritative"
-                                ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-500"
-                                : "border-amber-500/25 bg-amber-500/10 text-amber-500",
+                                ? "border-[var(--color-success)]/25 bg-[var(--color-success)]/10 text-[var(--color-success)]"
+                                : "border-[var(--color-warning)]/25 bg-[var(--color-warning)]/10 text-[var(--color-warning)]",
                             )}
                           >
                             {template.render_evidence.quality === "authoritative"
                               ? t("userOfficeTemplateAuthoritative")
                               : t("userOfficeTemplateApproximate")}
                           </span>
-                          <span className="rounded-full border border-white/10 px-1.5 py-0.5 text-[var(--text-tertiary)]">
+                          <span className="rounded-full border border-[var(--border-default)] px-1.5 py-0.5 text-[var(--text-tertiary)]">
                             {t("userOfficeTemplateStateVersion", {
                               version: template.state_version,
                             })}
@@ -777,14 +805,14 @@ export function UserOfficeTemplateCard({ sessionId }: { sessionId: string | null
                     </div>
 
                     <div>
-                      <p className="text-[10px] font-medium text-[var(--text-tertiary)]">
+                      <p className="text-xs font-medium text-[var(--text-tertiary)]">
                         {t("userOfficeTemplatePlaceholders")}
                       </p>
                       <div className="mt-1.5 flex max-h-24 flex-wrap gap-1 overflow-y-auto">
                         {template.placeholder_schema.map((placeholder) => (
                           <span
                             key={placeholder.name}
-                            className="rounded-md bg-white/[0.045] px-1.5 py-0.5 font-mono text-[9px] text-[var(--text-secondary)]"
+                            className="rounded-md bg-[var(--surface-secondary)] px-1.5 py-0.5 font-mono text-xs text-[var(--text-secondary)]"
                           >
                             {placeholder.name}
                           </span>
@@ -792,18 +820,18 @@ export function UserOfficeTemplateCard({ sessionId }: { sessionId: string | null
                       </div>
                     </div>
 
-                    <div className="rounded-lg border border-white/6 bg-black/[0.04] p-2">
-                      <p className="text-[9px] uppercase tracking-wide text-[var(--text-quaternary)]">
+                    <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-secondary)] p-2">
+                      <p className="text-xs uppercase tracking-wide text-[var(--text-tertiary)]">
                         {t("userOfficeTemplateReference")}
                       </p>
                       <div className="mt-1 flex items-start gap-2">
-                        <code className="min-w-0 flex-1 break-all text-[10px] text-[var(--text-secondary)]">
+                        <code className="min-w-0 flex-1 break-all text-xs text-[var(--text-secondary)]">
                           {template.template_ref}
                         </code>
                         <button
                           type="button"
                           aria-label={t("userOfficeTemplateCopyReference")}
-                          className="rounded p-1 text-[var(--text-tertiary)] transition-colors hover:bg-white/[0.05] hover:text-[var(--text-primary)]"
+                          className="rounded p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--surface-tertiary)] hover:text-[var(--text-primary)]"
                           onClick={() => void copyReference(template.template_ref)}
                         >
                           <Copy className="h-3.5 w-3.5" />
@@ -813,10 +841,10 @@ export function UserOfficeTemplateCard({ sessionId }: { sessionId: string | null
 
                     <p
                       className={cn(
-                        "flex items-start gap-1.5 text-[10px]",
+                        "flex items-start gap-1.5 text-xs",
                         template.can_instantiate
-                          ? "text-emerald-500"
-                          : "text-amber-500",
+                          ? "text-[var(--color-success)]"
+                          : "text-[var(--color-warning)]",
                       )}
                     >
                       {template.can_instantiate ? (
@@ -861,11 +889,19 @@ export function UserOfficeTemplateCard({ sessionId }: { sessionId: string | null
                           {t("userOfficeTemplateApprove")}
                         </Button>
                       )}
+                      {!template.can_instantiate && (
+                        <Button type="button" size="sm" variant="outline"
+                          disabled={busyAction !== null}
+                          onClick={() => void revalidateTemplate(template)}>
+                          {busyAction === revalidateKey ? <Loader2 className="animate-spin" /> : <RefreshCw />}
+                          {t("userOfficeTemplateRevalidate")}
+                        </Button>
+                      )}
                       <Button
                         type="button"
                         size="sm"
                         variant="ghost"
-                        className="text-red-500 hover:text-red-500"
+                        className="text-[var(--color-destructive)] hover:text-[var(--color-destructive)]"
                         disabled={busyAction !== null}
                         onClick={() => void deleteTemplate(template)}
                       >
@@ -881,17 +917,17 @@ export function UserOfficeTemplateCard({ sessionId }: { sessionId: string | null
                     {isPreviewSelected && (
                       <div
                         aria-live="polite"
-                        className="overflow-hidden rounded-xl border border-white/8 bg-black/[0.04]"
+                        className="overflow-hidden rounded-xl border border-[var(--border-default)] bg-[var(--surface-secondary)]"
                       >
                         <div className="flex min-h-32 items-center justify-center p-2">
                           {previewLoading ? (
-                            <span className="flex items-center gap-2 text-[11px] text-[var(--text-tertiary)]">
+                            <span className="flex items-center gap-2 text-xs text-[var(--text-tertiary)]">
                               <Loader2 className="h-4 w-4 animate-spin" />
                               {t("userOfficeTemplatePreviewLoading")}
                             </span>
                           ) : previewFailure ? (
                             <div className="p-3 text-center">
-                              <p role="alert" className="text-[10px] text-amber-500">
+                              <p role="alert" className="text-xs text-[var(--color-warning)]">
                                 {previewFailure}
                               </p>
                               <Button
@@ -920,12 +956,12 @@ export function UserOfficeTemplateCard({ sessionId }: { sessionId: string | null
                           ) : null}
                         </div>
                         {pageCount > 1 && (
-                          <div className="flex items-center justify-between border-t border-white/8 px-2 py-1.5">
+                          <div className="flex items-center justify-between border-t border-[var(--border-default)] px-2 py-1.5">
                             <button
                               type="button"
                               aria-label={t("userOfficeTemplatePreviousPage")}
                               disabled={previewSelection.pageNumber <= 1 || previewLoading}
-                              className="rounded p-1 text-[var(--text-tertiary)] hover:bg-white/[0.05] disabled:opacity-30"
+                              className="rounded p-1 text-[var(--text-tertiary)] hover:bg-[var(--surface-tertiary)] disabled:bg-[var(--surface-tertiary)] disabled:text-[var(--text-secondary)] disabled:cursor-not-allowed"
                               onClick={() =>
                                 setPreviewSelection((current) =>
                                   current
@@ -939,7 +975,7 @@ export function UserOfficeTemplateCard({ sessionId }: { sessionId: string | null
                             >
                               <ChevronLeft className="h-3.5 w-3.5" />
                             </button>
-                            <span className="text-[10px] text-[var(--text-tertiary)]">
+                            <span className="text-xs text-[var(--text-tertiary)]">
                               {t("userOfficeTemplatePageCount", {
                                 page: previewSelection.pageNumber,
                                 count: pageCount,
@@ -951,7 +987,7 @@ export function UserOfficeTemplateCard({ sessionId }: { sessionId: string | null
                               disabled={
                                 previewSelection.pageNumber >= pageCount || previewLoading
                               }
-                              className="rounded p-1 text-[var(--text-tertiary)] hover:bg-white/[0.05] disabled:opacity-30"
+                              className="rounded p-1 text-[var(--text-tertiary)] hover:bg-[var(--surface-tertiary)] disabled:bg-[var(--surface-tertiary)] disabled:text-[var(--text-secondary)] disabled:cursor-not-allowed"
                               onClick={() =>
                                 setPreviewSelection((current) =>
                                   current

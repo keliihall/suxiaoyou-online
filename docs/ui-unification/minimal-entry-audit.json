@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-11-15T12:50:47.563634+00:00",
+  "scope": "展开侧栏底栏单行、极简居中Logo及椭圆登录按钮、柔和composer边框",
+  "requirements": {
+    "expanded_workbench_footer": {
+      "visual_and_dom_order": [
+        "collapse",
+        "settings",
+        "more",
+        "logout"
+      ],
+      "one_row": true,
+      "control_size_px": [
+        44,
+        44
+      ],
+      "collapsed_order_unchanged": true,
+      "keyboard_focus_preserved_after_toggle": true,
+      "mobile_and_native_behavior_preserved": true
+    },
+    "login": {
+      "visible_brand_text": false,
+      "visible_welcome_heading": false,
+      "logo_only": true,
+      "logo_size_px": [
+        40,
+        40
+      ],
+      "logo_alignment": "center",
+      "submit_icon": "ArrowRight",
+      "submit_shape": "ellipse",
+      "visible_submit_size_px": [
+        48,
+        36
+      ],
+      "pointer_target_size_px": [
+        48,
+        44
+      ],
+      "submit_alignment": "center",
+      "initial_captcha_hidden": true,
+      "verified_auto_login_preserved": true
+    },
+    "composer": {
+      "default_border": "--border-subtle",
+      "hover_border": "--border-default",
+      "focused_border": "25% --ring + 75% --border-default",
+      "keyboard_focus_shadow": "16% --ring; 2px",
+      "scope": "composer-shell only",
+      "text_contrast_unchanged": true
+    }
+  },
+  "validation": {
+    "cloud_browser": {
+      "passed": 51,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "evidence": "/tmp/sxy-minimal-entry-ui.json",
+      "business_api": "isolated fixtures"
+    },
+    "targeted_eslint": "passed",
+    "production_build_lint_and_types": "passed",
+    "git_diff_check": "passed",
+    "real_browser": {
+      "tool": "Orca embedded browser",
+      "runtime": "http://localhost:3018",
+      "expanded_footer": {
+        "control_labels": [
+          "切换侧边栏",
+          "设置",
+          "云端管理 · 更多操作",
+          "退出登录"
+        ],
+        "x_positions_px": [
+          12,
+          60,
+          108,
+          156
+        ],
+        "y_positions_px": [
+          840,
+          840,
+          840,
+          840
+        ],
+        "control_size_px": [
+          44,
+          44
+        ],
+        "overflow": false
+      },
+      "composer": {
+        "themes": [
+          "dark",
+          "light"
+        ],
+        "default_dark_border_before": "rgb(116, 131, 156)",
+        "default_dark_border_after": "rgba(237, 242, 250, 0.08)",
+        "focused_dark_border": "color(srgb 0.234314 0.319608 0.470588)",
+        "focused_light_border": "color(srgb 0.683333 0.761765 0.921569)",
+        "visual_review": "passed"
+      },
+      "login": {
+        "visual_review": "passed",
+        "viewport_widths_px": [
+          534,
+          320
+        ],
+        "logo_and_button_center_delta_px": 0,
+        "visible_submit_size_px": [
+          48,
+          36
+        ],
+        "brand_text_nodes": 0,
+        "heading_nodes": 0,
+        "initial_captcha_elements": 0,
+        "horizontal_overflow": false
+      },
+      "final_page": "http://localhost:3018/c/new",
+      "final_viewport_px": [
+        1192,
+        892
+      ],
+      "private_screenshots": "frontend/test-results/ui-minimal-entry-real"
+    },
+    "backend_changed": false,
+    "new_paid_model_requests": false,
+    "existing_deepseek_still_visible": true
+  },
+  "runtime": {
+    "url": "http://localhost:3018",
+    "web_dist": ".next-ui-minimal-entry",
+    "build_id": "PimiHqMzwcsX0Zi2l3spl",
+    "build_exit_code": 0,
+    "build_asset_http_status": 200,
+    "status": "running",
+    "only_web_restarted": true,
+    "api_and_worker_restarted": false,
+    "health": {
+      "/livez": 200,
+      "/readyz": 200
+    },
+    "existing_tenant_containers_modified": false,
+    "docker_image_updated": false,
+    "public_deployment_performed": false
+  }
+}

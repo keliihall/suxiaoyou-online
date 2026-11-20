@@ -28,7 +28,7 @@ export function AppearanceCustomize() {
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 text-ui-caption text-[var(--text-tertiary)]"
+          className="h-10 rounded-xl text-[13px] text-[var(--text-tertiary)]"
           onClick={reset}
         >
           {t("resetAppearance")}
@@ -65,7 +65,7 @@ export function AppearanceCustomize() {
 function ThemeBlock({ theme }: { theme: ThemeKey }) {
   const { t } = useTranslation("settings");
   return (
-    <div className="rounded-xl border border-[var(--border-default)] overflow-hidden">
+    <div className="overflow-hidden rounded-xl border border-[var(--border-default)] bg-[var(--surface-primary)]">
       <div className="px-3 py-2 text-ui-overline font-semibold text-[var(--text-secondary)] uppercase tracking-wide border-b border-[var(--border-subtle)]">
         {theme === "light" ? t("lightTheme") : t("darkTheme")}
       </div>
@@ -103,7 +103,7 @@ function ColorRow({
             <button
               type="button"
               aria-label={label}
-              className="flex items-center gap-2 rounded-full border border-[var(--border-default)] pl-1 pr-3 py-1 hover:bg-[var(--surface-secondary)] data-[state=open]:bg-[var(--surface-secondary)] transition-colors"
+              className="ui-control flex min-h-10 items-center gap-2 rounded-xl border border-[var(--border-default)] pl-1 pr-3 py-1 hover:bg-[var(--surface-secondary)] data-[state=open]:bg-[var(--surface-secondary)] transition-colors"
             >
               <span
                 className="h-4 w-4 rounded-full border border-[var(--border-default)]"
@@ -130,7 +130,7 @@ function ColorRow({
           <button
             type="button"
             onClick={() => setColor(theme, kind, null)}
-            className="text-ui-3xs text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors"
+            className="text-[12px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors"
           >
             {t("resetColor")}
           </button>
@@ -194,27 +194,29 @@ function FontBlock() {
   const setCodeFont = useAppearanceStore((s) => s.setCodeFont);
 
   return (
-    <div className="rounded-xl border border-[var(--border-default)] overflow-hidden">
-      <div className="flex items-center gap-3 px-3 py-2 border-b border-[var(--border-subtle)]">
-        <span className="w-28 shrink-0 text-ui-body text-[var(--text-primary)]">
+    <div className="overflow-hidden rounded-xl border border-[var(--border-default)] bg-[var(--surface-primary)]">
+      <div className="flex flex-wrap items-center gap-3 px-4 py-3 border-b border-[var(--border-subtle)]">
+        <span className="w-28 shrink-0 text-[13px] text-[var(--text-primary)]">
           {t("uiFont")}
         </span>
         <Input
+          aria-label={t("uiFont")}
           value={uiFont}
           onChange={(e) => setUiFont(e.target.value)}
           placeholder="-apple-system, Inter, sans-serif"
-          className="h-8 text-ui-caption font-mono"
+          className="h-10 min-w-0 flex-1 basis-40 text-[13px] font-mono"
         />
       </div>
-      <div className="flex items-center gap-3 px-3 py-2">
-        <span className="w-28 shrink-0 text-ui-body text-[var(--text-primary)]">
+      <div className="flex flex-wrap items-center gap-3 px-4 py-3">
+        <span className="w-28 shrink-0 text-[13px] text-[var(--text-primary)]">
           {t("codeFont")}
         </span>
         <Input
+          aria-label={t("codeFont")}
           value={codeFont}
           onChange={(e) => setCodeFont(e.target.value)}
           placeholder='ui-monospace, "SF Mono", Menlo'
-          className="h-8 text-ui-caption font-mono"
+          className="h-10 min-w-0 flex-1 basis-40 text-[13px] font-mono"
         />
       </div>
     </div>
@@ -223,7 +225,6 @@ function FontBlock() {
 
 function ToggleRow({
   title,
-  desc,
   check,
 }: {
   title: string;
@@ -236,16 +237,15 @@ function ToggleRow({
     <div className="flex items-center justify-between">
       <div className="min-w-0 pr-4">
         <p className="text-ui-body text-[var(--text-primary)]">{title}</p>
-        <p className="text-ui-caption text-[var(--text-tertiary)]">{desc}</p>
+        {/* Auxiliary desc is retained as component metadata. */}
       </div>
-      <Switch checked={value} onCheckedChange={setter} />
+      <Switch aria-label={title} checked={value} onCheckedChange={setter} />
     </div>
   );
 }
 
 function NumberRow({
   title,
-  desc,
   field,
 }: {
   title: string;
@@ -271,10 +271,11 @@ function NumberRow({
     <div className="flex items-center justify-between">
       <div className="min-w-0 pr-4">
         <p className="text-ui-body text-[var(--text-primary)]">{title}</p>
-        <p className="text-ui-caption text-[var(--text-tertiary)]">{desc}</p>
+        {/* Auxiliary desc is retained as component metadata. */}
       </div>
       <div className="flex items-center gap-1.5">
         <Input
+          aria-label={title}
           type="number"
           min={10}
           max={22}

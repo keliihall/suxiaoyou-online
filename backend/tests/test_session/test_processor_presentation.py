@@ -175,6 +175,7 @@ async def test_shell_generated_files_are_tracked_through_generic_delivery(
         session_id="session-shell-artifact",
         file_path=str(workspace / "news.mp3"),
         tool_id="bash",
+        file_type="working",
     )
 
 

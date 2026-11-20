@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -50,7 +49,7 @@ function VersionRow({
   const { t } = useTranslation("chat");
   return (
     <li className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-secondary)] p-3">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
           <div className="flex items-center gap-1.5 text-sm font-medium text-[var(--text-primary)]">
             <Clock3 className="h-3.5 w-3.5" />
@@ -59,7 +58,7 @@ function VersionRow({
           <p className="truncate text-xs text-[var(--text-secondary)]" title={version.operation}>
             {t("fileVersionOperation", { operation: version.operation })}
           </p>
-          <p className="font-mono text-[11px] text-[var(--text-tertiary)]">
+          <p className="font-mono text-xs text-[var(--text-tertiary)]">
             {formatFileVersionSize(version.size)} · SHA-256 {version.sha256.slice(0, 12)}…
           </p>
         </div>
@@ -108,10 +107,10 @@ export function FileVersionHistoryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent aria-describedby={undefined} className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{t("fileVersionHistoryTitle", { name: fileName })}</DialogTitle>
-          <DialogDescription>{t("fileVersionHistoryDescription")}</DialogDescription>
+          <DialogTitle className="break-words pr-8">{t("fileVersionHistoryTitle", { name: fileName })}</DialogTitle>
+          {/* Auxiliary copy retained in source: <DialogDescription>{t("fileVersionHistoryDescription")}</DialogDescription> */}
         </DialogHeader>
 
         <div className="flex items-start gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--surface-tertiary)] p-3 text-xs text-[var(--text-secondary)]">

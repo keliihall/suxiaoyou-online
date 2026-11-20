@@ -41,7 +41,7 @@ import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { API, IS_DESKTOP } from "@/lib/constants";
 import { artifactTypeFromExtension, languageFromExtension } from "@/lib/artifacts";
-import { base64ToBlob, downloadBlob } from "@/lib/browser-files";
+import { downloadWorkspaceFile } from "@/lib/workspace-file-download";
 import {
   getFileArtifactActionIds,
   type FileArtifactActionId,
@@ -62,13 +62,6 @@ interface FileArtifactCardProps {
   cardId?: string;
   compact?: boolean;
   sessionId?: string | null;
-}
-
-interface BinaryContentResponse {
-  content_base64: string;
-  name: string;
-  mime_type: string;
-  size: number;
 }
 
 const TYPE_CONFIG: Record<
@@ -94,10 +87,6 @@ const TYPE_CONFIG: Record<
 
 function basename(path: string): string {
   return path.split(/[\\/]/).pop() || path;
-}
-
-function titleWithoutExtension(name: string): string {
-  return name.replace(/\.[^.]+$/, "");
 }
 
 function labelForFile(
@@ -169,7 +158,7 @@ export function FileArtifactCard({
   const filePath = directFilePath || metadataFilePath || input.file_path || "";
   const fileName = filePath ? basename(filePath) : t("artifactTypeFile");
   const metadataTitle = typeof metadata.title === "string" ? metadata.title : undefined;
-  const title = directTitle || metadataTitle || input.title || titleWithoutExtension(fileName);
+  const title = directTitle || metadataTitle || input.title || fileName;
   const isRunning = data?.state.status === "running" || data?.state.status === "pending";
   const isError = data?.state.status === "error";
   const isInteractive = Boolean(filePath) && !isRunning && !isError;
@@ -278,16 +267,7 @@ export function FileArtifactCard({
         return;
       }
 
-      const res = await api.post<BinaryContentResponse>(
-        API.FILES.CONTENT_BINARY,
-        { path: filePath, workspace },
-        { timeoutMs: 120_000 },
-      );
-
-      downloadBlob(
-        base64ToBlob(res.content_base64, res.mime_type),
-        res.name || fileName,
-      );
+      await downloadWorkspaceFile(filePath, workspace);
     } catch (error) {
       console.error("Failed to save file:", error);
       toast.error(t(nativeFileActionErrorKey(error, "fileSaveFailed")));
@@ -389,10 +369,11 @@ export function FileArtifactCard({
       <ContextMenuTrigger asChild>
         <div
           data-testid="file-artifact-card"
+          data-file-preview="inline-card"
           className={cn(
-            "group flex w-full items-center gap-2 rounded-xl border px-2 py-2 text-left",
-            "bg-[var(--surface-secondary)] transition-all duration-150",
-            isInteractive && "hover:-translate-y-0.5 hover:bg-[var(--surface-tertiary)] hover:shadow-[var(--shadow-md)]",
+            "group flex w-full max-w-full items-center gap-2 rounded-xl border px-2 py-2 text-left",
+            "bg-[var(--surface-secondary)] transition-colors duration-150",
+            isInteractive && "hover:border-[var(--border-heavy)] hover:bg-[var(--surface-tertiary)]",
             isError ? "border-[var(--color-destructive)]/30" : "border-[var(--border-default)]",
             compact && "min-h-[5.25rem]",
           )}
@@ -434,9 +415,10 @@ export function FileArtifactCard({
               </span>
               <ToolMetadataSummary metadata={metadata} className="mt-1" />
             </span>
+            {isInteractive && <Eye className="h-3.5 w-3.5 shrink-0 text-[var(--text-secondary)]" aria-hidden="true" />}
           </button>
 
-          {isInteractive && (
+          {isInteractive && localDesktop && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -445,11 +427,11 @@ export function FileArtifactCard({
                   aria-busy={busyAction !== null}
                   aria-label={nativeFileActionsAvailable ? t("openWith") : t("fileActions")}
                   className={cn(
-                    "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-medium",
+                    "flex min-h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-medium",
                     "bg-[var(--surface-tertiary)] text-[var(--text-secondary)] transition-colors",
                     "hover:bg-[var(--surface-primary)] hover:text-[var(--text-primary)]",
                     "focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)]",
-                    "disabled:cursor-wait disabled:opacity-60",
+                    "disabled:cursor-wait disabled:bg-[var(--surface-tertiary)] disabled:text-[var(--text-secondary)] disabled:cursor-not-allowed",
                   )}
                 >
                   {busyAction ? (
@@ -469,6 +451,23 @@ export function FileArtifactCard({
                 <MenuItems Item={DropdownMenuItem} Separator={DropdownMenuSeparator} />
               </DropdownMenuContent>
             </DropdownMenu>
+          )}
+          {isInteractive && !localDesktop && (
+            <button
+              type="button"
+              onClick={() => void handleSaveCopy()}
+              disabled={busyAction !== null}
+              aria-busy={busyAction === "saveCopy"}
+              aria-label={t("download")}
+              title={t("download")}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-tertiary)] hover:text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)] disabled:cursor-wait"
+            >
+              {busyAction === "saveCopy" ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <Download className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+            </button>
           )}
         </div>
       </ContextMenuTrigger>

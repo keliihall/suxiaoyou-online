@@ -65,18 +65,18 @@ export function OnboardingScreen() {
           <h1 className="mt-8 text-2xl font-semibold text-[var(--text-primary)] tracking-tight">
             {t("onboardingWelcome")}
           </h1>
-          <p className="mt-2 max-w-xs text-sm text-[var(--text-secondary)]">
+          {/* Auxiliary copy retained in source: <p className="mt-2 max-w-xs text-sm text-[var(--text-secondary)]">
             {t("onboardingDescription")}
-          </p>
+          </p> */}
 
           <div className="mt-8 w-full space-y-3">
-            <div className="rounded-xl border border-[var(--border-secondary)] bg-[var(--surface-secondary)] p-3 text-left">
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-secondary)] p-3 text-left">
               <p className="text-sm font-medium text-[var(--text-primary)]">
                 {t("onboardingWorkspaceTitle")}
               </p>
-              <p className="mt-1 text-xs text-[var(--text-secondary)]">
+              {/* Auxiliary copy retained in source: <p className="mt-1 text-xs text-[var(--text-secondary)]">
                 {t("onboardingWorkspaceDescription")}
-              </p>
+              </p> */}
               <Button
                 variant="outline"
                 className="mt-3 w-full justify-start"
@@ -93,7 +93,7 @@ export function OnboardingScreen() {
                 </span>
               </Button>
               {workspaceError && (
-                <p role="alert" className="mt-2 text-xs text-red-500">
+                <p role="alert" className="mt-2 text-sm text-[var(--status-danger-text)]">
                   {t("onboardingWorkspaceError")}
                 </p>
               )}

@@ -47,31 +47,31 @@ export function AutomationsTabContent() {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   return (
-    <div className="space-y-4">
+    <div className="page-content space-y-6">
       <AutomationReadOnlyNotice />
       {/* Action bar */}
-      <div className="flex justify-end">
+      <div className="page-toolbar flex justify-end">
         <Button
-          variant="outline"
           size="sm"
-          className="h-7 text-ui-2xs px-2.5"
+          className="min-h-10 gap-2 rounded-xl px-4 text-[13px]"
           onClick={() => setShowCreate(true)}
         >
-          <Plus className="h-3 w-3 mr-1" />
+          <Plus className="h-4 w-4" />
           {t("createNew")}
         </Button>
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 border-b border-[var(--border-default)]">
+      <div className="segmented-nav inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-xl bg-[var(--surface-secondary)] p-1">
         {(["active", "all", "templates"] as Tab[]).map((tabKey) => (
           <button
             key={tabKey}
             onClick={() => setTab(tabKey)}
-            className={`px-3 py-2 text-xs font-medium transition-colors border-b-2 -mb-px ${
+            aria-pressed={tab === tabKey}
+            className={`min-h-10 whitespace-nowrap rounded-lg px-4 text-[13px] font-medium transition-colors ${
               tab === tabKey
-                ? "border-[var(--text-primary)] text-[var(--text-primary)]"
-                : "border-transparent text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
+                ? "bg-[var(--surface-primary)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]"
+                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             }`}
           >
             {t(tabKey)}
@@ -107,7 +107,8 @@ function AutomationsList({ filter, onEdit }: { filter: "enabled" | "all"; onEdit
 
   if (items.length === 0) {
     return (
-      <div className="text-center py-12 text-[var(--text-tertiary)] text-sm">
+      <div className="surface-card flex min-h-56 flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-[var(--border-default)] bg-[var(--surface-primary)] p-8 text-center text-[14px] text-[var(--text-secondary)]">
+        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--surface-secondary)]"><Timer className="h-6 w-6 text-[var(--text-tertiary)]" /></span>
         {t("noAutomations")}
       </div>
     );
@@ -146,14 +147,14 @@ function TemplatesTab({ onCreated }: { onCreated: () => void }) {
             key={tpl.id}
             onClick={() => createFromTemplate.mutate(tpl.id, { onSuccess: onCreated })}
             disabled={createFromTemplate.isPending}
-            className="text-left rounded-lg border border-[var(--border-default)] bg-[var(--surface-primary)] p-4 hover:bg-[var(--surface-secondary)] transition-colors"
+            className="surface-card rounded-2xl border border-[var(--border-default)] bg-[var(--surface-primary)] p-5 text-left shadow-[var(--shadow-sm)] transition-colors hover:border-[var(--border-heavy)] hover:bg-[var(--surface-secondary)] disabled:cursor-not-allowed disabled:bg-[var(--surface-secondary)] disabled:text-[var(--text-tertiary)]"
           >
-            <div className="flex items-center gap-2 mb-2">
-              <IconComp className="h-4 w-4 text-[var(--text-secondary)]" />
+            <div className="mb-4 flex items-center gap-3">
+              <IconComp className="h-[18px] w-[18px] shrink-0 text-[var(--text-secondary)]" />
               <span className="text-sm font-medium text-[var(--text-primary)]">{tpl.name}</span>
             </div>
-            <p className="text-xs text-[var(--text-tertiary)] line-clamp-2">{tpl.description}</p>
-            <div className="flex items-center gap-1 mt-2 text-ui-3xs text-[var(--text-tertiary)]">
+            {/* Auxiliary template description retained in source: <p>{tpl.description}</p> */}
+            <div className="flex items-center gap-2 text-[12px] text-[var(--text-secondary)]">
               {tpl.loop_max_iterations ? (
                 <>
                   <Repeat className="h-3 w-3" />

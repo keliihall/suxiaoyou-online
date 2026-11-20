@@ -101,8 +101,8 @@ function PermissionDetails({
   const target = getPermissionTarget(args, permission.patterns);
   const hasArgs = Object.keys(args).length > 0;
   const labelClass = compact
-    ? "text-[10px] text-[var(--text-tertiary)] uppercase font-semibold mb-1"
-    : "text-[10px] text-[var(--text-tertiary)] uppercase font-semibold mb-1";
+    ? "text-xs text-[var(--text-tertiary)] uppercase font-semibold mb-1"
+    : "text-xs text-[var(--text-tertiary)] uppercase font-semibold mb-1";
   const codeClass = compact
     ? "text-xs text-[var(--text-secondary)] font-mono whitespace-pre-wrap break-words max-h-36 overflow-y-auto"
     : "text-xs text-[var(--text-secondary)] font-mono whitespace-pre-wrap break-words max-h-48 overflow-y-auto";
@@ -140,7 +140,7 @@ function PermissionDetails({
       ) : null}
 
       {permission.argumentsTruncated && (
-        <p className="text-[11px] text-[var(--color-warning)]">
+        <p className="text-xs text-[var(--color-warning)]">
           Argument preview was truncated.
         </p>
       )}
@@ -165,7 +165,7 @@ function ImageGenerationCostNotice({ permission }: { permission: PermissionReque
         {t("imageGenerationCostRisk")}
       </p>
       <ToolMetadataSummary metadata={permission.metadata} />
-      <p className="text-[11px] text-[var(--text-tertiary)]">
+      <p className="text-xs text-[var(--text-tertiary)]">
         {t("imageGenerationApprovalPerCall")}
       </p>
     </div>
@@ -324,7 +324,7 @@ export function PermissionDialog({ permission, onRespond, onRecover, onStop }: P
   if (isMobile) {
     return (
       <div className="px-3 pb-[max(env(safe-area-inset-bottom),8px)]">
-        <div className="rounded-2xl border-2 border-[var(--color-warning)]/40 bg-[var(--surface-primary)] shadow-lg p-4 animate-slide-up">
+        <div className="max-h-[50dvh] overflow-y-auto rounded-[var(--radius-card)] border border-[var(--border-default)] bg-[var(--surface-primary)] shadow-[var(--shadow-sm)] p-4 animate-slide-up">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -401,7 +401,7 @@ export function PermissionDialog({ permission, onRespond, onRecover, onStop }: P
                     type="button"
                     onClick={() => void handleRespond(false)}
                     disabled={submitting}
-                    className="flex-1 h-12 flex items-center justify-center gap-2 rounded-xl border-2 border-[var(--border-default)] bg-[var(--surface-secondary)] text-[var(--text-primary)] text-base font-medium active:scale-[0.97] transition-all disabled:opacity-50"
+                    className="flex-1 h-12 flex items-center justify-center gap-2 rounded-xl border-2 border-[var(--border-default)] bg-[var(--surface-secondary)] text-[var(--text-primary)] text-base font-medium active:scale-[0.97] transition-all disabled:bg-[var(--surface-tertiary)] disabled:text-[var(--text-secondary)] disabled:cursor-not-allowed"
                   >
                     <ShieldX className="h-5 w-5" />
                     Deny
@@ -410,7 +410,7 @@ export function PermissionDialog({ permission, onRespond, onRecover, onStop }: P
                     type="button"
                     onClick={() => void handleRespond(true)}
                     disabled={submitting}
-                    className="flex-1 h-12 flex items-center justify-center gap-2 rounded-xl bg-[var(--text-primary)] text-[var(--surface-primary)] text-base font-medium active:scale-[0.97] transition-all disabled:opacity-50"
+                    className="flex-1 h-12 flex items-center justify-center gap-2 rounded-xl bg-[var(--brand-primary)] text-[var(--brand-primary-text)] text-base font-medium active:scale-[0.97] transition-all disabled:bg-[var(--surface-tertiary)] disabled:text-[var(--text-secondary)] disabled:cursor-not-allowed"
                   >
                     <ShieldCheck className="h-5 w-5" />
                     Allow
@@ -428,17 +428,17 @@ export function PermissionDialog({ permission, onRespond, onRecover, onStop }: P
   return (
     <div className="px-4 pb-3">
       <div className="mx-auto max-w-3xl xl:max-w-4xl">
-        <div className="rounded-xl border-2 border-[var(--color-warning)]/40 bg-[var(--color-warning)]/5 p-4 animate-slide-up">
+        <div className="max-h-[50dvh] overflow-y-auto rounded-[var(--radius-card)] border border-[var(--border-default)] bg-[var(--surface-primary)] p-4 animate-slide-up">
           <div className="flex items-start gap-3">
             <ShieldAlert className="h-5 w-5 text-[var(--color-warning)] shrink-0 mt-0.5" />
-            <div className="flex-1 space-y-3">
+            <div className="min-w-0 flex-1 space-y-3">
               <div>
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-[var(--text-primary)]">
                     Permission Required
                   </h3>
                   {!expired && (
-                    <span className={`flex items-center gap-1 text-[11px] tabular-nums ${
+                    <span className={`flex items-center gap-1 text-xs tabular-nums ${
                       isUrgent ? "text-[var(--color-destructive)]" : "text-[var(--text-tertiary)]"
                     }`}>
                       <Clock className="h-3 w-3" />
@@ -507,7 +507,7 @@ export function PermissionDialog({ permission, onRespond, onRecover, onStop }: P
                     >
                       <ShieldX className="h-3.5 w-3.5" />
                       Deny
-                      <kbd className="ml-1 text-[10px] opacity-50 font-normal">N</kbd>
+                      <kbd className="ml-1 text-xs font-normal">N</kbd>
                     </Button>
                     <Button
                       type="button"
@@ -519,7 +519,7 @@ export function PermissionDialog({ permission, onRespond, onRecover, onStop }: P
                     >
                       <ShieldCheck className="h-3.5 w-3.5" />
                       Allow
-                      <kbd className="ml-1 text-[10px] opacity-50 font-normal">Y</kbd>
+                      <kbd className="ml-1 text-xs font-normal">Y</kbd>
                     </Button>
                   </div>
                 </>

@@ -25,7 +25,8 @@ test("the full Back to app row returns to the task that opened Settings", async 
   await back.click({
     position: {
       x: Math.max(1, (box?.width ?? 1) - 3),
-      y: Math.max(1, (box?.height ?? 1) - 3),
+      // Test the full row's empty right edge, inside its rounded outline.
+      y: Math.max(1, (box?.height ?? 1) / 2),
     },
   });
   await expect(page).toHaveURL(/\/c\/_\?sessionId=session-alpha$/);

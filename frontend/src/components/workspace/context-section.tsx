@@ -40,11 +40,11 @@ function ConnectorsBlock() {
 
   return (
     <div className="mb-1">
-      <p className="px-4 py-1.5 text-[11px] font-medium text-[var(--text-tertiary)]">
+      <p className="px-4 py-1.5 text-xs font-medium text-[var(--text-tertiary)]">
         {t("connectors")}
       </p>
       {connected.length === 0 ? (
-        <p className="px-4 py-1 text-[12px] text-[var(--text-quaternary)]">
+        <p className="px-4 py-1 text-[12px] text-[var(--text-tertiary)]">
           {t("noConnectorsActive")}
         </p>
       ) : (
@@ -81,7 +81,7 @@ function SkillsSummary() {
 
   return (
     <div>
-      <p className="px-4 py-1.5 text-[11px] font-medium text-[var(--text-tertiary)]">
+      <p className="px-4 py-1.5 text-xs font-medium text-[var(--text-tertiary)]">
         {t("skills")}
       </p>
       <div className="px-4 py-1">
@@ -186,7 +186,7 @@ function MemoryBlock() {
       <div className="flex items-center justify-between px-4 py-1.5">
         <div className="flex items-center gap-1.5">
           <Brain className="h-3.5 w-3.5 text-[var(--text-tertiary)]" />
-          <p className="text-[11px] font-medium text-[var(--text-tertiary)]">
+          <p className="text-xs font-medium text-[var(--text-tertiary)]">
             {t("memory")}
           </p>
         </div>
@@ -196,14 +196,14 @@ function MemoryBlock() {
               <button
                 onClick={handleSave}
                 disabled={updateMutation.isPending}
-                className="rounded p-1 text-[var(--text-tertiary)] hover:text-green-500 hover:bg-[var(--surface-tertiary)] transition-colors disabled:opacity-50"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-tertiary)] hover:text-[var(--color-success)] hover:bg-[var(--surface-tertiary)] transition-colors disabled:bg-[var(--surface-tertiary)] disabled:text-[var(--text-secondary)] disabled:cursor-not-allowed"
                 title={t("saveAction")}
               >
                 <Check className="h-3 w-3" />
               </button>
               <button
                 onClick={handleCancel}
-                className="rounded p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-tertiary)] transition-colors"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-tertiary)] transition-colors"
                 title={t("cancel")}
               >
                 <X className="h-3 w-3" />
@@ -214,14 +214,14 @@ function MemoryBlock() {
               <button
                 onClick={handleRefresh}
                 disabled={isRefreshing}
-                className="rounded p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-tertiary)] transition-colors disabled:opacity-50"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-tertiary)] transition-colors disabled:bg-[var(--surface-tertiary)] disabled:text-[var(--text-secondary)] disabled:cursor-not-allowed"
                 title={t("refresh")}
               >
                 <RefreshCw className={cn("h-3 w-3", isRefreshing && "animate-spin")} />
               </button>
               <button
                 onClick={handleStartEdit}
-                className="rounded p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-tertiary)] transition-colors"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-tertiary)] transition-colors"
                 title={t("editAction")}
               >
                 <Pencil className="h-3 w-3" />
@@ -230,7 +230,7 @@ function MemoryBlock() {
                 <button
                   onClick={handleExport}
                   disabled={exportMutation.isPending}
-                  className="rounded p-1 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-tertiary)] transition-colors disabled:opacity-50"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-tertiary)] transition-colors disabled:bg-[var(--surface-tertiary)] disabled:text-[var(--text-secondary)] disabled:cursor-not-allowed"
                   title={t("export")}
                 >
                   <Download className="h-3 w-3" />
@@ -245,7 +245,7 @@ function MemoryBlock() {
           <textarea
             value={editContent}
             onChange={(e) => setEditContent(e.target.value)}
-            className="w-full min-h-[80px] max-h-[200px] p-2 text-[11px] font-mono rounded-lg border border-[var(--border-default)] bg-[var(--surface-primary)] text-[var(--text-primary)] resize-y focus:outline-none focus:ring-1 focus:ring-[var(--accent-primary)]"
+            className="w-full min-h-[80px] max-h-[200px] p-2 text-base sm:text-xs font-mono rounded-lg border border-[var(--border-default)] bg-[var(--surface-primary)] text-[var(--text-primary)] resize-y focus:outline-none focus:ring-1 focus:ring-[var(--brand-primary)]"
             placeholder={t("workspaceMemoryPlaceholder")}
           />
         ) : isLoading || isRefreshing ? (
@@ -255,12 +255,12 @@ function MemoryBlock() {
           </div>
         ) : content ? (
           <div className="max-h-[150px] overflow-y-auto scrollbar-auto">
-            <pre className="text-[11px] text-[var(--text-secondary)] whitespace-pre-wrap break-words leading-relaxed">
+            <pre className="text-xs text-[var(--text-secondary)] whitespace-pre-wrap break-words leading-relaxed">
               {content}
             </pre>
           </div>
         ) : (
-          <p className="text-[11px] text-[var(--text-quaternary)]">
+          <p className="text-xs text-[var(--text-tertiary)]">
             {t("noMemoryYet")}
           </p>
         )}
@@ -276,9 +276,9 @@ export function ContextCard() {
   const workspacePath = useWorkspaceStore((s) => s.activeWorkspacePath);
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-white/8 bg-white/[0.03] shadow-[0_0_0_1px_rgba(255,255,255,0.02)_inset] backdrop-blur-sm">
+    <div className="surface-card overflow-hidden">
       <button
-        className="flex w-full items-start justify-between px-4 py-4 text-left transition-colors hover:bg-white/[0.02]"
+        className="flex w-full items-start justify-between px-4 py-4 text-left transition-colors hover:bg-[var(--surface-secondary)]"
         onClick={() => toggleSection("context")}
       >
         <div className="min-w-0 flex-1">
@@ -291,18 +291,18 @@ export function ContextCard() {
           <div className="mt-3 flex flex-wrap gap-1.5">
             {workspacePath ? (
               <>
-                <span className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-1 text-[10px] text-[var(--text-secondary)]">
+                <span className="rounded-full border border-[var(--border-default)] bg-[var(--surface-secondary)] px-2 py-1 text-[10px] text-[var(--text-secondary)]">
                   {t("memory")}
                 </span>
-                <span className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-1 text-[10px] text-[var(--text-secondary)]">
+                <span className="rounded-full border border-[var(--border-default)] bg-[var(--surface-secondary)] px-2 py-1 text-[10px] text-[var(--text-secondary)]">
                   {t("skills")}
                 </span>
-                <span className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-1 text-[10px] text-[var(--text-secondary)]">
+                <span className="rounded-full border border-[var(--border-default)] bg-[var(--surface-secondary)] px-2 py-1 text-[10px] text-[var(--text-secondary)]">
                   {t("connectors")}
                 </span>
               </>
             ) : (
-              <span className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-1 text-[10px] text-[var(--text-secondary)]">
+              <span className="rounded-full border border-[var(--border-default)] bg-[var(--surface-secondary)] px-2 py-1 text-[10px] text-[var(--text-secondary)]">
                 {t("waitingForWorkspace")}
               </span>
             )}
@@ -324,7 +324,7 @@ export function ContextCard() {
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="overflow-hidden"
           >
-            <div className="border-t border-white/6 pb-3 pt-2">
+            <div className="border-t border-[var(--border-subtle)] pb-3 pt-2">
               <MemoryBlock />
               <ConnectorsBlock />
               <SkillsSummary />

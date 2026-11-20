@@ -1,0 +1,241 @@
+{
+  "kind": "real-tenant-original-runtime-control",
+  "run_id": "7dd61c9805",
+  "rounds": [
+    {
+      "stream_id": "01M7EQ5NNTEMWW4GY40BM9R83X",
+      "session_id": "01M7EQ5NKRVBKGSEA1TZRTWEQ9",
+      "events": {
+        "permission-request": 1,
+        "permission-resolved": 1,
+        "step-start": 2,
+        "tool-call": 1,
+        "tool-result": 1,
+        "step-finish": 2,
+        "text-delta": 1,
+        "done": 1
+      },
+      "tools": [
+        {
+          "tool": "read",
+          "call_id": "call_00_nR0Ll8P4hGoZl1xfPnme6312",
+          "arguments": {
+            "file_path": "/tenant/workspaces/runtime-control-7dd61c9805/README.txt"
+          },
+          "session_id": "01M7EQ5NKRVBKGSEA1TZRTWEQ9"
+        }
+      ],
+      "approved_hooks": [
+        {
+          "hook_id": "cloud-marker",
+          "fingerprint": "sha256:6104e9ca32a700269ded8df144c7ff92e04f6e2f22ef84a8a3cf678dff145774"
+        }
+      ],
+      "errors": []
+    },
+    {
+      "stream_id": "01M7EQ8PWVHNNZ41J0AWJC6N1Y",
+      "session_id": "01M7EQ8PWVHNNZ41J0AWJC6N1X",
+      "events": {
+        "step-start": 3,
+        "tool-call": 2,
+        "tool-result": 2,
+        "step-finish": 3,
+        "text-delta": 1,
+        "title-update": 1,
+        "done": 1
+      },
+      "tools": [
+        {
+          "tool": "write",
+          "call_id": "call_00_ejDiERsjyAloFjg0Gdku5455",
+          "arguments": {
+            "file_path": "/tenant/workspaces/rewind-control-7dd61c9805/rewind-proof.txt",
+            "content": "REAL_REWIND_PROOF"
+          },
+          "session_id": "01M7EQ8PWVHNNZ41J0AWJC6N1X"
+        },
+        {
+          "tool": "read",
+          "call_id": "call_00_EjdLDdxdsQVIc4fwzajB1044",
+          "arguments": {
+            "file_path": "/tenant/workspaces/rewind-control-7dd61c9805/rewind-proof.txt"
+          },
+          "session_id": "01M7EQ8PWVHNNZ41J0AWJC6N1X"
+        }
+      ],
+      "approved_hooks": [],
+      "errors": []
+    }
+  ],
+  "git_seed_commit": "c013cf5a40863573d3f16bc8e8aa6cc7d90eb703",
+  "hook": {
+    "approval_requests": 1,
+    "marker_verified": true,
+    "listed": {
+      "session_id": "01M7EQ5NKRVBKGSEA1TZRTWEQ9",
+      "trust_store_available": true,
+      "hooks": [
+        {
+          "hook_id": "cloud-marker",
+          "event": "UserPromptSubmit",
+          "source": "project",
+          "failure_policy": "required",
+          "timeout_seconds": 5.0,
+          "fingerprint": "sha256:6104e9ca32a700269ded8df144c7ff92e04f6e2f22ef84a8a3cf678dff145774",
+          "approval_state": "approved"
+        }
+      ]
+    },
+    "credential_free_environment": "original hook runner"
+  },
+  "worktree_preflight": {
+    "session_id": "01M7EQ5NKRVBKGSEA1TZRTWEQ9",
+    "workspace_instance_id": "01M7EQ5NXEQT5HGYY952492HWH",
+    "workspace_kind": "direct",
+    "checkpoint_rewind_released": true,
+    "managed_worktrees_released": true,
+    "worktree_creation_available": true,
+    "worktree_creation_reason": null,
+    "external_side_effects_reverted": false
+  },
+  "worktree": {
+    "bound": {
+      "status": "bound",
+      "session_id": "01M7EQ5NKRVBKGSEA1TZRTWEQ9",
+      "workspace_instance_id": "01M7EQ8PGAG6JE23K5PT1GAZ96",
+      "parent_workspace_instance_id": "01M7EQ5NXEQT5HGYY952492HWH",
+      "state": "bound",
+      "head": "c013cf5a40863573d3f16bc8e8aa6cc7d90eb703",
+      "branch": null,
+      "clean": true
+    },
+    "inspection": {
+      "session_id": "01M7EQ5NKRVBKGSEA1TZRTWEQ9",
+      "workspace_instance_id": "01M7EQ8PGAG6JE23K5PT1GAZ96",
+      "database_status": "active",
+      "state": "bound",
+      "available": true,
+      "clean": true,
+      "registered": true,
+      "head": "c013cf5a40863573d3f16bc8e8aa6cc7d90eb703",
+      "branch": null,
+      "already_released": false
+    },
+    "released": {
+      "status": "released",
+      "already_released": false,
+      "session_id": "01M7EQ5NKRVBKGSEA1TZRTWEQ9",
+      "workspace_instance_id": "01M7EQ8PGAG6JE23K5PT1GAZ96",
+      "gc": {
+        "collected": [
+          "01M7EQ8PGAG6JE23K5PT1GAZ96"
+        ],
+        "blocked": [],
+        "foreign": [],
+        "error_count": 0,
+        "complete": true
+      }
+    },
+    "after": {
+      "session_id": "01M7EQ5NKRVBKGSEA1TZRTWEQ9",
+      "workspace_instance_id": "01M7EQ8PGAG6JE23K5PT1GAZ96",
+      "database_status": "released",
+      "state": "removed",
+      "available": false,
+      "clean": null,
+      "registered": false,
+      "head": null,
+      "branch": null,
+      "already_released": true
+    }
+  },
+  "rewind": {
+    "checkpoint_list": {
+      "session_id": "01M7EQ8PWVHNNZ41J0AWJC6N1X",
+      "workspace_instance_id": "01M7EQ8PXDS2V3MTPEW1W1PVTV",
+      "external_side_effects_are_reverted": false,
+      "checkpoints": [
+        {
+          "checkpoint_id": "01M7EQ8PXMMC4A4H8EQEQ5TSNA",
+          "sequence": 1,
+          "state": "finalized",
+          "pin_state": "pinned",
+          "anchor_message_id": "01M7EQ8PX5AS8RMW8BZJ58NRK3",
+          "turn_run_id": "01M7EQ8PWVHNNZ41J0AWJC6N1Y",
+          "has_irreversible_side_effects": false,
+          "external_side_effects": [],
+          "validation": {
+            "overall_status": "pass",
+            "count": 1,
+            "completed_count": 1,
+            "failed_count": 0,
+            "cancelled_count": 0,
+            "verdict_counts": {
+              "pass": 1,
+              "fail": 0,
+              "needs_review": 0
+            }
+          }
+        }
+      ]
+    },
+    "preview": {
+      "session_id": "01M7EQ8PWVHNNZ41J0AWJC6N1X",
+      "workspace_instance_id": "01M7EQ8PXDS2V3MTPEW1W1PVTV",
+      "target_checkpoint_id": "01M7EQ8PXMMC4A4H8EQEQ5TSNA",
+      "affected_checkpoint_ids": [
+        "01M7EQ8PXMMC4A4H8EQEQ5TSNA"
+      ],
+      "paths": [
+        {
+          "relative_path": "rewind-proof.txt",
+          "action": "remove",
+          "current_kind": "file",
+          "desired_kind": null
+        }
+      ],
+      "conflicts": [],
+      "blockers": [],
+      "can_execute": true,
+      "already_rewound": false,
+      "external_side_effects": [],
+      "external_side_effects_will_be_reverted": false
+    },
+    "execution": {
+      "status": "rewound",
+      "already_rewound": false,
+      "session_id": "01M7EQ8PWVHNNZ41J0AWJC6N1X",
+      "workspace_instance_id": "01M7EQ8PXDS2V3MTPEW1W1PVTV",
+      "target_checkpoint_id": "01M7EQ8PXMMC4A4H8EQEQ5TSNA",
+      "affected_checkpoint_ids": [
+        "01M7EQ8PXMMC4A4H8EQEQ5TSNA"
+      ],
+      "changed_paths": [
+        "rewind-proof.txt"
+      ],
+      "messages_removed": 4,
+      "todos_restored": 0,
+      "external_side_effects": [],
+      "external_side_effects_were_reverted": false
+    },
+    "created_file_removed": true
+  },
+  "emergency_stop": {
+    "blocked_new_prompt_status": 423,
+    "post_resume_real_read_succeeded": true,
+    "post_resume_read_calls": 2,
+    "post_resume_read_call_id": "call_00_3D2kV1yoCQRUhab4xmyU6834"
+  },
+  "accounting": {
+    "requests": 12,
+    "total_tokens": 112145,
+    "states": {
+      "settled": 12
+    }
+  },
+  "budget_limit": 100000,
+  "budget_exceeded": true,
+  "complete": true,
+  "account_token_limit_after_acceptance": 100000
+}

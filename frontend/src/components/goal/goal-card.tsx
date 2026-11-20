@@ -125,9 +125,9 @@ export function GoalCard({ sessionId, variant = "panel", className }: GoalCardPr
           </span>
           <div className="min-w-0 flex-1">
             <h2 className="text-sm font-medium text-[var(--text-primary)]">{t("goalEmptyTitle")}</h2>
-            <p className="mt-1 text-xs leading-relaxed text-[var(--text-tertiary)]">
+            {/* Auxiliary copy retained in source: <p className="mt-1 text-xs leading-relaxed text-[var(--text-tertiary)]">
               {t("goalEmptyDescription")}
-            </p>
+            </p> */}
           </div>
         </div>
       </section>
@@ -189,7 +189,7 @@ export function GoalCard({ sessionId, variant = "panel", className }: GoalCardPr
       <section className={shellClass} aria-label={t("goalTitle")} data-testid="goal-card">
         <div className="flex min-w-0 items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2 pt-1" data-testid="goal-run-status">
-            <p className="shrink-0 text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--text-quaternary)]">
+            <p className="shrink-0 text-xs font-medium uppercase tracking-[0.08em] text-[var(--text-tertiary)]">
               {t("goalTitle")}
             </p>
             <span className="h-3 w-px shrink-0 bg-[var(--border-default)]" aria-hidden="true" />
@@ -200,7 +200,7 @@ export function GoalCard({ sessionId, variant = "panel", className }: GoalCardPr
             onClick={() => setEditing(true)}
             disabled={busy}
             className={cn(
-              "flex shrink-0 items-center justify-center rounded-full text-[var(--text-tertiary)] transition-colors hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)] disabled:opacity-40",
+              "flex shrink-0 items-center justify-center rounded-full text-[var(--text-tertiary)] transition-colors hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)] disabled:bg-[var(--surface-tertiary)] disabled:text-[var(--text-secondary)] disabled:cursor-not-allowed",
               mobile ? "h-11 w-11" : "h-8 w-8",
             )}
             aria-label={t("goalEditAction")}
@@ -215,7 +215,7 @@ export function GoalCard({ sessionId, variant = "panel", className }: GoalCardPr
 
         {goal.definition_of_done && (
           <div className="mt-3 rounded-xl bg-[var(--surface-secondary)] px-3 py-2.5">
-            <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-[var(--text-quaternary)]">
+            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--text-tertiary)]">
               {t("goalDefinitionOfDone")}
             </p>
             <p className="mt-1 whitespace-pre-wrap break-words text-xs leading-relaxed text-[var(--text-secondary)]">
@@ -239,7 +239,7 @@ export function GoalCard({ sessionId, variant = "panel", className }: GoalCardPr
           </p>
         )}
 
-        <div className="mt-4 grid grid-cols-2 gap-2 text-[11px] text-[var(--text-tertiary)]">
+        <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-[var(--text-tertiary)]">
           <span className="inline-flex items-center gap-1.5">
             <RotateCw className="h-3.5 w-3.5" />
             {t("goalContinuationCount", { count: goal.continuation_count })}
@@ -252,7 +252,7 @@ export function GoalCard({ sessionId, variant = "panel", className }: GoalCardPr
 
         {tokenBudget !== null && (
           <div className="mt-3">
-            <div className="flex items-start justify-between gap-2 text-[11px] text-[var(--text-tertiary)]">
+            <div className="flex items-start justify-between gap-2 text-xs text-[var(--text-tertiary)]">
               <span className="inline-flex min-w-0 items-start gap-1.5 leading-relaxed">
                 <Gauge className="h-3.5 w-3.5" />
                 {t("goalBudgetUsage")}

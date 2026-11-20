@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "allowImportingTsExtensions": true,
     "skipLibCheck": true,
@@ -14,11 +18,49 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "plugins": [{ "name": "next" }],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".next-parity-complete/types/**/*.ts",
+    ".next-parity-delivery/types/**/*.ts",
+    ".next-parity-headers-test/types/**/*.ts",
+    ".next-parity-release/types/**/*.ts",
+    ".next-parity-ui-test/types/**/*.ts",
+    ".next-ui-compact-dev/types/**/*.ts",
+    ".next-ui-compact-final/types/**/*.ts",
+    ".next-ui-compact-live/types/**/*.ts",
+    ".next-ui-desktop-test/types/**/*.ts",
+    ".next-ui-dev/types/**/*.ts",
+    ".next-ui-login-brand/types/**/*.ts",
+    ".next-ui-login-centered/types/**/*.ts",
+    ".next-ui-login-dialog/types/**/*.ts",
+    ".next-ui-login-pill/types/**/*.ts",
+    ".next-ui-login-rounded/types/**/*.ts",
+    ".next-ui-minimal-entry/types/**/*.ts",
+    ".next-ui-navigation-captcha/types/**/*.ts",
+    ".next-ui-readability-live/types/**/*.ts",
+    ".next-ui-refined-final/types/**/*.ts",
+    ".next-ui-refined/types/**/*.ts",
+    ".next-ui-review/types/**/*.ts",
+    ".next-ui-test/types/**/*.ts",
+    ".next-ui-unified-final/types/**/*.ts",
+    ".next-ui-unified/types/**/*.ts",
+    ".next/types/**/*.ts",
+    "next-env.d.ts",
+    ".next-ui-login-circle/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

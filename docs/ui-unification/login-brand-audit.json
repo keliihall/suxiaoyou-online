@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-11-15T13:29:20.978655+00:00",
+  "scope": "恢复圆形登录按钮，图标和苏小有名称整体居中",
+  "requirements": {
+    "submit_shape": "circle",
+    "submit_size_px": [
+      40,
+      40
+    ],
+    "submit_radius_px": 20,
+    "pointer_target_size_px": [
+      44,
+      44
+    ],
+    "submit_alignment": "center",
+    "brand_text": "苏小有",
+    "logo_to_left_of_name": true,
+    "brand_group_alignment": "center",
+    "subtitle_visible": false,
+    "welcome_heading_visible": false,
+    "initial_captcha_hidden": true,
+    "auto_login_after_verification_preserved": true,
+    "submit_css_radius": "50%"
+  },
+  "validation": {
+    "focused_login_tests": {
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0,
+      "evidence": "/tmp/sxy-login-circle-ui.json",
+      "business_api": "isolated fixtures"
+    },
+    "previous_full_cloud_regression": {
+      "passed": 51,
+      "audit": "minimal-entry-audit.json"
+    },
+    "production_build_lint_and_types": "passed",
+    "git_diff_check": "passed",
+    "independent_source_review": "passed",
+    "real_browser": {
+      "tool": "Orca embedded browser",
+      "viewport_widths_px": [
+        534,
+        320
+      ],
+      "brand_group_center_delta_px": 0,
+      "logo_and_name_vertical_center_delta_px": 0,
+      "button_center_delta_px": 0,
+      "computed_button_size_px": [
+        40,
+        40
+      ],
+      "visible_brand_text": "苏小有",
+      "subtitle_nodes": 0,
+      "welcome_heading_nodes": 0,
+      "initial_captcha_nodes": 0,
+      "horizontal_overflow": false,
+      "visual_review": "passed",
+      "private_screenshot": "frontend/test-results/ui-login-circle-real/login-circle.png",
+      "computed_button_radius": "50%",
+      "used_button_radius_px": 20,
+      "computed_pointer_target_size_px": [
+        44,
+        44
+      ]
+    },
+    "production_build_evidence": "/tmp/sxy-login-circle-final-build.log"
+  },
+  "runtime": {
+    "url": "http://localhost:3018",
+    "web_dist": ".next-ui-login-circle",
+    "build_id": "tyaa-czIGk05gNXiW_eHA",
+    "build_exit_code": 0,
+    "build_asset_http_status": 200,
+    "status": "running",
+    "only_web_restarted": true,
+    "api_and_worker_restarted": false,
+    "existing_tenant_containers_modified": false,
+    "docker_image_updated": false,
+    "public_deployment_performed": false
+  }
+}

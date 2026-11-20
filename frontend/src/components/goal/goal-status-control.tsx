@@ -72,12 +72,13 @@ export function GoalStatusControl({ sessionId }: { sessionId: string }) {
       {!isDesktop && (
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetContent
+            title={t("goalTitle")}
             side="bottom"
             className="max-h-[85dvh] overflow-y-auto rounded-t-3xl bg-[var(--surface-chat)] px-4 pb-[max(env(safe-area-inset-bottom),16px)] pt-5"
           >
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[var(--text-quaternary)]" aria-hidden="true" />
             <h2 className="pr-8 text-base font-semibold text-[var(--text-primary)]">{t("goalTitle")}</h2>
-            <p className="mt-1 text-xs text-[var(--text-tertiary)]">{t("goalMobileDescription")}</p>
+            {/* Auxiliary copy retained in source: <p className="mt-1 text-xs text-[var(--text-tertiary)]">{t("goalMobileDescription")}</p> */}
             <GoalCard sessionId={sessionId} variant="mobile" className="mt-4" />
           </SheetContent>
         </Sheet>

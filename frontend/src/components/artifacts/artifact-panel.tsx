@@ -7,10 +7,7 @@ import { useIsDesktop, useIsMacOS } from "@/hooks/use-platform";
 import {
   Sheet,
   SheetContent,
-  SheetTitle,
-  SheetDescription,
 } from "@/components/ui/sheet";
-import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { useArtifactStore } from "@/stores/artifact-store";
 import { ArtifactPanelHeader } from "./artifact-panel-header";
 import { ArtifactPanelContent } from "./artifact-panel-content";
@@ -69,6 +66,7 @@ function ResizeHandle() {
 }
 
 export function ArtifactPanel() {
+  const previousFocusRef = useRef<HTMLElement | null>(null);
   const isOpen = useArtifactStore((s) => s.isOpen);
   const panelWidth = useArtifactStore((s) => s.panelWidth);
   const close = useArtifactStore((s) => s.close);
@@ -110,13 +108,17 @@ export function ArtifactPanel() {
   // Mobile: Sheet overlay from right
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
-      <SheetContent side="right" className="w-[90vw] sm:max-w-[520px] p-0">
-        <VisuallyHidden.Root asChild>
-          <SheetTitle>Artifact Preview</SheetTitle>
-        </VisuallyHidden.Root>
-        <VisuallyHidden.Root asChild>
-          <SheetDescription>Preview of generated content</SheetDescription>
-        </VisuallyHidden.Root>
+      <SheetContent
+        title="Artifact Preview"
+        showCloseButton={false}
+        onOpenAutoFocus={() => {
+          previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        }}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          previousFocusRef.current?.focus();
+        }}
+        side="right" className="w-full sm:max-w-[520px] p-0">
         <div className="flex flex-col h-full">
           <ArtifactPanelHeader />
           <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">

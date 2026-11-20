@@ -21,6 +21,7 @@ from app.office_rendering.errors import RenderContractError
 
 
 RENDER_MANIFEST_SCHEMA_VERSION = 2
+LIBREOFFICE_PARAMETERS_VERSION = "libreoffice-pdf-png-v1"
 AUTHORITATIVE_QUALITY = "authoritative"
 APPROXIMATE_QUALITY = "approximate"
 RenderQuality: TypeAlias = Literal["authoritative", "approximate"]

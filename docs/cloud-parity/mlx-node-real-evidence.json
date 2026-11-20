@@ -1,0 +1,70 @@
+{
+  "actual_model_inference": true,
+  "transport": "pinned HTTPS to live Mac node",
+  "control_plane_http": "ASGI in verification process, isolated migrated SQLite ledger",
+  "node_status": {
+    "configured": true,
+    "platform_supported": true,
+    "binary_installed": true,
+    "running": true,
+    "process_running": true,
+    "port": 18081,
+    "base_url": "/cloud/mlx-node/v1",
+    "version": null,
+    "current_model": "qwen2.5-0.5b",
+    "executable_path": null,
+    "install_commands": [],
+    "unavailable_reason": ""
+  },
+  "model": "qwen2.5-0.5b",
+  "answer": "5",
+  "native_receipt_record": {
+    "source": "mlx-node",
+    "state": "settled",
+    "total_tokens": 32,
+    "raw_usage": {
+      "receipt_source": "mac_node_proxy",
+      "provider_receipt": {
+        "completion_tokens": 2,
+        "prompt_tokens": 30,
+        "total_tokens": 32,
+        "prompt_tokens_details": {
+          "cached_tokens": 30
+        }
+      }
+    },
+    "normalized_usage": {
+      "input_total": 30,
+      "output_total": 2,
+      "cache_read": 30,
+      "cache_write": 0,
+      "reasoning": 0,
+      "total_tokens": 32,
+      "usage_status": "complete",
+      "provider_total": 32,
+      "cost_status": "unknown"
+    }
+  },
+  "usage": {
+    "prompt_tokens": 30,
+    "completion_tokens": 2,
+    "total_tokens": 32,
+    "prompt_tokens_details": {
+      "cached_tokens": 30
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "quota_zero_http_status": 429,
+  "quota_zero_error": {
+    "error": {
+      "message": "Monthly token quota is exhausted",
+      "type": "quota_exceeded",
+      "code": "quota_exceeded"
+    }
+  },
+  "certificate_fingerprint": "1dca340c36fa9074b5c41ca456a29671bfcbf5df181d78f18f5bb3dd3bec49ac",
+  "vendor_api_key_used": false,
+  "ledger_storage": "Isolated migrated SQLite under private verification data; path intentionally omitted"
+}

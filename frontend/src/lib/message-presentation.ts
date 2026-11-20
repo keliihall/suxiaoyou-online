@@ -25,84 +25,32 @@ export const GENERATED_FILE_TOOL_PARTS = new Set([
   "bash",
 ]);
 
-const FILE_CARD_EXTENSIONS = new Set([
-  ".aac",
-  ".avi",
-  ".bmp",
-  ".csv",
-  ".docx",
-  ".flac",
-  ".gif",
-  ".html",
-  ".htm",
-  ".jpeg",
-  ".jpg",
-  ".json",
-  ".m4a",
-  ".md",
-  ".mdx",
-  ".mkv",
-  ".mov",
-  ".mp3",
-  ".mp4",
-  ".ogg",
-  ".opus",
-  ".pdf",
-  ".png",
-  ".ppt",
-  ".pptx",
-  ".svg",
-  ".tsv",
-  ".txt",
-  ".wav",
-  ".webm",
-  ".webp",
-  ".xls",
-  ".xlsx",
-  ".zip",
-]);
-
-const NON_USER_FACING_FILE_HINTS = ["helper", "scratch", "temp", "tmp", "script"];
-const NON_USER_FACING_PATH_SEGMENTS = [
-  ".git",
-  ".suxiaoyou",
-  ".venv",
-  "__pycache__",
-  "node_modules",
-];
-
-function fileExtension(filePath: string): string {
-  const lastSlash = Math.max(filePath.lastIndexOf("/"), filePath.lastIndexOf("\\"));
-  const fileName = filePath.slice(lastSlash + 1);
-  const dot = fileName.lastIndexOf(".");
-  return dot >= 0 ? fileName.slice(dot).toLowerCase() : "";
-}
-
-function isUserFacingGeneratedFile(filePath: string): boolean {
-  const lastSlash = Math.max(filePath.lastIndexOf("/"), filePath.lastIndexOf("\\"));
-  const fileName = filePath.slice(lastSlash + 1).toLowerCase();
-  const pathSegments = filePath.toLowerCase().split(/[/\\]+/);
-  if (!FILE_CARD_EXTENSIONS.has(fileExtension(filePath))) return false;
-  if (pathSegments.some((segment) => NON_USER_FACING_PATH_SEGMENTS.includes(segment))) {
-    return false;
-  }
-  return !NON_USER_FACING_FILE_HINTS.some((hint) => fileName.includes(hint));
-}
-
-function isExplicitArtifactFile(part: ToolPart, filePath: string): boolean {
+/** Delivery intent, mirrored by backend session/file_delivery.py.
+ * A workspace write is process evidence; only a successful explicit delivery
+ * becomes a card. No filename or extension can disqualify a requested output.
+ */
+export function collectDeliveredFilePaths(part: ToolPart): string[] {
+  if (part.state.status !== "completed") return [];
   const metadata = (part.state.metadata ?? {}) as Record<string, unknown>;
-  if (metadata.artifact_delivery === true && metadata.file_path === filePath) return true;
-  if (!Array.isArray(metadata.artifact_files)) return false;
-  return metadata.artifact_files.some((value) => {
-    if (value === filePath) return true;
-    if (!value || typeof value !== "object") return false;
-    const item = value as Record<string, unknown>;
-    return item.path === filePath || item.file_path === filePath;
-  });
+  const paths: string[] = [];
+  if (Array.isArray(metadata.artifact_files)) {
+    for (const value of metadata.artifact_files) {
+      const path = value && typeof value === "object"
+        ? (value as Record<string, unknown>).path || (value as Record<string, unknown>).file_path
+        : value;
+      if (typeof path === "string" && path) paths.push(path);
+    }
+  }
+  const primary = metadata.file_path || (part.tool === "present_file" ? part.state.input?.file_path : undefined);
+  if (
+    (part.tool === "present_file" || part.tool === "image_generate" || metadata.artifact_delivery === true) &&
+    typeof primary === "string" && primary
+  ) paths.push(primary);
+  return [...new Set(paths)];
 }
 
 export function collectToolFilePaths(part: ToolPart): string[] {
-  const input = part.state.input as Record<string, unknown>;
+  const input = (part.state.input ?? {}) as Record<string, unknown>;
   const metadata = (part.state.metadata ?? {}) as Record<string, unknown>;
 
   if (part.tool === "present_file") {
@@ -149,13 +97,13 @@ export function isFileCardToolPart(part: PartData): boolean {
     part.type === "tool" &&
     (
       FILE_CARD_TOOL_PARTS.has((part as ToolPart).tool) ||
-      collectToolFilePaths(part as ToolPart).length > 0
+      collectDeliveredFilePaths(part as ToolPart).length > 0
     )
   );
 }
 
 export function fileCardsForTool(part: ToolPart, presentedFilePaths: Set<string>) {
-  const input = part.state.input as Record<string, unknown>;
+  const input = (part.state.input ?? {}) as Record<string, unknown>;
   const metadata = (part.state.metadata ?? {}) as Record<string, unknown>;
   const title =
     typeof metadata.title === "string"
@@ -164,15 +112,8 @@ export function fileCardsForTool(part: ToolPart, presentedFilePaths: Set<string>
         ? input.title
         : undefined;
 
-  return collectToolFilePaths(part)
-    .filter((filePath) =>
-      part.tool === "present_file"
-        ? !!filePath
-        : (
-            isExplicitArtifactFile(part, filePath) ||
-            isUserFacingGeneratedFile(filePath)
-          ) && !presentedFilePaths.has(filePath),
-    )
+  return collectDeliveredFilePaths(part)
+    .filter((filePath) => part.tool === "present_file" || !presentedFilePaths.has(filePath))
     .map((filePath) => ({ filePath, title: part.tool === "present_file" ? title : undefined }));
 }
 
@@ -180,7 +121,7 @@ export function presentedFilePathsForParts(parts: PartData[]): Set<string> {
   const paths = new Set<string>();
   for (const part of parts) {
     if (part.type !== "tool" || part.tool !== "present_file") continue;
-    for (const filePath of collectToolFilePaths(part)) paths.add(filePath);
+    for (const filePath of collectDeliveredFilePaths(part)) paths.add(filePath);
   }
   return paths;
 }
@@ -198,6 +139,7 @@ export function hasVisibleMessageOutput(parts: PartData[]): boolean {
       return true;
     }
     if (part.type !== "tool") return false;
+    if (part.tool === "present_file") return fileCardsForTool(part, presentedFilePaths).length > 0;
     if (part.tool === "artifact" && part.state.status === "error") return false;
     if (VISIBLE_TOOL_PARTS.has(part.tool)) return true;
     return (

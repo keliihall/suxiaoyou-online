@@ -1,0 +1,16 @@
+**
+!backend/
+backend/**
+!backend/requirements.txt
+!backend/alembic.ini
+!backend/alembic/
+!backend/alembic/**
+!backend/app/
+!backend/app/**
+!backend/release_packaging/
+!backend/release_packaging/**
+backend/app/**/__pycache__/
+backend/app/**/*.pyc
+backend/app/**/.env*
+backend/app/**/*.pem
+backend/app/**/session_token.json

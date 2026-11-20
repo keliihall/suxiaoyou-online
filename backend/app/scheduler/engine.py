@@ -102,21 +102,23 @@ class TaskScheduler:
     # Public API (called by API endpoints after CRUD)
     # ------------------------------------------------------------------
 
-    async def sync_task(self, task_id: str) -> None:
+    async def sync_task(self, task_id: str, *, db: AsyncSession | None = None) -> None:
         """Recompute next_run_at for a task after create/update/toggle."""
+        # API mutations must schedule in their own still-open transaction.
+        # A second session cannot see an uncommitted insert and can deadlock
+        # against the writer when updating an existing SQLite task.
+        if db is not None:
+            await self._sync_task_in_session(db, task_id)
+            return
         async with self._session_factory() as db:
             async with db.begin():
-                task = (
-                    await db.execute(
-                        select(ScheduledTask).where(ScheduledTask.id == task_id)
-                    )
-                ).scalar_one_or_none()
-                if task is None:
-                    return
-                if task.enabled:
-                    task.next_run_at = self._compute_next_run(task.schedule_config)
-                else:
-                    task.next_run_at = None
+                await self._sync_task_in_session(db, task_id)
+
+    async def _sync_task_in_session(self, db: AsyncSession, task_id: str) -> None:
+        task = await db.get(ScheduledTask, task_id)
+        if task is not None:
+            task.next_run_at = self._compute_next_run(task.schedule_config) if task.enabled else None
+            await db.flush()
 
     async def run_now(self, task_id: str) -> str | None:
         """Manually trigger a task immediately. Returns session_id."""

@@ -2,7 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { IS_CLOUD, userStorage } from "@/lib/cloud-session";
+import {
+  defaultWorkModeSettings,
+  migrateCloudWorkModeDefault,
+  settingsForWorkMode,
+  type WorkMode,
+} from "@/lib/work-mode";
 import {
   getSavedPermissionDecision,
   migrateSavedPermissionRules,
@@ -34,7 +41,7 @@ export type ActiveProvider =
  *   ask  → agent=build, auto-approve off
  *   auto → agent=build, auto-approve on
  */
-export type WorkMode = "plan" | "ask" | "auto";
+export type { WorkMode } from "@/lib/work-mode";
 
 interface SettingsStore {
   /** Whether the user has completed the first-run onboarding flow */
@@ -105,11 +112,8 @@ export const useSettingsStore = create<SettingsStore>()(
       hasCompletedOnboarding: false,
       selectedModel: null,
       selectedProviderId: null,
-      selectedAgent: "build",
-      safeMode: false,
-      workMode: "ask" as WorkMode,
+      ...defaultWorkModeSettings(IS_CLOUD),
       reasoningEnabled: true,
-      permissionPresets: { fileChanges: false, runCommands: false },
       savedPermissions: [],
       workspaceDirectory: null,
       hasSeenHints: false,
@@ -140,34 +144,7 @@ export const useSettingsStore = create<SettingsStore>()(
           workMode: mode,
         });
       },
-      setWorkMode: (mode) => {
-        switch (mode) {
-          case "plan":
-            set({
-              workMode: "plan",
-              selectedAgent: "plan",
-              safeMode: true,
-              permissionPresets: { fileChanges: false, runCommands: false },
-            });
-            break;
-          case "ask":
-            set({
-              workMode: "ask",
-              selectedAgent: "build",
-              safeMode: false,
-              permissionPresets: { fileChanges: false, runCommands: false },
-            });
-            break;
-          case "auto":
-            set({
-              workMode: "auto",
-              selectedAgent: "build",
-              safeMode: false,
-              permissionPresets: { fileChanges: true, runCommands: true },
-            });
-            break;
-        }
-      },
+      setWorkMode: (mode) => set(settingsForWorkMode(mode)),
       setReasoningEnabled: (enabled) => set({ reasoningEnabled: enabled }),
       togglePermissionPreset: (key) =>
         set((s) => {
@@ -218,7 +195,7 @@ export const useSettingsStore = create<SettingsStore>()(
       setHasSeenHints: (seen) => set({ hasSeenHints: seen }),
       setLanguage: (lang) => {
         set({ language: lang });
-        localStorage.setItem("suxiaoyou-language", lang);
+        userStorage.setItem("suxiaoyou-language", lang);
         // Dynamic import to avoid circular dependency
         import("@/i18n/config").then((mod) => mod.default.changeLanguage(lang));
       },
@@ -226,7 +203,8 @@ export const useSettingsStore = create<SettingsStore>()(
     }),
     {
       name: "suxiaoyou-settings",
-      version: 5,
+      storage: createJSONStorage(() => userStorage),
+      version: 6,
       migrate: (persistedState, persistedVersion) => {
         if (!persistedState || typeof persistedState !== "object") {
           return persistedState as SettingsStore;
@@ -291,7 +269,7 @@ export const useSettingsStore = create<SettingsStore>()(
           );
         }
 
-        return state as SettingsStore;
+        return migrateCloudWorkModeDefault(state, persistedVersion, IS_CLOUD) as SettingsStore;
       },
     },
   ),

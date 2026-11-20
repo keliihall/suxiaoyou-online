@@ -1,0 +1,3 @@
+# Fail closed with legacy builders. Each cloud Dockerfile has its own explicit
+# BuildKit context allowlist; never send local state, credentials or databases.
+**

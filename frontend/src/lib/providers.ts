@@ -9,12 +9,15 @@
  */
 
 import type { ActiveProvider } from "@/stores/settings-store";
+import { IS_CLOUD } from "./cloud-session.ts";
 
 /** A concrete provider bucket (the non-null `ActiveProvider` values). */
 export type ProviderBucket = Exclude<ActiveProvider, null>;
 
 /** Which dropdown bucket a model's `provider_id` belongs to. */
 export function providerBucket(providerId: string): ProviderBucket {
+  // The private engine exposes centrally managed routes through one adapter.
+  if (IS_CLOUD && providerId === "custom_cloud") return "byok";
   if (providerId === "openai-subscription") return "chatgpt";
   if (providerId === "ollama") return "ollama";
   if (providerId === "rapid-mlx") return "rapid-mlx";

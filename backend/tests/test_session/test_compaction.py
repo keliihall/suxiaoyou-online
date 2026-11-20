@@ -33,6 +33,7 @@ class _CompactionProvider:
             type="usage",
             data={"input": 10, "output": 5, "total": 15},
         )
+        yield StreamChunk(type="finish", data={"reason": "stop"})
 
 
 class _CompactionRegistry:
@@ -190,6 +191,40 @@ async def test_goal_pause_closes_compaction_provider_admission(
     assert provider.started is False
     async with session_factory() as db:
         assert list((await db.execute(select(GoalUsageRecord))).scalars()) == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("ending", ["error", "exception", "missing_finish", "length"])
+async def test_failed_goal_summary_preserves_confirmed_usage_without_returning_partial_text(
+    session_factory, ending,
+) -> None:
+    job = await _seed_goal_compaction(session_factory)
+
+    class FailedSummary(_CompactionProvider):
+        async def stream_chat(self, model_id, messages, **kwargs):
+            yield StreamChunk(type="text-delta", data={"text": "partial summary"})
+            yield StreamChunk(type="usage", data={"input": 10, "output": 5, "total": 15})
+            if ending == "exception":
+                raise RuntimeError("PRIVATE_PROVIDER_DIAGNOSTIC")
+            if ending == "error":
+                yield StreamChunk(type="error", data={"message": "PRIVATE_PROVIDER_DIAGNOSTIC"})
+            if ending == "length":
+                yield StreamChunk(type="finish", data={"reason": "length"})
+
+    provider = FailedSummary()
+    summary = await _phase2_summarize(
+        "compact-session", job=job, session_factory=session_factory,
+        provider_registry=_CompactionRegistry(provider),
+        agent_registry=SimpleNamespace(get=lambda _: SimpleNamespace(system_prompt="Summarize")),
+    )
+
+    assert summary is None
+    async with session_factory() as db:
+        records = list((await db.execute(select(GoalUsageRecord))).scalars())
+    assert len(records) == 1
+    assert (records[0].tokens_used, records[0].cost_used_microusd) == (15, 20)
+    assert job.goal_run_usage == (15, 20)
+    assert "PRIVATE_PROVIDER_DIAGNOSTIC" not in str([event.data for event in job.events])
 
 
 @pytest.mark.parametrize(

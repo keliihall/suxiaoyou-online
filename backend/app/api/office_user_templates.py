@@ -13,7 +13,7 @@ from typing import Any, NoReturn
 from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -1309,6 +1309,92 @@ async def approve_user_office_template(
             session_id=body.session_id,
             details=audit,
         )
+        if isinstance(exc, Exception):
+            return _api_error(request, exc)
+        raise
+
+
+@router.post("/{template_ref}/revalidate")
+async def revalidate_user_office_template(
+    template_ref: str,
+    body: UserTemplateApprovalBody,
+    request: Request,
+    session_factory: SessionFactoryDep,
+) -> Any:
+    """Create a new immutable render revision and require fresh user approval."""
+    candidate = None
+    service = None
+    publication_started = False
+    audit = _audit_details(workspace_instance_id=body.workspace_instance_id,
+        template_ref=template_ref, revision=body.revision, state_version=body.expected_state_version)
+    try:
+        _require_feature()
+        await _require_workspace_binding(session_factory, session_id=body.session_id,
+            workspace_instance_id=body.workspace_instance_id)
+        if not _runtime_can_instantiate(request):
+            raise _UserTemplateRuntimeUnavailable
+        async with _lifecycle_lock(request):
+            record = await _scoped_record(session_factory,
+                workspace_instance_id=body.workspace_instance_id,
+                template_ref=template_ref, revision=body.revision)
+            if (record.state_version != body.expected_state_version
+                    or record.source_sha256 != body.expected_source_sha256
+                    or record.render_cache_key != body.expected_render_cache_key
+                    or record.status not in {"approved", "needs_confirmation", "needs_review"}):
+                raise _UserTemplateConflict
+            await _record_template_audit(session_factory, action="revalidate", outcome="started",
+                session_id=body.session_id, details=audit, required=True)
+            service = await _service_locked(request, session_factory, reconcile=True)
+            async with session_factory() as db:
+                highest = await db.scalar(select(func.max(OfficeUserTemplate.revision)).where(
+                    OfficeUserTemplate.template_ref == record.template_ref))
+            next_revision = int(highest or record.revision) + 1
+            candidate = await service.revalidate_and_register(template_ref=record.template_ref,
+                revision=record.revision, next_revision=next_revision,
+                source_sha256=record.source_sha256, manifest_sha256=record.manifest_sha256,
+                format_name=record.format,
+                placeholder_schema=decode_user_template_placeholder_schema(record.placeholder_schema),
+                placeholder_parts=tuple(record.placeholder_parts), display_name=record.display_name)
+            if candidate.status != "needs_confirmation" or candidate.render_manifest.quality != "authoritative":
+                raise UserTemplateEvidenceError("User template revalidation requires authoritative evidence")
+            await _require_workspace_binding(session_factory, session_id=body.session_id,
+                workspace_instance_id=body.workspace_instance_id)
+            now = datetime.now(timezone.utc)
+            fresh = _record_from_candidate(candidate, session_id=body.session_id,
+                workspace_instance_id=body.workspace_instance_id,
+                idempotency_key=f"revalidate:{template_ref}:{body.revision}:{body.expected_state_version}")
+            fresh.validation_report = {**fresh.validation_report, "revalidated_from_revision": body.revision}
+            async with session_factory() as db:
+                async with db.begin():
+                    changed = await db.execute(update(OfficeUserTemplate).where(
+                        OfficeUserTemplate.id == record.id,
+                        OfficeUserTemplate.workspace_instance_id == body.workspace_instance_id,
+                        OfficeUserTemplate.revision == body.revision,
+                        OfficeUserTemplate.state_version == body.expected_state_version,
+                        OfficeUserTemplate.status == record.status,
+                        OfficeUserTemplate.source_sha256 == body.expected_source_sha256,
+                        OfficeUserTemplate.render_cache_key == body.expected_render_cache_key,
+                    ).values(state_version=OfficeUserTemplate.state_version + 1, time_updated=now))
+                    if changed.rowcount != 1:
+                        raise _UserTemplateConflict
+                    db.add(fresh)
+                    await db.flush()
+                    publication_started = True
+                await db.refresh(fresh)
+                content = _public_record(fresh, runtime_ready=False)
+            candidate = None
+        await _record_template_audit(session_factory, action="revalidate", outcome="success",
+            session_id=body.session_id, details={**audit, "new_revision": next_revision})
+        return JSONResponse(status_code=201, content={"template": content,
+            "supersedes": {"template_ref": template_ref, "revision": body.revision,
+                "state_version": body.expected_state_version + 1}}, headers={"Cache-Control": "no-store"})
+    except BaseException as exc:
+        if candidate is not None and service is not None and not publication_started:
+            await _discard_candidate(service, candidate)
+        await _record_template_audit(session_factory, action="revalidate", outcome=_audit_failure_outcome(exc),
+            session_id=body.session_id, details=audit)
+        if isinstance(exc, IntegrityError):
+            return _api_error(request, _UserTemplateConflict())
         if isinstance(exc, Exception):
             return _api_error(request, exc)
         raise

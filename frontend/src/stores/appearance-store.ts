@@ -1,7 +1,8 @@
 "use client";
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { userStorage } from "@/lib/cloud-session";
 
 export type ThemeKey = "light" | "dark";
 export type ColorKind = "accent" | "background" | "foreground";
@@ -9,9 +10,9 @@ export type ColorKind = "accent" | "background" | "foreground";
 /** Stock theme defaults — match the base tokens in globals.css. Used as
  *  placeholder values in the UI when the user hasn't overridden yet. */
 export const APPEARANCE_DEFAULTS = {
-  light: { accent: "#339CFF", background: "#FFFFFF", foreground: "#1A1C1F" },
-  dark: { accent: "#339CFF", background: "#000000", foreground: "#FFFFFF" },
-  uiFontSize: 13,
+  light: { accent: "#2563EB", background: "#FFFFFF", foreground: "#172033" },
+  dark: { accent: "#6B9EFF", background: "#101620", foreground: "#EDF2FA" },
+  uiFontSize: 14,
   codeFontSize: 12,
 } as const;
 
@@ -84,7 +85,7 @@ export const useAppearanceStore = create<AppearanceState>()(
       setPointerCursors: (v) => set({ pointerCursors: v }),
       reset: () => set(INITIAL),
     }),
-    { name: "suxiaoyou-appearance" },
+    { name: "suxiaoyou-appearance", storage: createJSONStorage(() => userStorage) },
   ),
 );
 

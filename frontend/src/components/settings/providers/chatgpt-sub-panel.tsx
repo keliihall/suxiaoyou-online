@@ -124,9 +124,9 @@ export function ChatGPTSubPanel({ keyStatus }: ChatGPTSubPanelProps) {
 
   return (
     <div>
-      <p className="text-xs text-[var(--text-secondary)] mb-3">
+      {/* Auxiliary copy retained in source: <p className="text-xs text-[var(--text-secondary)] mb-3">
         {t("chatgptSubscriptionDesc")}
-      </p>
+      </p> */}
       {openaiSubStatus?.is_connected ? (
         <div className="space-y-3">
           <div

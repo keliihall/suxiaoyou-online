@@ -10,17 +10,17 @@ export default function PluginsPage() {
   const { t } = useTranslation("plugins");
 
   return (
-    <div className="flex-1 overflow-y-auto">
-      <div className="mx-auto max-w-2xl px-4 py-8">
+    <div className="flex-1 overflow-y-auto bg-[var(--surface-chat)] scrollbar-auto">
+      <div className="page-shell mx-auto w-full max-w-5xl px-5 pb-10 pt-20 sm:px-8 lg:py-10">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
+        <div className="page-header mb-8 flex min-h-12 items-center gap-3 border-b border-[var(--border-subtle)] pb-6">
           <Button variant="ghost" size="icon" className="h-8 w-8 lg:hidden" asChild>
-            <Link href="/c/new">
+            <Link href="/c/new" aria-label={t("settings:backToApp")}>
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
-          <Plug className="h-5 w-5 text-[var(--text-secondary)]" />
-          <h1 className="text-lg font-semibold text-[var(--text-primary)]">
+          <Plug className="h-6 w-6 text-[var(--text-secondary)]" />
+          <h1 className="text-[26px] font-semibold tracking-tight text-[var(--text-primary)]">
             {t("title")}
           </h1>
         </div>

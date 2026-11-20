@@ -1,5 +1,5 @@
 import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { extendTailwindMerge } from "tailwind-merge";
 import type { PartData, TextPart } from "@/types/message";
 
 export const APP_TIME_ZONE = "Asia/Shanghai";
@@ -7,8 +7,22 @@ export const APP_TIME_ZONE = "Asia/Shanghai";
 const BACKEND_NAIVE_DATETIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?$/;
 const SHANGHAI_OFFSET_MS = 8 * 60 * 60 * 1000;
 
+// These utilities set font size/line height, not text color. Without this
+// registration a small Button's text-ui-xs removes its theme foreground.
+const mergeClasses = extendTailwindMerge({
+  extend: {
+    classGroups: {
+      "font-size": [{ text: [
+        "ui-overline", "ui-caption", "ui-body", "ui-title-sm", "ui-title",
+        "ui-title-lg", "ui-3xs", "ui-2xs", "ui-xs", "ui-sm", "ui-md",
+        "ui-lg", "ui-xl", "ui-code", "ui-qr",
+      ] }],
+    },
+  },
+});
+
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+  return mergeClasses(clsx(inputs));
 }
 
 export function parseBackendDate(dateLike: string | Date): Date {

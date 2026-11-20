@@ -105,6 +105,44 @@ class StreamChunk(BaseModel):
     data: dict[str, Any] = {}
 
 
+# Cloud transports pass fixed categories rather than vendor diagnostics. Keep
+# this contract independent of the cloud database so tenant runtimes share it.
+SAFE_PROVIDER_ERRORS = {
+    "model_context_too_long": ("当前对话超出模型上下文限制。", "The conversation exceeds the model context limit."),
+    "model_request_rejected": ("模型服务不接受本次请求，请检查模型配置。", "The model service rejected this request. Check its configuration."),
+    "model_authentication_failed": ("模型服务认证失败，请管理员检查 API Key 或模型权限。", "Model authentication failed. Ask an administrator to check the API key and permissions."),
+    "model_payment_required": ("模型服务余额不足，请管理员充值后重试。", "The model account has insufficient credit. Ask an administrator to top it up."),
+    "model_rate_limited": ("模型服务请求受限，请稍后重试。", "The model service is rate limited. Try again later."),
+    "model_timeout": ("模型服务响应超时，请先确认任务状态，避免重复提交。", "The model request timed out. Check the task status before resubmitting it."),
+    "model_connection_interrupted": ("模型服务连接中断，请先确认任务状态，避免重复提交。", "The model connection was interrupted. Check the task status before resubmitting it."),
+    "model_usage_unconfirmed": ("模型请求未完整结束，用量待核对，请勿重复提交。", "The model response was incomplete. Its usage needs review; avoid resubmitting it."),
+    "model_response_incomplete": ("模型未返回可用的最终结果，请调整任务后继续。", "The model did not return a usable final result. Adjust the task before continuing."),
+    "model_output_exhausted": ("模型输出额度已用尽，未生成最终结果，请调整思考模式或输出额度。", "The model exhausted its output allowance before producing a final result. Adjust thinking mode or the output allowance."),
+    "model_service_error": ("模型服务调用失败，请管理员检查服务状态。", "The model service failed. Ask an administrator to check its status."),
+}
+
+
+def safe_provider_error_metadata(value: Any) -> dict[str, Any]:
+    """Accept only non-sensitive correlation fields, independently validated."""
+    get = value.get if isinstance(value, dict) else lambda key: getattr(value, key, None)
+    result: dict[str, Any] = {}
+    request_id = get("request_id")
+    if isinstance(request_id, str) and re.fullmatch(r"[a-f0-9]{32}", request_id):
+        result["request_id"] = request_id
+    status = get("upstream_status")
+    if isinstance(status, int) and not isinstance(status, bool) and 100 <= status <= 599:
+        result["upstream_status"] = status
+    return result
+
+
+def safe_provider_error_data(code: str, **metadata: Any) -> dict[str, Any]:
+    """A dispatched cloud request is never automatically replayed on error."""
+    if not isinstance(code, str) or code not in SAFE_PROVIDER_ERRORS:
+        code = "model_service_error"
+    return {"code": code, "message": SAFE_PROVIDER_ERRORS[code][0],
+            "retryable": False, **safe_provider_error_metadata(metadata)}
+
+
 class ApiKeyUpdate(BaseModel):
     """Request to update the OpenRouter API key."""
 

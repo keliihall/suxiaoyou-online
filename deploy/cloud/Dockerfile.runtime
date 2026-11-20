@@ -1,0 +1,53 @@
+FROM node:22-bookworm-slim AS node
+FROM python:3.12-slim-bookworm
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    HOME=/tenant/home \
+    XDG_CACHE_HOME=/tenant/home/.cache \
+    XDG_CONFIG_HOME=/tenant/home/.config \
+    XDG_DATA_HOME=/tenant/home/.local/share \
+    MPLCONFIGDIR=/tenant/home/.cache/matplotlib \
+    TMPDIR=/tenant/state/tmp \
+    PYTHONPATH=/opt/backend \
+    CLOUD_ENGINE_PORT=8080 \
+    CLOUD_ENGINE_TENANT_ROOT=/tenant
+
+# These are runtime tools used by the original engine. Host LibreOffice offers
+# approximate previews only; it does not satisfy the signed Office write gate.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       bash git ripgrep bubblewrap ca-certificates curl procps zstd \
+       libreoffice-writer libreoffice-calc libreoffice-impress \
+       poppler-utils fonts-dejavu-core fonts-liberation \
+       fonts-crosextra-carlito fonts-crosextra-caladea fonts-noto-cjk \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --gid 10001 runtime \
+    && useradd --uid 10001 --gid 10001 --home-dir /tenant/home --no-create-home --shell /bin/bash runtime \
+    && mkdir -p /tenant/home /tenant/state /tenant/workspaces /opt/backend \
+    && chown -R 10001:10001 /tenant
+
+COPY --from=node /usr/local/bin/node /usr/local/bin/node
+COPY --from=node /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
+RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
+    && ln -s /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
+
+COPY backend/requirements.txt /opt/backend/requirements.txt
+RUN python -m pip install --require-hashes -r /opt/backend/requirements.txt
+
+# The Dockerfile-specific ignore file allowlists source and bundled skills,
+# plugins and signed template assets. No host state or environment is sent.
+COPY backend/app /opt/backend/app
+COPY backend/release_packaging /opt/backend/release_packaging
+COPY backend/alembic.ini /opt/backend/alembic.ini
+COPY backend/alembic /opt/backend/alembic
+RUN python -m app.cloud.office_job --write-descriptor \
+    && chmod -R a+rX /opt/backend/cloud-office /var/lib/libreoffice /var/spool/libreoffice
+USER 10001:10001
+WORKDIR /tenant/state
+EXPOSE 8080
+HEALTHCHECK --interval=15s --timeout=3s --start-period=60s --retries=4 \
+    CMD python -c "import os,urllib.request; urllib.request.urlopen('http://127.0.0.1:'+os.environ.get('CLOUD_ENGINE_PORT','8080')+'/livez', timeout=2).close()"
+CMD ["python", "-m", "app.cloud.runtime_entry"]

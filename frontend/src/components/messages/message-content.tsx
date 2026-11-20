@@ -14,6 +14,7 @@ import { TodoProgress, type TodoItem } from "@/components/parts/todo-progress";
 import { extractSources } from "@/lib/sources";
 import { cn } from "@/lib/utils";
 import type { ActivityData, ChainItem } from "@/stores/activity-store";
+import { hasTerminalStepFinish } from "@/lib/activity-state";
 import {
   GENERATED_FILE_TOOL_PARTS,
   VISIBLE_TOOL_PARTS,
@@ -136,9 +137,7 @@ export function MessageContent({
             thinkingDuration,
             isAwaitingConfirmation,
             stepParts,
-            isTerminal: !isStreaming || stepParts.some(
-              (part) => part.type === "step-finish" && part.reason !== "tool_use",
-            ),
+            isTerminal: !isStreaming || hasTerminalStepFinish({ toolParts, stepParts }),
             hasVisibleOutput: hasVisibleMessageOutput(parts),
             chain,
           }
@@ -147,7 +146,7 @@ export function MessageContent({
   );
 
   // Content parts: text, subtask, and deliverable tool calls (shown as inline cards)
-  // Exclude error-status artifact calls (e.g. failed update attempts) — they have no content to display
+  // Failed attempts without content have no preview; keep any recovered content available.
   const contentParts = useMemo(
     () =>
       parts.filter(
@@ -167,13 +166,29 @@ export function MessageContent({
               fileCardsForTool(p as ToolPart, presentedFilePaths).length > 0
             )
           ) &&
-          !(p.type === "tool" && (p as ToolPart).tool === "artifact" && (p as ToolPart).state.status === "error"),
+          !(
+            p.type === "tool" &&
+            p.tool === "artifact" &&
+            p.state.status === "error" &&
+            !(p.state.input.content ?? p.state.metadata?.content)
+          ),
       ),
     [parts, presentedFilePaths],
   );
 
   // Extract sources from web_search / web_fetch tool parts for citation rendering
   const sources = useMemo(() => extractSources(parts), [parts]);
+
+  // A turn combines its separate agent steps, so final prose can link files
+  // written by an earlier step without exposing every working file as a card.
+  // Only completed, recorded tools supply candidates; prose cannot authorize
+  // an arbitrary server path by itself.
+  const fileReferences = useMemo(
+    () => [...new Set(toolParts
+      .filter((part) => part.state.status === "completed")
+      .flatMap(collectToolFilePaths))].map((path) => ({ path })),
+    [toolParts],
+  );
 
   // Extract latest todo list from the most recent todo tool call
   const latestTodos = useMemo<TodoItem[]>(() => {
@@ -260,6 +275,7 @@ export function MessageContent({
                 data={part}
                 isStreaming={isStreaming && originalIndex === lastTextIndex}
                 sources={sources}
+                fileReferences={fileReferences}
               />
             );
           case "subtask":

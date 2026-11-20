@@ -135,6 +135,8 @@ export interface SSEEventData {
   error_message?: string | null;
   /** Machine-readable error tag (e.g. "JOB_NOT_FOUND") for quiet recovery. */
   code?: string | null;
+  request_id?: string | null;
+  upstream_status?: number | null;
 
   // done
   finish_reason?: string | null;

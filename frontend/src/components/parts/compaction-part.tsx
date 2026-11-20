@@ -143,10 +143,7 @@ export function CompactionPart({ data }: CompactionPartProps) {
                 layout
                 variants={itemVariants}
                 exit="exit"
-                className={cn(
-                  "flex items-center gap-2 py-0.5 text-[13px]",
-                  isDone && "opacity-50",
-                )}
+                className="flex items-center gap-2 py-0.5 text-[13px]"
               >
                 {/* Icon — three-state (mirrors todo-progress.tsx) */}
                 {isDone ? (
@@ -156,7 +153,7 @@ export function CompactionPart({ data }: CompactionPartProps) {
                     <span className="h-1.5 w-1.5 rounded-full bg-[var(--text-primary)]" />
                   </span>
                 ) : (
-                  <PhaseIcon className="h-3 w-3 shrink-0 text-[var(--text-tertiary)] opacity-60 ml-px" />
+                  <PhaseIcon className="h-3 w-3 shrink-0 text-[var(--text-tertiary)] ml-px" />
                 )}
 
                 {/* Text — shimmer for active, muted for done */}
@@ -164,7 +161,7 @@ export function CompactionPart({ data }: CompactionPartProps) {
                   className={cn(
                     "truncate",
                     isDone
-                      ? "text-[var(--text-tertiary)]"
+                      ? "text-[var(--text-secondary)]"
                       : isActive
                         ? "shimmer-text"
                         : "text-[var(--text-secondary)]",

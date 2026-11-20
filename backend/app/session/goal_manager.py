@@ -656,7 +656,9 @@ async def resume_session_goal(
         raise GoalInvalidTransitionError(
             f"Cannot resume a Goal in {goal.status!r}/{goal.run_state!r} state"
         )
-    _assert_remaining_budget(goal)
+    # Explicit operator resume is not an autonomous continuation. Keep the
+    # token/cost/time gates while allowing max_continuations=0 manual Goals.
+    _assert_remaining_budget(goal, include_continuations=False)
     result = await db.execute(
         update(SessionGoal)
         .where(

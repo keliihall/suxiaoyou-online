@@ -1,3 +1,5 @@
+import { userStorage } from "./cloud-session.ts";
+
 type StorageLike = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
 interface PendingPromptRecord {
@@ -49,7 +51,7 @@ export function uploadSelectionFingerprint(
 export function reservePromptRequestId(
   scope: string,
   fingerprint: string,
-  storage: StorageLike | null = typeof localStorage === "undefined" ? null : localStorage,
+  storage: StorageLike | null = typeof localStorage === "undefined" ? null : userStorage,
 ): string {
   const key = `${STORAGE_PREFIX}${scope}`;
   if (storage) {
@@ -80,7 +82,7 @@ export function reservePromptRequestId(
 export function clearPromptRequestId(
   scope: string,
   expectedRequestId: string,
-  storage: StorageLike | null = typeof localStorage === "undefined" ? null : localStorage,
+  storage: StorageLike | null = typeof localStorage === "undefined" ? null : userStorage,
 ): void {
   if (!storage) return;
   const key = `${STORAGE_PREFIX}${scope}`;

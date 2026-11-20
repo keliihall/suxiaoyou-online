@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
+  hasTerminalStepFinish,
   isActivityComplete,
   isActivityFailed,
 } from "../../src/lib/activity-state.ts";
@@ -31,11 +32,11 @@ function tool(
   };
 }
 
-test("generated deliverables count as visible assistant output", () => {
+test("explicit deliverables count as visible output while process writes remain in activity", () => {
   assert.equal(
     hasVisibleMessageOutput([
       tool("bash", "completed", {
-        written_files: ["/workspace/suxiaoyou_written/news.mp3"],
+        artifact_files: ["/workspace/suxiaoyou_written/news.mp3"],
       }),
     ]),
     true,
@@ -99,6 +100,52 @@ test("activity outcome follows the final terminal step instead of tool detours",
     }),
     true,
   );
+});
+
+test("a resumed step does not inherit an earlier attempt's task failure", () => {
+  const activity = {
+    toolParts: [tool("bash", "running")],
+    stepParts: [
+      { type: "step-finish", reason: "error", tokens: {}, cost: 0 } as const,
+      { type: "step-start" },
+    ],
+    hasVisibleOutput: true,
+  };
+  const live = { ...activity, isTerminal: hasTerminalStepFinish(activity) };
+  assert.equal(live.isTerminal, false);
+  assert.equal(isActivityComplete(live), false);
+  assert.equal(isActivityFailed(live), false);
+
+  // Between STEP_START and the next tool call, old text is still visible.
+  assert.equal(isActivityComplete({ ...live, toolParts: [] }), false);
+});
+
+test("a continued tool step supersedes an old terminal error", () => {
+  const activity = {
+    toolParts: [tool("read", "completed")],
+    stepParts: [
+      { type: "step-finish", reason: "error", tokens: {}, cost: 0 } as const,
+      { type: "step-start" },
+      { type: "step-finish", reason: "tool_use", tokens: {}, cost: 0 } as const,
+    ],
+  };
+  assert.equal(hasTerminalStepFinish(activity), false);
+  assert.equal(isActivityFailed(activity), false);
+});
+
+test("a genuine final error and authoritative terminal state remain visible", () => {
+  const failed = {
+    toolParts: [tool("bash", "running")],
+    stepParts: [
+      { type: "step-start" },
+      { type: "step-finish", reason: "error", tokens: {}, cost: 0 } as const,
+    ],
+  };
+  assert.equal(hasTerminalStepFinish(failed), true);
+  assert.equal(isActivityComplete(failed), true);
+  assert.equal(isActivityFailed(failed), true);
+  assert.equal(isActivityComplete({ ...failed, isTerminal: true }), true);
+  assert.equal(isActivityComplete({ ...failed, isTerminal: true, isAwaitingConfirmation: true }), false);
 });
 
 test("DONE clears generation before any database reconciliation", () => {

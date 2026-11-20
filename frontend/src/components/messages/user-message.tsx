@@ -45,7 +45,6 @@ interface UserMessageProps {
 
 export function UserMessage({ message, isNew = true, onEditAndResend, isGenerating, directory, sessionId }: UserMessageProps) {
   const { t } = useTranslation("chat");
-  const [hovered, setHovered] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState("");
   const [copied, setCopied] = useState(false);
@@ -282,7 +281,7 @@ export function UserMessage({ message, isNew = true, onEditAndResend, isGenerati
             <button
               type="button"
               onClick={handleBrowse}
-              className="shrink-0 flex items-center justify-center h-8 w-8 rounded-full border border-[var(--border-default)] hover:bg-[var(--surface-tertiary)] transition-colors text-[var(--text-secondary)]"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-[var(--border-default)] text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-tertiary)] lg:h-9 lg:w-9 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:min-w-11"
               aria-label={t("attachFile")}
             >
               <Plus className="h-4 w-4" />
@@ -299,7 +298,7 @@ export function UserMessage({ message, isNew = true, onEditAndResend, isGenerati
               type="button"
               onClick={handleSave}
               disabled={!editText.trim() && editAttachments.length === 0}
-              className="px-4 py-1.5 text-sm font-medium rounded-full bg-[var(--text-primary)] text-[var(--surface-primary)] hover:opacity-90 transition-opacity disabled:opacity-40"
+              className="min-h-11 rounded-lg bg-[var(--brand-primary)] px-4 py-1.5 text-sm font-medium text-[var(--brand-primary-text)] transition-colors hover:bg-[var(--brand-primary-hover)] disabled:bg-[var(--surface-tertiary)] disabled:text-[var(--text-secondary)] disabled:cursor-not-allowed lg:min-h-9"
             >
               {t("send")}
             </button>
@@ -311,7 +310,7 @@ export function UserMessage({ message, isNew = true, onEditAndResend, isGenerati
 
   return (
     <motion.div
-      className="flex flex-col items-end"
+      className="group/message flex min-w-0 flex-col items-end"
       initial={isNew ? { opacity: 0, y: 6 } : false}
       animate={{ opacity: 1, y: 0 }}
       transition={{
@@ -320,8 +319,6 @@ export function UserMessage({ message, isNew = true, onEditAndResend, isGenerati
         damping: 30,
         opacity: { duration: 0.2 },
       }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
     >
       <div className="max-w-[85%] sm:max-w-[70%] rounded-2xl bg-[var(--user-bubble-bg)] px-4 py-2.5 shadow-[var(--shadow-sm)] border border-[var(--border-default)]">
         {text && (
@@ -338,15 +335,15 @@ export function UserMessage({ message, isNew = true, onEditAndResend, isGenerati
         )}
       </div>
 
-      {/* Action icons — always in DOM to avoid layout shift, opacity-only toggle */}
+      {/* Keep actions in flow, visible to touch and keyboard users. */}
       <div
-        className={`flex items-center gap-0.5 mt-1 mr-1 transition-opacity duration-150 ${hovered ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        className="mt-2 mr-1 flex max-w-full flex-wrap items-center gap-1 opacity-100 transition-opacity duration-150 lg:opacity-0 lg:group-hover/message:opacity-100 lg:group-focus-within/message:opacity-100 [@media(hover:none)]:opacity-100"
       >
         {text && (
           <button
             type="button"
             onClick={handleCopy}
-            className="flex items-center justify-center h-7 w-7 rounded-md text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-secondary)] transition-colors"
+            className="flex items-center justify-center h-11 w-11 lg:h-9 lg:w-9 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:min-w-11 rounded-md text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-secondary)] transition-colors"
             aria-label={copied ? t("copied") : t("copyMessage")}
           >
             <AnimatePresence mode="wait" initial={false}>
@@ -380,7 +377,7 @@ export function UserMessage({ message, isNew = true, onEditAndResend, isGenerati
           <button
             type="button"
             onClick={handleStartEdit}
-            className="flex items-center justify-center h-7 w-7 rounded-md text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-secondary)] transition-colors"
+            className="flex items-center justify-center h-11 w-11 lg:h-9 lg:w-9 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:min-w-11 rounded-md text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-secondary)] transition-colors"
             aria-label={t("editMessage")}
           >
             <Pencil className="h-3.5 w-3.5" />

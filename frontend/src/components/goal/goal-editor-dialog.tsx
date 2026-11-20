@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -112,10 +111,10 @@ export function GoalEditorDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
+      <DialogContent aria-describedby={undefined} className="max-w-xl">
         <DialogHeader>
           <DialogTitle>{t("goalEditTitle")}</DialogTitle>
-          <DialogDescription>{t("goalEditDescription")}</DialogDescription>
+          {/* Auxiliary copy retained in source: <DialogDescription>{t("goalEditDescription")}</DialogDescription> */}
         </DialogHeader>
 
         <div className="space-y-4">

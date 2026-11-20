@@ -37,6 +37,7 @@ from app.office_rendering.errors import (
 )
 from app.office_rendering.models import (
     APPROXIMATE_QUALITY,
+    LIBREOFFICE_PARAMETERS_VERSION,
     PageArtifact,
     PdfArtifact,
     RenderManifest,
@@ -61,7 +62,6 @@ from app.office_rendering.sandbox import (
 )
 
 
-LIBREOFFICE_PARAMETERS_VERSION: Final = "libreoffice-pdf-png-v1"
 LIBREOFFICE_RENDERER_ID: Final = "libreoffice-pdf-png"
 LIBREOFFICE_PIPELINE_VERSION: Final = "pipeline-3"
 DEFAULT_DPI: Final = 144

@@ -11,6 +11,7 @@ import { api } from "@/lib/api";
 import { API, IS_DESKTOP, queryKeys } from "@/lib/constants";
 import { isRemoteMode } from "@/lib/remote-connection";
 import { getChatRoute } from "@/lib/routes";
+import { messageHistoryQueryOptions } from "@/lib/message-history";
 import { useDebouncedPrefetch } from "@/hooks/use-debounced-prefetch";
 import { usePlatform } from "@/hooks/use-platform";
 import { useChatSession } from "@/stores/chat-store";
@@ -361,10 +362,14 @@ export const SessionItem = memo(function SessionItem({
             prefetch(() => {
               const isCached = queryClient.getQueryData(queryKeys.messages.list(session.id));
               if (!isCached) {
-                queryClient.prefetchInfiniteQuery({
-                  queryKey: queryKeys.messages.list(session.id),
-                  queryFn: () => api.get<PaginatedMessages>(API.MESSAGES.LIST(session.id, 50, -1)),
-                  initialPageParam: -1,
+                queryClient.prefetchQuery({
+                  ...messageHistoryQueryOptions(
+                    queryClient,
+                    queryKeys.messages.list(session.id),
+                    (limit, offset, signal) => api.get<PaginatedMessages>(
+                      API.MESSAGES.LIST(session.id, limit, offset), { signal },
+                    ),
+                  ),
                   staleTime: 60_000,
                 });
               }
@@ -374,9 +379,9 @@ export const SessionItem = memo(function SessionItem({
             cancel();
           }}
           className={cn(
-            "group/session relative mx-3 flex cursor-pointer items-center gap-2 overflow-hidden rounded-lg text-sm transition-colors duration-150 ease-out",
+            "group/session relative mx-3 flex cursor-pointer items-center gap-2 overflow-hidden rounded-xl text-[13px] transition-colors duration-150 ease-out",
             "pl-9 pr-2",
-            snippet ? "min-h-11 py-1.5" : "h-7 py-1",
+            snippet ? "min-h-14 py-2" : "h-10 py-2",
             isActive
               ? "bg-[var(--sidebar-active)] text-[var(--text-primary)] shadow-[var(--sidebar-active-shadow)]"
               : "text-[var(--text-primary)] hover:bg-[var(--sidebar-hover)] focus-within:bg-[var(--sidebar-active)] focus-within:shadow-[var(--sidebar-active-shadow)] data-[state=open]:bg-[var(--sidebar-active)] data-[state=open]:shadow-[var(--sidebar-active-shadow)]",
@@ -422,7 +427,7 @@ export const SessionItem = memo(function SessionItem({
               <>
                 <p
                   ref={titleRef}
-                  className="flex items-center gap-1.5 overflow-hidden whitespace-nowrap text-sm leading-5"
+                  className="flex items-center gap-1.5 overflow-hidden whitespace-nowrap text-[13px] leading-5"
                   style={scrollVars}
                 >
                   {channelBadge && (

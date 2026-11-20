@@ -138,7 +138,7 @@ function PaginationControls({
   return (
     <div className="flex flex-col gap-2 border-t border-[var(--border-default)] bg-[var(--surface-secondary)]/40 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4">
       <p
-        className="text-center text-[11px] text-[var(--text-tertiary)] sm:text-left"
+        className="text-center text-[12px] text-[var(--text-tertiary)] sm:text-left"
         aria-live="polite"
       >
         {t("securityPaginationRange", { start, end, total })}
@@ -185,7 +185,7 @@ function Capabilities({ values }: { values: string[] }) {
   const { t } = useTranslation("settings");
   if (values.length === 0) {
     return (
-      <span className="text-[11px] text-[var(--text-tertiary)]">
+      <span className="text-[12px] text-[var(--text-tertiary)]">
         {t("securityNoCapabilities")}
       </span>
     );
@@ -196,7 +196,7 @@ function Capabilities({ values }: { values: string[] }) {
         <Badge
           key={capability}
           variant="outline"
-          className="max-w-full font-mono text-[10px] font-medium"
+          className="max-w-full font-mono text-[12px] font-medium"
         >
           <span className="truncate">{capability}</span>
         </Badge>
@@ -230,7 +230,6 @@ function SectionHeading({
   id,
   icon: Icon,
   title,
-  description,
   count,
 }: {
   id: string;
@@ -255,7 +254,7 @@ function SectionHeading({
           </h2>
           {typeof count === "number" && <Badge variant="secondary">{count}</Badge>}
         </div>
-        <p className="mt-1 text-xs text-[var(--text-secondary)]">{description}</p>
+        {/* Auxiliary description is retained in the component's description prop. */}
       </div>
     </div>
   );
@@ -442,7 +441,7 @@ export function SecurityTab() {
 
   if (!overview) {
     return (
-      <div className="rounded-xl border border-[var(--color-destructive)]/30 bg-[var(--color-destructive)]/5 p-5">
+      <div className="surface-card rounded-2xl border border-[var(--color-destructive)]/30 bg-[var(--color-destructive)]/5 p-5">
         <div className="flex items-start gap-3">
           <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-[var(--color-destructive)]" />
           <div className="min-w-0 flex-1">
@@ -480,7 +479,7 @@ export function SecurityTab() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="settings-section space-y-6">
       <section aria-labelledby="security-overview-title">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
@@ -490,9 +489,9 @@ export function SecurityTab() {
             >
               {t("securityOverviewTitle")}
             </h2>
-            <p className="mt-1 max-w-2xl text-xs text-[var(--text-secondary)]">
+            {/* Auxiliary copy retained in source: <p className="mt-1 max-w-2xl text-xs text-[var(--text-secondary)]">
               {t("securityOverviewDesc")}
-            </p>
+            </p> */}
           </div>
           <Button
             variant="outline"
@@ -541,13 +540,10 @@ export function SecurityTab() {
                   warning
                 />
               </div>
-              <p className="mt-1 text-xs text-[var(--text-secondary)]">
-                {overview.state.emergency_stop
-                  ? t("securityEmergencyActiveDesc")
-                  : t("securityEmergencyReadyDesc")}
-              </p>
+              {/* Auxiliary copy retained in source: <p>{overview.state.emergency_stop
+                ? t("securityEmergencyActiveDesc") : t("securityEmergencyReadyDesc")}</p> */}
               {updatedAt && (
-                <p className="mt-2 text-[11px] text-[var(--text-tertiary)]">
+                <p className="mt-2 text-[12px] text-[var(--text-tertiary)]">
                   {t("securityLastChanged", { time: updatedAt })}
                 </p>
               )}
@@ -563,7 +559,7 @@ export function SecurityTab() {
         </div>
 
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-lg border border-[var(--border-default)] p-3">
+          <div className="surface-card rounded-2xl border border-[var(--border-default)] p-3">
             <div className="flex items-center justify-between gap-2">
               <Workflow className="h-4 w-4 text-[var(--text-secondary)]" />
               <BinaryStatus
@@ -575,13 +571,13 @@ export function SecurityTab() {
             <p className="mt-2 text-xs font-medium text-[var(--text-primary)]">
               {t("securityAutomations")}
             </p>
-            <p className="mt-0.5 text-[11px] text-[var(--text-secondary)]">
+            <p className="mt-0.5 text-[12px] text-[var(--text-secondary)]">
               {t("securityEnabledAutomationCount", {
                 count: overview.automations.enabled_count,
               })}
             </p>
           </div>
-          <div className="rounded-lg border border-[var(--border-default)] p-3">
+          <div className="surface-card rounded-2xl border border-[var(--border-default)] p-3">
             <div className="flex items-center justify-between gap-2">
               <Radio className="h-4 w-4 text-[var(--text-secondary)]" />
               <BinaryStatus
@@ -594,11 +590,11 @@ export function SecurityTab() {
             <p className="mt-2 text-xs font-medium text-[var(--text-primary)]">
               {t("securityRemoteAccess")}
             </p>
-            <p className="mt-0.5 text-[11px] text-[var(--text-secondary)]">
+            {/* Auxiliary copy retained in source: <p className="mt-0.5 text-[12px] text-[var(--text-secondary)]">
               {t("securityReleaseGateDesc")}
-            </p>
+            </p> */}
           </div>
-          <div className="rounded-lg border border-[var(--border-default)] p-3">
+          <div className="surface-card rounded-2xl border border-[var(--border-default)] p-3">
             <div className="flex items-center justify-between gap-2">
               <Plug className="h-4 w-4 text-[var(--text-secondary)]" />
               <BinaryStatus
@@ -611,26 +607,26 @@ export function SecurityTab() {
             <p className="mt-2 text-xs font-medium text-[var(--text-primary)]">
               {t("securityMessagingChannels")}
             </p>
-            <p className="mt-0.5 text-[11px] text-[var(--text-secondary)]">
+            {/* Auxiliary copy retained in source: <p className="mt-0.5 text-[12px] text-[var(--text-secondary)]">
               {t("securityReleaseGateDesc")}
-            </p>
+            </p> */}
           </div>
         </div>
 
-        <div className="mt-3 rounded-xl border border-[var(--border-default)] bg-[var(--surface-secondary)]/30 p-4">
+        <div className="surface-card mt-3 rounded-2xl border border-[var(--border-default)] bg-[var(--surface-secondary)]/30 p-4">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div>
               <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("securityV11Features")}</h3>
-              <p className="mt-1 text-xs text-[var(--text-secondary)]">{t("securityV11FeaturesDesc")}</p>
+              {/* Auxiliary copy retained in source: <p className="mt-1 text-xs text-[var(--text-secondary)]">{t("securityV11FeaturesDesc")}</p> */}
             </div>
             <Badge variant="outline">v1.1</Badge>
           </div>
           <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {v11Features.map((feature) => (
-              <div key={feature.id} className="flex items-center justify-between gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--surface-primary)]/50 px-3 py-2">
+              <div key={feature.id} className="surface-card flex items-center justify-between gap-2 rounded-2xl border border-[var(--border-default)] bg-[var(--surface-primary)]/50 px-3 py-2">
                 <div className="min-w-0">
                   <p className="truncate text-xs font-medium text-[var(--text-primary)]">{feature.label}</p>
-                  <p className="mt-0.5 text-[10px] text-[var(--text-tertiary)]">
+                  <p className="mt-0.5 text-[12px] text-[var(--text-tertiary)]">
                     {feature.beta ? t("securityStatusTesting") : t("securityStatusAvailable")} · {feature.ready ? t("securityRuntimeReady") : feature.released ? t("securityRuntimePending") : t("securityClosed")}
                   </p>
                 </div>
@@ -641,12 +637,12 @@ export function SecurityTab() {
           {(overview.source_profiles?.length ?? 0) > 0 && (
             <div className="mt-4 border-t border-[var(--border-default)] pt-3">
               <p className="text-xs font-medium text-[var(--text-primary)]">{t("securitySourceCeilings")}</p>
-              <p className="mt-1 text-[11px] text-[var(--text-secondary)]">{t("securitySourceCeilingsDesc")}</p>
+              {/* Auxiliary copy retained in source: <p className="mt-1 text-[12px] text-[var(--text-secondary)]">{t("securitySourceCeilingsDesc")}</p> */}
               <div className="mt-2 space-y-2">
                 {overview.source_profiles?.map((profile) => (
-                  <div key={profile.source} className="rounded-lg border border-[var(--border-default)] px-3 py-2">
+                  <div key={profile.source} className="surface-card rounded-2xl border border-[var(--border-default)] px-3 py-2">
                     <div className="flex items-center justify-between gap-2">
-                      <code className="text-[11px] font-semibold text-[var(--text-primary)]">{profile.source}</code>
+                      <code className="text-[12px] font-semibold text-[var(--text-primary)]">{profile.source}</code>
                       <Badge variant="secondary" className="text-[9px]">{profile.deny_unknown ? t("securityDenyUnknown") : t("securityExposed")}</Badge>
                     </div>
                     <div className="mt-2"><Capabilities values={profile.allowed_capabilities} /></div>
@@ -660,7 +656,7 @@ export function SecurityTab() {
 
       <div
         role="tablist"
-        className="grid grid-cols-3 gap-1 rounded-xl border border-[var(--border-default)] bg-[var(--surface-secondary)]/60 p-1"
+        className="surface-card grid grid-cols-3 gap-1 rounded-2xl border border-[var(--border-default)] bg-[var(--surface-secondary)]/60 p-1"
         aria-label={t("securitySectionNavigation")}
       >
         {SECURITY_SECTIONS.map(({ id, labelKey, icon: Icon }, index) => {
@@ -707,11 +703,11 @@ export function SecurityTab() {
           />
 
           {toolsPage.total === 0 ? (
-            <div className="rounded-lg border border-dashed border-[var(--border-default)] px-4 py-8 text-center text-xs text-[var(--text-secondary)]">
+            <div className="surface-card rounded-2xl border border-dashed border-[var(--border-default)] px-4 py-8 text-center text-xs text-[var(--text-secondary)]">
               {t("securityNoTools")}
             </div>
           ) : (
-            <div className="overflow-hidden rounded-xl border border-[var(--border-default)]">
+            <div className="surface-card overflow-hidden rounded-2xl border border-[var(--border-default)]">
               <div className="divide-y divide-[var(--border-default)]">
                 {toolsPage.items.map((tool) => {
                   const changing =
@@ -735,16 +731,16 @@ export function SecurityTab() {
                             <Badge variant="warning">{t("securityApprovalRequired")}</Badge>
                           )}
                         </div>
-                        <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5 text-[11px] text-[var(--text-tertiary)]">
+                        <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5 text-[12px] text-[var(--text-tertiary)]">
                           <Badge variant="secondary">
                             {sourceKindLabel(tool.source_kind)}
                           </Badge>
                           <span className="break-all font-mono">{tool.source_id}</span>
                         </div>
                         {tool.description && (
-                          <p className="mt-2 text-xs text-[var(--text-secondary)]">
+                          null /* Auxiliary catalog description: <p className="mt-2 text-xs text-[var(--text-secondary)]">
                             {tool.description}
-                          </p>
+                          </p> */
                         )}
                         <div className="mt-2">
                           <Capabilities values={tool.capabilities} />
@@ -806,7 +802,7 @@ export function SecurityTab() {
           />
 
           <div className="grid gap-3 md:grid-cols-2">
-            <div className="overflow-hidden rounded-xl border border-[var(--border-default)]">
+            <div className="surface-card overflow-hidden rounded-2xl border border-[var(--border-default)]">
               <div className="flex items-center gap-2 border-b border-[var(--border-default)] bg-[var(--surface-secondary)]/50 px-4 py-3">
                 <Plug className="h-4 w-4 text-[var(--text-secondary)]" />
                 <h3
@@ -833,7 +829,7 @@ export function SecurityTab() {
                           <p className="truncate text-xs font-semibold text-[var(--text-primary)]">
                             {connector.name}
                           </p>
-                          <p className="mt-0.5 truncate font-mono text-[10px] text-[var(--text-tertiary)]">
+                          <p className="mt-0.5 truncate font-mono text-[12px] text-[var(--text-tertiary)]">
                             {connector.id}
                           </p>
                         </div>
@@ -847,7 +843,7 @@ export function SecurityTab() {
                           }
                         />
                       </div>
-                      <div className="mt-2 flex items-center gap-1.5 text-[11px] text-[var(--text-secondary)]">
+                      <div className="mt-2 flex items-center gap-1.5 text-[12px] text-[var(--text-secondary)]">
                         <KeyRound className="h-3 w-3" />
                         {connector.credential_configured
                           ? t("securityCredentialConfigured")
@@ -872,7 +868,7 @@ export function SecurityTab() {
               />
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-[var(--border-default)]">
+            <div className="surface-card overflow-hidden rounded-2xl border border-[var(--border-default)]">
               <div className="flex items-center gap-2 border-b border-[var(--border-default)] bg-[var(--surface-secondary)]/50 px-4 py-3">
                 <Cpu className="h-4 w-4 text-[var(--text-secondary)]" />
                 <h3
@@ -899,7 +895,7 @@ export function SecurityTab() {
                           <p className="truncate text-xs font-semibold text-[var(--text-primary)]">
                             {provider.name}
                           </p>
-                          <p className="mt-0.5 truncate font-mono text-[10px] text-[var(--text-tertiary)]">
+                          <p className="mt-0.5 truncate font-mono text-[12px] text-[var(--text-tertiary)]">
                             {provider.id}
                           </p>
                         </div>
@@ -909,7 +905,7 @@ export function SecurityTab() {
                           inactiveLabel={t("securityDisabled")}
                         />
                       </div>
-                      <div className="mt-2 flex items-center gap-1.5 text-[11px] text-[var(--text-secondary)]">
+                      <div className="mt-2 flex items-center gap-1.5 text-[12px] text-[var(--text-secondary)]">
                         <KeyRound className="h-3 w-3" />
                         {provider.configured
                           ? t("securityCredentialConfigured")
@@ -936,16 +932,16 @@ export function SecurityTab() {
           </div>
 
           {overview.release_gates.v11_hooks && (
-            <div className="overflow-hidden rounded-xl border border-[var(--border-default)]">
+            <div className="surface-card overflow-hidden rounded-2xl border border-[var(--border-default)]">
               <div className="flex items-start gap-3 border-b border-[var(--border-default)] bg-[var(--surface-secondary)]/50 px-4 py-3">
                 <Fingerprint className="mt-0.5 h-4 w-4 shrink-0 text-[var(--text-secondary)]" />
                 <div className="min-w-0 flex-1">
                   <h3 className="text-sm font-semibold text-[var(--text-primary)]">
                     {t("securityProjectHooksTitle")}
                   </h3>
-                  <p className="mt-1 text-[11px] text-[var(--text-secondary)]">
+                  {/* Auxiliary copy retained in source: <p className="mt-1 text-[12px] text-[var(--text-secondary)]">
                     {t("securityProjectHooksDesc")}
-                  </p>
+                  </p> */}
                 </div>
                 <Badge variant="outline">{t("securityStatusAvailable")}</Badge>
               </div>
@@ -993,10 +989,10 @@ export function SecurityTab() {
                                   : t("securityApprovalRequired")}
                             </Badge>
                           </div>
-                          <p className="mt-1.5 text-[11px] text-[var(--text-secondary)]">
+                          <p className="mt-1.5 text-[12px] text-[var(--text-secondary)]">
                             {hook.event} · {hook.failure_policy} · {t("securityHookTimeout", { seconds: hook.timeout_seconds })}
                           </p>
-                          <p className="mt-1 break-all font-mono text-[10px] text-[var(--text-tertiary)]">
+                          <p className="mt-1 break-all font-mono text-[12px] text-[var(--text-tertiary)]">
                             {t("securityHookFingerprint")}: {shortId(hook.fingerprint)}
                           </p>
                         </div>
@@ -1035,7 +1031,7 @@ export function SecurityTab() {
             count={auditPage.total}
           />
 
-          <div className="overflow-hidden rounded-xl border border-[var(--border-default)]">
+          <div className="surface-card overflow-hidden rounded-2xl border border-[var(--border-default)]">
             {auditQuery.isLoading ? (
               <div className="flex items-center justify-center gap-2 px-4 py-10 text-xs text-[var(--text-secondary)]">
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -1088,11 +1084,11 @@ export function SecurityTab() {
                                 {event.outcome}
                               </Badge>
                             </div>
-                            <p className="mt-1 break-all text-[11px] text-[var(--text-secondary)]">
+                            <p className="mt-1 break-all text-[12px] text-[var(--text-secondary)]">
                               {sourceKindLabel(event.source_kind)} · {event.source_id} ·{" "}
                               {t("securityDecision", { decision: event.decision })}
                             </p>
-                            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 font-mono text-[10px] text-[var(--text-tertiary)]">
+                            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 font-mono text-[12px] text-[var(--text-tertiary)]">
                               {eventTime && <span>{eventTime}</span>}
                               {event.session_id && (
                                 <span>

@@ -1,5 +1,6 @@
 import type { SessionInputResponse } from "@/types/chat";
 import { promptRequestFingerprint } from "./prompt-idempotency.ts";
+import { userStorage } from "./cloud-session.ts";
 
 const TERMINAL_INPUT_STATUSES = new Set(["consumed", "failed", "cancelled"]);
 const PENDING_INPUT_STORAGE_PREFIX = "suxiaoyou:pending-session-input:v1:";
@@ -37,7 +38,7 @@ export function createSessionInputRequestId(): string {
  */
 export function reserveSessionInputRequestId(
   fingerprint: string,
-  storage: StorageLike | null = typeof localStorage === "undefined" ? null : localStorage,
+  storage: StorageLike | null = typeof localStorage === "undefined" ? null : userStorage,
 ): string {
   const key = `${PENDING_INPUT_STORAGE_PREFIX}${promptRequestFingerprint(fingerprint)}`;
   if (storage) {
@@ -61,7 +62,7 @@ export function reserveSessionInputRequestId(
 export function clearSessionInputRequestId(
   fingerprint: string,
   expectedRequestId: string,
-  storage: StorageLike | null = typeof localStorage === "undefined" ? null : localStorage,
+  storage: StorageLike | null = typeof localStorage === "undefined" ? null : userStorage,
 ): void {
   if (!storage) return;
   const key = `${PENDING_INPUT_STORAGE_PREFIX}${promptRequestFingerprint(fingerprint)}`;

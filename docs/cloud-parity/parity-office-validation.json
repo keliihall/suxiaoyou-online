@@ -1,0 +1,287 @@
+{
+  "kind": "real-http-signature-and-isolated-docker-render",
+  "image_id": "sha256:b68ddba7247c9cf6022deddd5f540917f8441b9a49a816ce9b7811879a582c96",
+  "sandbox": {
+    "uid": 10001,
+    "root_read_only": true,
+    "network_denied": true
+  },
+  "font_digest": "09159c524d013f7e9a640c840786cb8e95281e2e0a27c32381ea0c038fa812fd",
+  "formats": {
+    "docx": {
+      "page_count": 1,
+      "source_sha256": "d9323e7e861643b64e291a51f748fa0fd47155b120db09b82c371c96078974a1",
+      "pdf_sha256": "69648992a4291385fa69d6f619074c45addfa2a52c7c5a8ed5b819a5afce0301",
+      "pixel_sha256": [
+        "f3d87c6922c313cc94c14281c210260386e6d423c636913b32aad11fdd342f3a"
+      ],
+      "signature_verified": true,
+      "quality": "authoritative"
+    },
+    "xlsx": {
+      "page_count": 1,
+      "source_sha256": "f22e8a8f5fd4657a91324d513a9aa6b3f0b483df1a4838a40bf2270fcd61f49f",
+      "pdf_sha256": "cfca98e58cfd90db0fa9d65147b62f3413ee16848dfb6b6408898cc96fe229d9",
+      "pixel_sha256": [
+        "d57ab99ae7ec64f56b70dc8cfa9798f4acd1ae040b52c93c6a25590a6b9b3c67"
+      ],
+      "signature_verified": true,
+      "quality": "authoritative"
+    },
+    "pptx": {
+      "page_count": 1,
+      "source_sha256": "c2683ad8bac94e3fcf62d6ba14b818e897057deaf3958811214ad2073971b499",
+      "pdf_sha256": "4931c18a8e306a09dea06e44683c314571e04b32f347d5f76dc88be48d1666ca",
+      "pixel_sha256": [
+        "4f637c1aef51b8ddebe0383772299b753f4b5c1ce031a3e6f2d4dba73f3349b8"
+      ],
+      "signature_verified": true,
+      "quality": "authoritative"
+    }
+  },
+  "real_agent": {
+    "kind": "real-cookie-authenticated-original-agent-and-deepseek",
+    "account_role": "ordinary-user",
+    "run_id": "94137ff01c",
+    "model": "deepseek-office",
+    "advanced_pptx_verified": true,
+    "files": [
+      {
+        "filename": "cloud-report.docx",
+        "source_sha256": "99f0f2d05c1ceb00532632a322f34cf21d6d6163942e46922f5584d845fd1507",
+        "bytes": 37179,
+        "structure": {
+          "table": true,
+          "sections": true,
+          "header": true,
+          "footer": true
+        },
+        "validation_status": "authoritative_pass",
+        "validation_verdict": "pass",
+        "renderer_id": "suxiaoyou-cloud-office",
+        "renderer_version": "image-5802f4798ee7d944657ddb01a91e090f14258f6a59f157090bc109cca59ad0ac",
+        "cache_key": "d2a41dfe4c08bca935c4481304fe9c2ad3fd52a79d0b74cd717de03ce0c2b87f",
+        "preview_png_sha256": "8e5d79edb0581817dc6dca123f75a831d6d3f6e739d53544e7432b5b7623962e"
+      },
+      {
+        "filename": "cloud-budget.xlsx",
+        "source_sha256": "5357f000034e83ca13869ccdd795b6f115a2a3e20d9aabd692ee1867f1731a40",
+        "bytes": 6727,
+        "structure": {
+          "chart": true,
+          "formula": true,
+          "freeze": true,
+          "validation": true,
+          "conditional_format": true
+        },
+        "validation_status": "authoritative_pass",
+        "validation_verdict": "pass",
+        "renderer_id": "suxiaoyou-cloud-office",
+        "renderer_version": "image-5802f4798ee7d944657ddb01a91e090f14258f6a59f157090bc109cca59ad0ac",
+        "cache_key": "840dcb88e00b8d8ab0079ae5ca8621aac5575d369e8fa800d841be976c6a31ee",
+        "preview_png_sha256": "cb5f8cec0fd496c8d6315c5d6f6a4b6c2f6409544580c87b1a6b2eefd375df46"
+      },
+      {
+        "filename": "signed-brief.docx",
+        "source_sha256": "a842b642276f74b009bf59ea4bcbc82920c9ebd44acfc173f7a5222b576bf3cf",
+        "bytes": 35575,
+        "structure": {
+          "table": true,
+          "sections": true,
+          "header": false,
+          "footer": true
+        },
+        "validation_status": "authoritative_pass",
+        "validation_verdict": "pass",
+        "renderer_id": "suxiaoyou-cloud-office",
+        "renderer_version": "image-5802f4798ee7d944657ddb01a91e090f14258f6a59f157090bc109cca59ad0ac",
+        "cache_key": "dd952f70ce361b795e49a648cb1759259585a487a459182bd83ec672e6ec8d05",
+        "preview_png_sha256": "f92c8d261c686412c5810f6ec52b1e905da4a4c74d112cd36032eb3bfc5e7773"
+      },
+      {
+        "filename": "signed-tracker.xlsx",
+        "source_sha256": "dc9fe3c8bb85d2baf8cfb4fa66d5a68c9ded0c8c567e5e8114df0fdb0c5ee2f3",
+        "bytes": 7908,
+        "structure": {
+          "chart": true,
+          "formula": true,
+          "freeze": true,
+          "validation": true,
+          "conditional_format": true
+        },
+        "validation_status": "authoritative_pass",
+        "validation_verdict": "pass",
+        "renderer_id": "suxiaoyou-cloud-office",
+        "renderer_version": "image-5802f4798ee7d944657ddb01a91e090f14258f6a59f157090bc109cca59ad0ac",
+        "cache_key": "56898200d24ecab58fd06b38a4b05e4bff4bf7fc02fe30a1a6f86e982bb32801",
+        "preview_png_sha256": "7bc599936bbc58f90c2dd70c4ec5583b44f984c106bba610f9fffa6ea994ff94"
+      },
+      {
+        "filename": "signed-update.pptx",
+        "source_sha256": "0786fef1aec9cdb87c64b98edd2f02ae0c842f682a2a3391954c5eabc003f369",
+        "bytes": 29179,
+        "structure": {
+          "chart": false,
+          "notes": false,
+          "table": true
+        },
+        "validation_status": "authoritative_pass",
+        "validation_verdict": "pass",
+        "renderer_id": "suxiaoyou-cloud-office",
+        "renderer_version": "image-5802f4798ee7d944657ddb01a91e090f14258f6a59f157090bc109cca59ad0ac",
+        "cache_key": "49aa109d6bfd2566e49b61dff88b15fe29edc0241225c6691fa52aa5b18d03b2",
+        "preview_png_sha256": "47f6007104111750b473dbab00198931f9dfe1e8221ced10dfc21e0cd9137e11"
+      },
+      {
+        "filename": "uploaded-brief.docx",
+        "source_sha256": "c2efaf796fe7b40073ecf83e330f8cd9d6ee895f3bdcf56ea841a9c3beffe3e4",
+        "bytes": 34331,
+        "structure": {
+          "table": false,
+          "sections": true,
+          "header": false,
+          "footer": false
+        },
+        "validation_status": "authoritative_pass",
+        "validation_verdict": "pass",
+        "renderer_id": "suxiaoyou-cloud-office",
+        "renderer_version": "image-5802f4798ee7d944657ddb01a91e090f14258f6a59f157090bc109cca59ad0ac",
+        "cache_key": "102dde6e07fab7450cba95195a5a4268a22bb3e941f2c1b2aa07c391619e4dfa",
+        "preview_png_sha256": "ca7a33cc0d3e24b081040aafc7499220cb09ade0a84c23423d50313b86fce9ea"
+      },
+      {
+        "filename": "cloud-update.pptx",
+        "source_sha256": "cb9424d4a57abfa04f855244941b4a7b6ad2744173be9e89065467546f1d0de9",
+        "bytes": 39313,
+        "structure": {
+          "chart": true,
+          "notes": true,
+          "table": true
+        },
+        "validation_status": "authoritative_pass",
+        "validation_verdict": "pass",
+        "renderer_id": "suxiaoyou-cloud-office",
+        "renderer_version": "image-f279d880a4ba979718fbdc0e41fea014be82414b0df494230dde2d3070f43de4",
+        "preview_png_sha256": "0ec5861377b92b3e56a7dd486782004864eef73a2469e3b57f1afe275773119f",
+        "speaker_note_marker_verified": true,
+        "preview_visually_inspected": true,
+        "chart_and_table_layout": "legible, within slide bounds, no overlap"
+      }
+    ],
+    "first_party_templates": {
+      "docx": "passed",
+      "xlsx": "passed",
+      "pptx": "passed"
+    },
+    "user_template": {
+      "import_status": "needs_confirmation",
+      "approval_required": true,
+      "render_quality": "authoritative",
+      "preview_png_verified": true,
+      "approved_status": "approved",
+      "approved_can_instantiate": true,
+      "real_agent_instantiation_and_exact_placeholder_substitution": true
+    },
+    "template_round_accounting": {
+      "requests": 21,
+      "states": {
+        "settled": 21
+      },
+      "total_tokens": 153204
+    },
+    "negative_checks": {
+      "xlsx_unsafe_print_layout": "rejected by original 0.999 blank guard; A6 subsequently passed",
+      "pptx_chart_original_embedding_conflict": "repaired with exact native-chart graph and recursive workbook safety; actual DeepSeek output now authoritative_pass"
+    },
+    "checks": {
+      "cloud_boundaries": {
+        "passed": 22,
+        "environment": "clean cloud check venv"
+      },
+      "office_templates_validation_and_v2": {
+        "passed": 162,
+        "environment": "Python 3.12 complete runtime hashlock venv",
+        "includes_native_chart_security_cases": 19
+      }
+    },
+    "complete_seven_test_outputs": true,
+    "latest_runtime_image_id": "sha256:f279d880a4ba979718fbdc0e41fea014be82414b0df494230dde2d3070f43de4",
+    "presentation_round_accounting": {
+      "requests": 6,
+      "states": {
+        "settled": 6
+      },
+      "total_tokens": 58289
+    },
+    "native_chart_safety": {
+      "cases_passed": 19,
+      "xml_encoding_dtd_guard": true,
+      "live_presentation_slide_chart_workbook_graph": true,
+      "shared_nested_expansion_budget": true,
+      "template_import_default_unchanged": true
+    }
+  },
+  "file_history_exports_and_isolation": {
+    "file_versions": {
+      "real_edit_versions": 1,
+      "old_bytes_restored": true,
+      "displaced_file_saved": true,
+      "latest_bytes_recovered": true,
+      "preview_status_after_old_restore": "stale"
+    },
+    "exports": {
+      "md": {
+        "bytes": 12070,
+        "sha256": "8da80e6c013d70858f51ca5b1415c17cd44af691175a0f4ce5708ec0129b791c"
+      },
+      "pdf": {
+        "bytes": 82426,
+        "sha256": "772380776efa34277190d7f17f5cc432c0419513a38bc71f476263ade649d8c1",
+        "pages": 6
+      }
+    },
+    "cross_user": {
+      "session": 404,
+      "versions": 404,
+      "office_context": 404,
+      "office_validation": 404,
+      "user_template_page": 404
+    }
+  },
+  "user_template_upgrade_revalidation": {
+    "kind": "real-runtime-upgrade-template-revalidation",
+    "original_revision": 2,
+    "new_revision": 3,
+    "source_sha256": "0b69d5e3f94eb3d86d18f5d5cb4fe08da526d4b668213a2d310a5bd4f0deccbb",
+    "old_approval_does_not_authorize_new_renderer": true,
+    "old_source_approval_and_render_evidence_retained": true,
+    "all_prior_revisions_retained": [
+      1,
+      2
+    ],
+    "new_revision_requires_user_confirmation": true,
+    "old_state_cas_replay_status": 409,
+    "new_preview_png_sha256": "b009b8cc921e5bf3d32790f55dd174793f52137288e6dba12cb6e8554d967706",
+    "old_renderer_version": "image-c18f546bc41655f6250b851c9a9fb6580c51188981b67bff9dfce6939dcfc5b2",
+    "new_renderer_version": "image-d2a754e0528386f7e3c6a6ec2a91417f626fb236629a3f38cc6899ff26d5eb86",
+    "approved_can_instantiate": true,
+    "model_calls": 0
+  },
+  "user_template_upgrade_revalidation_history": [
+    {
+      "kind": "real-runtime-upgrade-template-revalidation",
+      "original_revision": 1,
+      "new_revision": 2,
+      "source_sha256": "0b69d5e3f94eb3d86d18f5d5cb4fe08da526d4b668213a2d310a5bd4f0deccbb",
+      "old_approval_does_not_authorize_new_renderer": true,
+      "old_source_approval_and_render_evidence_retained": true,
+      "new_revision_requires_user_confirmation": true,
+      "old_state_cas_replay_status": 409,
+      "new_preview_png_sha256": "b009b8cc921e5bf3d32790f55dd174793f52137288e6dba12cb6e8554d967706",
+      "old_renderer_version": "image-5802f4798ee7d944657ddb01a91e090f14258f6a59f157090bc109cca59ad0ac",
+      "new_renderer_version": "image-c18f546bc41655f6250b851c9a9fb6580c51188981b67bff9dfce6939dcfc5b2",
+      "approved_can_instantiate": true,
+      "model_calls": 0
+    }
+  ]
+}

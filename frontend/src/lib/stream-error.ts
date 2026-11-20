@@ -2,6 +2,8 @@ export interface StreamErrorPayload {
   error_message?: string | null;
   error_type?: string | null;
   code?: string | null;
+  request_id?: string | null;
+  upstream_status?: number | null;
 }
 
 const CONNECTION_ERROR_MARKERS = [
@@ -20,8 +22,30 @@ export function streamErrorTranslationKey(
 ): string | null {
   const code = data.code ?? data.error_type ?? "";
   switch (code) {
+    case "quota_exceeded":
+      return "streamErrorQuotaExceeded";
+    case "concurrency_exceeded":
+      return "streamErrorConcurrencyExceeded";
+    case "account_disabled":
+      return "streamErrorAccountDisabled";
+    case "runtime_unavailable":
+      return "streamErrorRuntimeUnavailable";
+    case "model_unavailable":
+      return "streamErrorModelUnavailable";
+    case "model_request_too_large":
+      return "streamErrorRequestTooLarge";
     case "model_context_too_long":
       return "streamErrorContextTooLong";
+    case "model_output_exhausted":
+      return "streamErrorOutputExhausted";
+    case "model_response_incomplete":
+      return "streamErrorResponseIncomplete";
+    case "model_usage_unconfirmed":
+      return "streamErrorUsageUnconfirmed";
+    case "model_request_rejected":
+      return "streamErrorRequestRejected";
+    case "model_payment_required":
+      return "streamErrorPaymentRequired";
     case "model_connection_interrupted":
       return "streamErrorConnectionInterrupted";
     case "model_timeout":
@@ -86,6 +110,13 @@ export function streamErrorTranslationKey(
     return "streamErrorAuthentication";
   }
   return null;
+}
+
+/** Only platform-generated ledger IDs may appear in a user-facing reference. */
+export function streamErrorRequestId(data: StreamErrorPayload): string | null {
+  return typeof data.request_id === "string" && data.request_id.length === 32 && /^[a-f0-9]{32}$/.test(data.request_id)
+    ? data.request_id
+    : null;
 }
 
 export function streamErrorToastId(

@@ -112,6 +112,21 @@ _STREAM_CONNECTION_MARKERS = (
 class _ProviderReportedStreamError(RuntimeError):
     """A provider adapter converted its stream exception into an error chunk."""
 
+    def __init__(self, message, *, code=None, retryable=None, request_id=None, upstream_status=None):
+        from app.schemas.provider import safe_provider_error_metadata
+        super().__init__(message)
+        self.code = code if isinstance(code, str) else None
+        self.retryable = retryable if isinstance(retryable, bool) else None
+        for key, value in safe_provider_error_metadata({
+            "request_id": request_id, "upstream_status": upstream_status,
+        }).items():
+            setattr(self, key, value)
+
+
+def _safe_stream_error_metadata(error) -> dict[str, Any]:
+    from app.schemas.provider import safe_provider_error_metadata
+    return safe_provider_error_metadata(error)
+
 
 def _localized_provider_stream_error(
     error: Exception | str,
@@ -121,6 +136,22 @@ def _localized_provider_stream_error(
 
     detail = str(error).strip()
     lowered = detail.lower()
+    code = getattr(error, "code", None)
+    from app.schemas.provider import SAFE_PROVIDER_ERRORS
+    if code in SAFE_PROVIDER_ERRORS:
+        zh, en = SAFE_PROVIDER_ERRORS[code]
+        return code, localize(language, zh, en)
+    if code in {"quota_exceeded", "concurrency_exceeded", "account_disabled", "runtime_unavailable", "model_unavailable", "model_request_too_large"}:
+        from app.cloud.gateway_errors import ADMISSION_ERRORS
+        english = {
+            "quota_exceeded": "Monthly token quota is insufficient. Contact an administrator.",
+            "concurrency_exceeded": "Model concurrency is at its limit. Wait for running tasks to finish.",
+            "account_disabled": "This account has been disabled.",
+            "runtime_unavailable": "Cloud runtime identity expired. Sign in again.",
+            "model_unavailable": "Model configuration is unavailable. Contact an administrator.",
+            "model_request_too_large": "This model request is too large. Reduce images or split the task and try again.",
+        }
+        return code, localize(language, ADMISSION_ERRORS[code], english[code])
     if is_context_overflow(RuntimeError(detail)):
         return (
             "model_context_too_long",
@@ -508,7 +539,8 @@ from app.session.loop_detection import (
 )
 
 # Tools that operate on file paths — used for two-dimensional permission check
-_FILE_TOOLS = frozenset({"read", "write", "edit", "image_generate", "office"})
+# Tools whose permission resource is a file path, including read-only presentation.
+_FILE_TOOLS = frozenset({"read", "write", "edit", "image_generate", "office", "present_file"})
 
 _PERMISSION_ARGUMENT_CHAR_LIMIT = 20_000
 _SENSITIVE_ARG_KEY_RE = re.compile(
@@ -598,8 +630,9 @@ async def _track_session_file(
     session_id: str,
     file_path: str,
     tool_id: str,
+    file_type: str = "working",
 ) -> None:
-    """Persist a file record for the workspace panel (deduplicated by path)."""
+    """Persist session provenance; explicit delivery is a monotonic promotion."""
     import os
     from sqlalchemy import select
     from app.models.session_file import SessionFile
@@ -609,14 +642,17 @@ async def _track_session_file(
     try:
         async with session_factory() as db:
             async with db.begin():
-                # Deduplicate: skip if this exact path is already tracked
                 existing = await db.execute(
-                    select(SessionFile.id).where(
+                    select(SessionFile).where(
                         SessionFile.session_id == session_id,
                         SessionFile.file_path == file_path,
                     ).limit(1)
                 )
-                if existing.scalar_one_or_none() is not None:
+                entry = existing.scalar_one_or_none()
+                if entry is not None:
+                    if file_type == "deliverable" and entry.file_type != "deliverable":
+                        entry.file_type = "deliverable"
+                        entry.tool_id = tool_id
                     return
                 db.add(SessionFile(
                     id=generate_ulid(),
@@ -624,10 +660,13 @@ async def _track_session_file(
                     file_path=file_path,
                     file_name=file_name,
                     tool_id=tool_id,
-                    file_type="generated",
+                    file_type=file_type,
                 ))
     except Exception:
         logger.debug("Failed to track session file: %s", file_path, exc_info=True)
+        # Never announce successful delivery before its provenance is durable.
+        if file_type == "deliverable":
+            raise
 
 
 _PRESENTABLE_DELIVERABLE_EXTS = {
@@ -690,11 +729,11 @@ def _artifact_delivery_paths(
     tool_id: str,
     metadata: dict[str, Any] | None,
 ) -> list[str]:
-    """Extract generated-file paths from the shared tool metadata contract.
+    """Extract produced paths for process tracking and presentation reminders.
 
     ``written_files`` is intentionally tool-agnostic so shell runners, code
-    execution, plugins, and future generators receive the same tracking and
-    deterministic file-card behavior.  ``artifact_files`` is the forward
+    execution, plugins, and future generators receive the same audit tracking.
+    It does not confer final-delivery status. ``artifact_files`` is the forward
     contract for tools that want to declare delivery without also claiming a
     workspace mutation.  Existing single-output tools retain ``file_path``.
     """
@@ -1390,7 +1429,10 @@ class SessionProcessor:
                             )
                             provider_finished = True
                             raise _ProviderReportedStreamError(
-                                str(chunk.data.get("message") or "LLM error")
+                                str(chunk.data.get("message") or "LLM error"),
+                                code=chunk.data.get("code"), retryable=chunk.data.get("retryable"),
+                                request_id=chunk.data.get("request_id"),
+                                upstream_status=chunk.data.get("upstream_status"),
                             )
 
                 await _audit_provider_event(
@@ -1580,6 +1622,10 @@ class SessionProcessor:
         reasoning_extra = None
         if sp.request.reasoning is False:
             reasoning_extra = {"reasoning": {"enabled": False}}
+        elif (sp.request.reasoning is True
+              and sp.provider.id == "custom_cloud"
+              and (getattr(sp.model_info, "metadata", None) or {}).get("upstream_provider") == "deepseek"):
+            reasoning_extra = {"reasoning": {"enabled": True}}
 
         safe_max_tokens = _compute_safe_max_tokens(
             self._llm_messages,
@@ -2981,7 +3027,8 @@ class SessionProcessor:
                         data={"type": "text", "text": self._accumulated_text},
                     )
         error_code, error_message = _localized_provider_stream_error(
-            str(chunk.data.get("message") or "LLM error"),
+            _ProviderReportedStreamError(str(chunk.data.get("message") or "LLM error"),
+                code=chunk.data.get("code"), retryable=chunk.data.get("retryable")),
             job.language,
         )
         job.publish(
@@ -2991,6 +3038,7 @@ class SessionProcessor:
                     "error_type": error_code,
                     "code": error_code,
                     "error_message": error_message,
+                    **_safe_stream_error_metadata(chunk.data),
                 },
             )
         )
@@ -3019,43 +3067,49 @@ class SessionProcessor:
         logger.exception("LLM stream error (not retryable or retries exhausted)")
         self.has_text = bool(self._accumulated_text.strip())
         self.finish_reason = "error"
+        error_code, error_message = _localized_provider_stream_error(self._stream_error, job.language)
+        error_metadata = _safe_stream_error_metadata(self._stream_error)
+        if self.usage_data:
+            self._compute_step_cost()
+        logger.warning("Model attempt stopped session_id=%s code=%s request_id=%s upstream_status=%s",
+                       job.session_id, error_code, error_metadata.get("request_id"),
+                       error_metadata.get("upstream_status"))
         await self._persist_pending_reasoning()
-        if self._accumulated_text or self._accumulated_reasoning:
-            async with sp.session_factory() as db:
-                async with db.begin():
-                    if self._accumulated_text:
-                        await create_part(
-                            db,
-                            message_id=self._assistant_msg_id,
-                            session_id=job.session_id,
-                            data={"type": "text", "text": self._accumulated_text},
-                        )
+        async with sp.session_factory() as db:
+            async with db.begin():
+                if self._accumulated_text:
                     await create_part(
                         db,
                         message_id=self._assistant_msg_id,
                         session_id=job.session_id,
-                        data={
-                            "type": "step-finish",
-                            "goal_run_id": job.goal_run_id,
-                            "reason": self.finish_reason,
-                            "tokens": self.usage_data,
-                            "cost": self.step_cost,
-                        },
+                        data={"type": "text", "text": self._accumulated_text},
                     )
-            job.publish(SSEEvent(
-                STEP_FINISH,
-                {
-                    "tokens": self.usage_data,
-                    "cost": self.step_cost,
-                    "total_cost": sp.total_cost + self.step_cost,
-                    "reason": self.finish_reason,
-                },
-            ))
+                await create_part(
+                    db,
+                    message_id=self._assistant_msg_id,
+                    session_id=job.session_id,
+                    data={
+                        "type": "step-finish",
+                        "goal_run_id": job.goal_run_id,
+                        "reason": self.finish_reason,
+                        "tokens": self.usage_data,
+                        "cost": self.step_cost,
+                        "error_code": error_code,
+                        **error_metadata,
+                    },
+                )
+        job.publish(SSEEvent(
+            STEP_FINISH,
+            {
+                "tokens": self.usage_data,
+                "cost": self.step_cost,
+                "total_cost": sp.total_cost + self.step_cost,
+                "reason": self.finish_reason,
+                "error_code": error_code,
+                **error_metadata,
+            },
+        ))
         await _delete_empty_assistant_messages(sp.session_factory, job.session_id)
-        error_code, error_message = _localized_provider_stream_error(
-            self._stream_error,
-            job.language,
-        )
         job.publish(
             SSEEvent(
                 AGENT_ERROR,
@@ -3063,6 +3117,7 @@ class SessionProcessor:
                     "error_type": error_code,
                     "code": error_code,
                     "error_message": error_message,
+                    **error_metadata,
                 },
             )
         )
@@ -3420,16 +3475,21 @@ class SessionProcessor:
             charged = bool(result.metadata and result.metadata.get("charged"))
             await _search_quota.increment(charged=charged)
 
-        # Track every declared generated file through one metadata contract.
-        # This includes shell-created outputs (for example edge-tts MP3 files),
-        # plugin artifacts, code execution, and existing single-file tools.
+        # Keep mutation evidence, but promote only an explicit delivery signal.
+        # Commit this before TOOL_RESULT so stream refresh and history agree.
         if result.success:
-            for file_path in _artifact_delivery_paths(tool.id, result.metadata):
+            from app.session.file_delivery import explicit_delivery_paths
+
+            delivery_paths = explicit_delivery_paths(tool.id, result.metadata)
+            delivered = set(delivery_paths)
+            produced = _artifact_delivery_paths(tool.id, result.metadata)
+            for file_path in dict.fromkeys([*produced, *delivery_paths]):
                 await _track_session_file(
                     session_factory,
                     session_id=job.session_id,
                     file_path=file_path,
                     tool_id=tool.id,
+                    file_type="deliverable" if file_path in delivered else "working",
                 )
 
         # Track todos from todo tool results

@@ -1,12 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { API, queryKeys } from "@/lib/constants";
+import { messageHistoryQueryOptions } from "@/lib/message-history";
 import type { PaginatedMessages, MessageResponse, AssistantMessageInfo } from "@/types/message";
-
-const PAGE_SIZE = 50;
 
 function extractStepSnapshot(msg: MessageResponse): Record<string, number> | null {
   let latest: Record<string, number> | null = null;
@@ -90,20 +89,19 @@ function computeStats(messages: MessageResponse[], maxContext?: number): Message
 /**
  * Hook to get message statistics for a session.
  *
- * Shares the same infinite query cache as useMessages — no extra network request.
+ * Shares the same latest-anchored cache as useMessages — no extra network request.
  * Derives stats from the loaded pages using useMemo.
  */
 export function useMessageStats(sessionId: string | undefined, maxContext?: number) {
-  const query = useInfiniteQuery({
-    queryKey: queryKeys.messages.list(sessionId!),
-    queryFn: ({ pageParam }: { pageParam: number }) =>
-      api.get<PaginatedMessages>(API.MESSAGES.LIST(sessionId!, PAGE_SIZE, pageParam)),
-    initialPageParam: -1 as number,
-    getPreviousPageParam: (firstPage: PaginatedMessages) => {
-      if (firstPage.offset <= 0) return undefined;
-      return Math.max(0, firstPage.offset - PAGE_SIZE);
-    },
-    getNextPageParam: (): undefined => undefined,
+  const queryClient = useQueryClient();
+  const query = useQuery({
+    ...messageHistoryQueryOptions(
+      queryClient,
+      queryKeys.messages.list(sessionId!),
+      (limit, offset, signal) => api.get<PaginatedMessages>(
+        API.MESSAGES.LIST(sessionId!, limit, offset), { signal },
+      ),
+    ),
     enabled: !!sessionId,
     staleTime: 60_000,
   });

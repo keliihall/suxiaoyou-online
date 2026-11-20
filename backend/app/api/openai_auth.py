@@ -94,7 +94,11 @@ async def login_openai_subscription(request: Request) -> LoginResponse:
         del _pending_flows[k]
 
     # Start a temporary callback server on the registered redirect port
-    asyncio.create_task(_start_callback_listener(request.app))
+    if not getattr(request.app.state, "cloud_runtime", False):
+        asyncio.create_task(_start_callback_listener(request.app))
+    # The public client has a fixed localhost:1455 redirect registration.
+    # In cloud mode the existing manual PKCE callback completes the same flow
+    # in this user's private engine without opening an unreachable listener.
 
     return LoginResponse(auth_url=auth_url)
 

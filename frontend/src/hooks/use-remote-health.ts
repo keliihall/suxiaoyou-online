@@ -20,6 +20,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import i18n from "@/i18n/config";
 import { getRemoteConfig, isRemoteMode } from "@/lib/remote-connection";
+import { IS_CLOUD, leaveCloudWorkspace } from "@/lib/cloud-session";
 
 export type RemoteHealthStatus = "connected" | "limited" | "disconnected" | "unknown";
 
@@ -58,7 +59,7 @@ export function useRemoteHealth() {
   };
 
   useEffect(() => {
-    if (!isRemoteMode()) {
+    if (!IS_CLOUD && !isRemoteMode()) {
       updateStatus("unknown");
       return;
     }
@@ -68,7 +69,7 @@ export function useRemoteHealth() {
     const check = async () => {
       if (!activeRef.current) return;
       const config = getRemoteConfig();
-      if (!config) {
+      if (!IS_CLOUD && !config) {
         updateStatus("disconnected");
         return;
       }
@@ -76,9 +77,10 @@ export function useRemoteHealth() {
       try {
         // Use an /api/ endpoint so the auth middleware validates the token.
         // /health bypasses auth and would always return 200 even with an invalid token.
-        const res = await fetch(`${config.url}/api/remote/provider-info`, {
+        const res = await fetch(IS_CLOUD ? "/api/cloud/runtime/status" : `${config!.url}/api/remote/provider-info`, {
           method: "GET",
-          headers: { Authorization: `Bearer ${config.token}` },
+          headers: IS_CLOUD ? {} : { Authorization: `Bearer ${config!.token}` },
+          ...(IS_CLOUD ? { credentials: "same-origin" as const } : {}),
           signal: AbortSignal.timeout(8000),
         });
 
@@ -88,6 +90,7 @@ export function useRemoteHealth() {
           updateStatus("connected");
           delayRef.current = POLL_INTERVAL_CONNECTED;
         } else if (res.status === 401 || res.status === 403) {
+          if (IS_CLOUD && res.status === 401) void leaveCloudWorkspace();
           updateStatus("limited");
           delayRef.current = POLL_INTERVAL_CONNECTED;
         } else {

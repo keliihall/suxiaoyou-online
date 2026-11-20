@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { X, FileText, Image, FileCode, File as FileIcon, Folder } from "lucide-react";
 import type { FileAttachment } from "@/types/chat";
 import type { FilePart } from "@/types/message";
@@ -12,6 +13,7 @@ interface FileChipProps {
 
 /** Compact pill showing attached file with type icon. */
 export function FileChip({ file, onRemove }: FileChipProps) {
+  const { t } = useTranslation("settings");
   const Icon = getFileIcon(file.mime_type, file.name);
   const sizeLabel = formatBytes(file.size);
 
@@ -23,13 +25,14 @@ export function FileChip({ file, onRemove }: FileChipProps) {
       </span>
       {sizeLabel && <span className="shrink-0 text-[var(--text-tertiary)]">{sizeLabel}</span>}
       {"source" in file && file.source === "referenced" && (
-        <span className="shrink-0 text-[10px] text-[var(--text-tertiary)] opacity-60" title="Referenced from disk">ref</span>
+        <span className="shrink-0 text-xs text-[var(--text-secondary)]" title="Referenced from disk">ref</span>
       )}
       {onRemove && (
         <button
           type="button"
           onClick={onRemove}
-          className="shrink-0 ml-0.5 rounded-full p-0.5 hover:bg-[var(--surface-secondary)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors"
+          aria-label={`${t("remove")} ${file.name}`}
+          className="flex h-7 w-7 shrink-0 ml-0.5 items-center justify-center rounded-lg hover:bg-[var(--surface-secondary)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors"
         >
           <X className="h-3 w-3" />
         </button>

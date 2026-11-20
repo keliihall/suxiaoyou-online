@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { api } from "@/lib/api";
 import { errorToMessage } from "@/lib/errors";
 import { API, queryKeys } from "@/lib/constants";
@@ -81,16 +82,12 @@ export function ByokPanel({ providers, onSaved }: ByokPanelProps) {
 
   return (
     <div className="space-y-4">
-      <p className="text-xs text-[var(--text-secondary)]">{t("byokDesc")}</p>
+      {/* Auxiliary copy retained in source: <p className="text-xs text-[var(--text-secondary)]">{t("byokDesc")}</p> */}
 
       {byokProviders.map((p) => (
         <div
           key={p.id}
-          className={`rounded-lg border p-3 space-y-2 transition-opacity ${
-            p.is_configured && !p.enabled
-              ? "border-[var(--border-default)] opacity-50"
-              : "border-[var(--border-default)]"
-          }`}
+          className="space-y-3 rounded-2xl border border-[var(--border-default)] bg-[var(--surface-primary)] p-4"
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-[var(--text-primary)]">
@@ -98,30 +95,19 @@ export function ByokPanel({ providers, onSaved }: ByokPanelProps) {
             </span>
             <div className="flex items-center gap-2">
               {p.is_configured && p.enabled && (
-                <span className="text-ui-3xs text-[var(--text-tertiary)]">
+                <span className="text-[12px] text-[var(--text-tertiary)]">
                   {p.model_count} {t("providerModels")}
                 </span>
               )}
               {p.is_configured && (
-                <button
-                  type="button"
-                  onClick={() => toggleProvider.mutate(p.id)}
+                <Switch
+                  checked={p.enabled}
+                  onCheckedChange={() => toggleProvider.mutate(p.id)}
                   disabled={toggleProvider.isPending}
-                  className={`relative inline-flex h-4 w-7 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none ${
-                    p.enabled
-                      ? "bg-[var(--color-success)]"
-                      : "bg-[var(--surface-tertiary)]"
-                  }`}
-                  title={
+                  aria-label={
                     p.enabled ? t("disableProvider") : t("enableProvider")
                   }
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow-sm transition-transform ${
-                      p.enabled ? "translate-x-3" : "translate-x-0"
-                    }`}
-                  />
-                </button>
+                />
               )}
             </div>
           </div>
@@ -160,7 +146,7 @@ export function ByokPanel({ providers, onSaved }: ByokPanelProps) {
                   placeholder={t(`providerKeyPlaceholder_${p.id}`, {
                     defaultValue: `${p.name} API key`,
                   })}
-                  className="pr-8 font-mono text-xs"
+                  className="pr-12 font-mono text-xs"
                   autoComplete="one-time-code"
                   data-form-type="other"
                 />
@@ -172,7 +158,9 @@ export function ByokPanel({ providers, onSaved }: ByokPanelProps) {
                       [p.id]: !prev[p.id],
                     }))
                   }
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
+                  aria-label={t("customApiKeyLabel", { defaultValue: "API key" })}
+                  aria-pressed={showKey[p.id]}
+                  className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
                 >
                   {showKey[p.id] ? (
                     <EyeOff className="h-3.5 w-3.5" />

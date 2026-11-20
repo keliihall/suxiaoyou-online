@@ -99,10 +99,7 @@ export function TodoProgress({ todos }: TodoProgressProps) {
                 layout
                 variants={itemVariants}
                 exit="exit"
-                className={cn(
-                  "flex items-center gap-2 py-0.5 text-[13px]",
-                  isCompleted && "opacity-50",
-                )}
+                className="flex items-center gap-2 py-0.5 text-[13px]"
               >
                 {/* Icon */}
                 {isCompleted ? (
@@ -112,7 +109,7 @@ export function TodoProgress({ todos }: TodoProgressProps) {
                     <span className="h-1.5 w-1.5 rounded-full bg-[var(--text-primary)]" />
                   </span>
                 ) : (
-                  <Circle className="h-3 w-3 shrink-0 text-[var(--text-tertiary)] opacity-60 ml-px" />
+                  <Circle className="h-3 w-3 shrink-0 text-[var(--text-tertiary)] ml-px" />
                 )}
 
                 {/* Text */}
@@ -120,7 +117,7 @@ export function TodoProgress({ todos }: TodoProgressProps) {
                   className={cn(
                     "truncate",
                     isCompleted
-                      ? "text-[var(--text-tertiary)]"
+                      ? "text-[var(--text-secondary)]"
                       : isActive
                         ? "shimmer-text"
                         : "text-[var(--text-secondary)]",

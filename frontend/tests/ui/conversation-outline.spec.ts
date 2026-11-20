@@ -60,7 +60,7 @@ test.describe("苏小有 conversation outline navigation", () => {
     await page.evaluate(() =>
       document.documentElement.classList.remove("dark"),
     );
-    await expect(firstMarker).toHaveCSS("color", "rgb(138, 143, 152)");
+    await expect(firstMarker).toHaveCSS("color", "rgb(91, 104, 125)");
     const idleMarkerStyles = await markers.evaluateAll((elements) =>
       elements.map((element) => {
         const line = element.querySelector<HTMLElement>(
@@ -77,11 +77,11 @@ test.describe("苏小有 conversation outline navigation", () => {
     expect(
       idleMarkerStyles.every(
         ({ color, height, width }) =>
-          color === "rgb(138, 143, 152)" && height === "2px" && width === "6px",
+          color === "rgb(91, 104, 125)" && height === "2px" && width === "6px",
       ),
     ).toBe(true);
     await page.evaluate(() => document.documentElement.classList.add("dark"));
-    await expect(firstMarker).toHaveCSS("color", "rgb(149, 151, 157)");
+    await expect(firstMarker).toHaveCSS("color", "rgb(140, 156, 179)");
     await page.evaluate(() =>
       document.documentElement.classList.remove("dark"),
     );
@@ -98,24 +98,24 @@ test.describe("苏小有 conversation outline navigation", () => {
     );
     await expect(page.getByText(/^(?:60 turns|60\s*轮对话)$/i)).toHaveCount(0);
     await page.mouse.move(800, 400);
-    await expect(firstMarker).toHaveCSS("color", "rgb(138, 143, 152)");
+    await expect(firstMarker).toHaveCSS("color", "rgb(91, 104, 125)");
     await expect(firstLine).toHaveCSS("height", "2px");
     await expect(firstLine).toHaveCSS("width", "6px");
     await firstMarker.focus();
     await expect(firstMarker).toHaveCSS("outline-style", "solid");
     await expect(firstMarker).toHaveCSS("outline-width", "1px");
     await expect(firstMarker).toHaveCSS("outline-offset", "1px");
-    await expect(firstMarker).toHaveCSS("outline-color", "rgb(51, 156, 255)");
+    await expect(firstMarker).toHaveCSS("outline-color", "rgb(37, 99, 235)");
     const focusedLine = firstMarker.locator('span[aria-hidden="true"]');
     await expect(focusedLine).toHaveCSS("height", "3px");
     await expect(focusedLine).toHaveCSS("width", "10px");
     const activeMarker = outline.locator('button[aria-current="location"]');
     const activeLine = activeMarker.locator('span[aria-hidden="true"]');
-    await expect(activeMarker).toHaveCSS("color", "rgb(138, 143, 152)");
+    await expect(activeMarker).toHaveCSS("color", "rgb(91, 104, 125)");
     await expect(activeLine).toHaveCSS("height", "2px");
     await expect(activeLine).toHaveCSS("width", "6px");
     await activeMarker.hover();
-    await expect(activeMarker).toHaveCSS("color", "rgb(26, 28, 31)");
+    await expect(activeMarker).toHaveCSS("color", "rgb(23, 32, 51)");
     await expect(activeLine).toHaveCSS("height", "3px");
     await expect(activeLine).toHaveCSS("width", "10px");
 

@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Mail, FileDiff, CalendarDays, Settings,
   Receipt, FolderOpen, Trash2,
-  MessagesSquare,
 } from "lucide-react";
 import Link from "next/link";
 import { useTranslation } from 'react-i18next';
@@ -14,13 +13,14 @@ import { ChatHeader } from "./chat-header";
 import { OfflineOverlay } from "@/components/layout/offline-overlay";
 import { StreamingMessage } from "@/components/messages/assistant-message";
 import { FileChip } from "./file-chip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useChat } from "@/hooks/use-chat";
 import { useChatStore } from "@/stores/chat-store";
 import { useArtifactStore } from "@/stores/artifact-store";
 import { useActivityStore } from "@/stores/activity-store";
 import { useSettingsStore } from "@/stores/settings-store";
-import { cn } from "@/lib/utils";
 import { isInteractionAwaitingResolution } from "@/lib/interaction-response";
+import { IS_CLOUD } from "@/lib/cloud-session";
 
 const FEATURED_STARTERS = [
   { icon: Mail, textKey: "starterDraftFromNotes", promptKey: "starterDraftFromNotesPrompt" },
@@ -35,14 +35,6 @@ const STARTERS_PER_MOUNT = 3;
 
 interface LandingProps {
   directoryParam?: string | null;
-}
-
-function workspaceBasename(path: string | null | undefined): string | null {
-  if (!path || path === ".") return null;
-  const trimmed = path.replace(/[\\/]+$/, "");
-  const segments = trimmed.split(/[\\/]/);
-  const last = segments[segments.length - 1];
-  return last || null;
 }
 
 function pickRandomStarters(count: number): typeof FEATURED_STARTERS {
@@ -72,7 +64,6 @@ export function Landing({ directoryParam = null }: LandingProps) {
     pendingPlanReview,
   } = useChat();
   const globalWorkspace = useSettingsStore((s) => s.workspaceDirectory);
-  const workspaceName = workspaceBasename(globalWorkspace);
   const activeProvider = useSettingsStore((s) => s.activeProvider);
   // Start with a deterministic slice so SSR and first client render match,
   // then shuffle post-mount. A new random pair is drawn every time Landing
@@ -80,25 +71,18 @@ export function Landing({ directoryParam = null }: LandingProps) {
   const [starters, setStarters] = useState(() =>
     FEATURED_STARTERS.slice(0, STARTERS_PER_MOUNT),
   );
-  // `round` increments every refresh so each starter re-mounts
-  // (keyed by round+index) and the flip animation replays — avoids the
-  // "same textKey sampled twice in a row = no animation" trap.
-  const [round, setRound] = useState(0);
+  // Pick once for each new conversation. Suggestions remain still while the
+  // user reads or types, and only the visible cards enter the tab order.
   useEffect(() => {
     setStarters(pickRandomStarters(STARTERS_PER_MOUNT));
-    setRound((r) => r + 1);
-    const id = setInterval(() => {
-      setStarters(pickRandomStarters(STARTERS_PER_MOUNT));
-      setRound((r) => r + 1);
-    }, 10_000);
-    return () => clearInterval(id);
   }, []);
 
   useEffect(() => {
     const chat = useChatStore.getState();
     chat.resetSession(null);
     chat.setFocusedSession(null);
-    useSettingsStore.getState().setWorkspaceDirectory(directoryParam || null);
+    const settings = useSettingsStore.getState();
+    settings.setWorkspaceDirectory(directoryParam || (IS_CLOUD ? settings.workspaceDirectory || "/tenant/workspaces" : null));
     useArtifactStore.getState().clearAll();
     useActivityStore.getState().close();
   }, [directoryParam]);
@@ -187,40 +171,44 @@ export function Landing({ directoryParam = null }: LandingProps) {
       <OfflineOverlay />
       <ChatHeader />
 
-      <div className="flex flex-1 flex-col items-center justify-center px-4 pb-8">
-        <div className="w-full max-w-3xl xl:max-w-4xl">
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-4 py-6 sm:px-8 sm:pb-8">
+        <div className="w-full max-w-3xl">
           {/* Provider setup prompt */}
           {!activeProvider && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-              className="mb-6 flex items-center gap-4 rounded-xl border border-[var(--brand-primary)]/30 bg-[var(--brand-primary)]/5 px-5 py-4"
+              className="mb-6 flex items-center gap-3 rounded-xl border border-[var(--border-default)] px-3 py-2"
             >
-              <Settings className="h-5 w-5 shrink-0 text-[var(--brand-primary)]" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-[var(--text-primary)]">
                   {t('setupProvider')}
                 </p>
-                <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                {/* Auxiliary copy retained in source: <p className="text-xs text-[var(--text-secondary)] mt-0.5">
                   {t('setupProviderDesc')}
-                </p>
+                </p> */}
               </div>
-              <Link
-                href="/settings?tab=providers"
-                className="shrink-0 inline-flex items-center rounded-lg border border-[var(--border-default)] bg-[var(--surface-primary)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--surface-secondary)] transition-colors"
-              >
-                {t('configureSettings')}
-              </Link>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Link
+                      href="/settings?tab=providers"
+                      aria-label={t('configureSettings')}
+                      className="icon-action flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]"
+                    >
+                      <Settings className="h-[18px] w-[18px]" aria-hidden="true" />
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent>{t('configureSettings')}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </motion.div>
           )}
 
-          {/* Greeting — becomes workspace-aware when a folder is set, mirroring Codex */}
-          <div className="mb-6 text-center pb-2">
-            <h1 className="text-3xl sm:text-[2.5rem] font-medium text-[var(--text-primary)] tracking-tight">
-              {workspaceName
-                ? t('greetingInWorkspace', { workspace: workspaceName })
-                : t('greeting')}
+          <div className="mb-5 text-center sm:mb-6">
+            <h1 className="mx-auto max-w-[22em] text-2xl font-semibold leading-[1.35] tracking-tight text-[var(--text-primary)] sm:text-[28px]">
+              {t('greeting')}
             </h1>
           </div>
 
@@ -232,35 +220,9 @@ export function Landing({ directoryParam = null }: LandingProps) {
             onSendTaskBatch={sendTaskBatch}
             onStop={stopGeneration}
             directory={globalWorkspace}
+            className="!px-0 !pb-0"
+            starters={starters.map(starter => ({ key: starter.textKey, icon: starter.icon, label: t(starter.textKey), prompt: t(starter.promptKey) }))}
           />
-
-          {/* Suggested starters — mx-7 aligns suggestion icons with the folder picker icon inside the input container */}
-          <div className="-mt-3 mx-7" style={{ perspective: 1200 }}>
-            <AnimatePresence mode="popLayout" initial={false}>
-              {starters.map((starter, index) => (
-                <motion.button
-                  key={`${round}-${index}`}
-                  initial={{ opacity: 0, rotateX: -90 }}
-                  animate={{ opacity: 1, rotateX: 0 }}
-                  exit={{ opacity: 0, rotateX: 90 }}
-                  transition={{
-                    duration: 0.55,
-                    delay: index * 0.12,
-                    ease: [0.16, 1, 0.3, 1],
-                  }}
-                  onClick={() => useArtifactStore.getState().requestFix(t(starter.promptKey))}
-                  disabled={isGenerating}
-                  className={cn(
-                    "group flex w-full items-center gap-3 px-3 py-2.5 text-left text-[14px] text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-secondary)] disabled:opacity-50 disabled:cursor-not-allowed",
-                    index > 0 && "border-t border-[var(--border-default)]/40",
-                  )}
-                >
-                  <MessagesSquare className="h-[18px] w-[18px] shrink-0 text-[var(--text-tertiary)] group-hover:text-[var(--text-secondary)]" strokeWidth={1.75} />
-                  <span className="truncate">{t(starter.textKey)}</span>
-                </motion.button>
-              ))}
-            </AnimatePresence>
-          </div>
         </div>
       </div>
     </div>

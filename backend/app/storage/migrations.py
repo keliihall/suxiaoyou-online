@@ -47,7 +47,8 @@ V100_GOAL_USAGE_LEDGER_REVISION: Final = "0009_v100_goal_usage_ledger"
 V110_CHECKPOINT_LEDGER_REVISION: Final = "0010_v110_checkpoint_ledger"
 V110_USER_OFFICE_TEMPLATES_REVISION: Final = "0011_v110_user_office_templates"
 V110_WORKSPACE_IDENTITY_V2_REVISION: Final = "0012_v110_workspace_identity_v2"
-CURRENT_HEAD_REVISION: Final = V110_WORKSPACE_IDENTITY_V2_REVISION
+V110_CONTEXT_PROJECTION_REVISION: Final = "0013_v110_context_projection"
+CURRENT_HEAD_REVISION: Final = V110_CONTEXT_PROJECTION_REVISION
 # Backward-compatible import for older callers/tests. New code must use the
 # release-neutral CURRENT_HEAD_REVISION name.
 V080_HEAD_REVISION: Final = CURRENT_HEAD_REVISION
@@ -64,6 +65,7 @@ SUPPORTED_REVISIONS: Final[frozenset[str]] = frozenset(
         V100_GOAL_USAGE_LEDGER_REVISION,
         V110_CHECKPOINT_LEDGER_REVISION,
         V110_USER_OFFICE_TEMPLATES_REVISION,
+        V110_WORKSPACE_IDENTITY_V2_REVISION,
         CURRENT_HEAD_REVISION,
     }
 )
@@ -1367,6 +1369,10 @@ def _validate_revision_schema(
         (
             _unversioned_schema(V080_IDEMPOTENCY_REVISION),
             V080_IDEMPOTENCY_REVISION,
+        ),
+        (
+            _unversioned_schema(V110_WORKSPACE_IDENTITY_V2_REVISION),
+            V110_WORKSPACE_IDENTITY_V2_REVISION,
         ),
         (
             _unversioned_schema(CURRENT_HEAD_REVISION),

@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-11-15T12:24:27.919013+00:00",
+  "scope": "Web默认折叠导航、极简登录、服务端拼图弹窗、居中圆形右箭头",
+  "requirements": {
+    "sidebar": {
+      "default_collapsed": true,
+      "rail_width_px": 64,
+      "top": [
+        "logo",
+        "search",
+        "workbench",
+        "new_chat",
+        "primary_more"
+      ],
+      "bottom": [
+        "settings",
+        "account_more",
+        "logout",
+        "collapse_toggle"
+      ],
+      "primary_control_size_px": 44,
+      "new_chat_neutral": true,
+      "native_and_mobile_preserved": true,
+      "legacy_preference_migrates_once": true
+    },
+    "login": {
+      "submit_icon": "ArrowRight",
+      "submit_shape": "circle",
+      "submit_size_px": 48,
+      "submit_alignment": "center",
+      "visible_submit_text": false,
+      "accessible_name": "登录工作台",
+      "captcha_initially_mounted": false,
+      "initial_challenge_requests": 0,
+      "captcha_trigger": "validated_form_submit",
+      "captcha_container": "Radix Dialog: 安全验证",
+      "auto_login_after_verification": true,
+      "second_confirmation_required": false,
+      "close_target_px": 44,
+      "cancel_aborts_and_invalidates_attempt": true,
+      "request_timeout_seconds": 10,
+      "proof_and_credentials_in_memory_only": true
+    },
+    "captcha_backend": {
+      "persistent_store": "shared SQL; live PostgreSQL",
+      "schema": "cloud_0008",
+      "image_size_px": [
+        320,
+        160
+      ],
+      "piece_size_px": [
+        48,
+        48
+      ],
+      "ttl_seconds": 120,
+      "tolerance_px": 4,
+      "bound_to_http_only_cookie": true,
+      "atomic_single_use_challenge_and_proof": true,
+      "wrong_password_consumes_proof": true,
+      "server_side_origin_and_rate_limits": true,
+      "no_bypass_or_client_target": true
+    },
+    "operator_scripts": {
+      "shared_helper": "scripts/cloud_login.py",
+      "manual_interactive_verification": true,
+      "noninteractive_requires_verified_private_session": true,
+      "private_session_checks": [
+        "owner-only regular non-symlink file",
+        "size <=16KiB",
+        "exact origin",
+        "authenticated target email"
+      ],
+      "legacy_raw_cookie_bypasses_removed": true
+    }
+  },
+  "validation": {
+    "cloud_browser_unique_tests_passed": 50,
+    "desktop_workbench_browser_unique_tests_passed": 15,
+    "cloud_ui_first_pass": {
+      "passed": 47,
+      "failed": 3,
+      "evidence": "/tmp/sxy-login-dialog-ui.json",
+      "failure_reason": "测试误把开发模式StrictMode重新挂载的两次challenge请求计为一次；修正为断言新挑战已签发，源码无需修复"
+    },
+    "captcha_recheck": {
+      "passed": 8,
+      "failed": 0,
+      "evidence": "/tmp/sxy-login-dialog-recheck.json"
+    },
+    "final_centered_button_recheck": {
+      "passed": 8,
+      "failed": 0,
+      "evidence": "/tmp/sxy-login-centered-ui.json"
+    },
+    "desktop_workbench": {
+      "first_passed": 14,
+      "first_failed": 1,
+      "final_recheck_passed": 1,
+      "evidence": [
+        "/tmp/sxy-navigation-native.json",
+        "/tmp/sxy-navigation-native-recheck-final.json"
+      ],
+      "test_update": "显式展开Web默认折叠栏后检查会话右键菜单"
+    },
+    "backend_cloud": {
+      "passed": 294,
+      "skipped": 92,
+      "evidence": "/tmp/sxy-captcha-cloud-regression.log",
+      "cli_tests_included": false
+    },
+    "cli_helper": {
+      "passed": 31,
+      "evidence": "/tmp/sxy-captcha-cli-helper-tests.log"
+    },
+    "shared_transport_unit": {
+      "passed": 2,
+      "evidence": "/tmp/sxy-login-dialog-unit.log"
+    },
+    "typescript": "passed",
+    "targeted_eslint": "passed",
+    "git_diff_check": "passed",
+    "production_build": "passed",
+    "real_browser": {
+      "tool": "Orca embedded browser",
+      "real_server": "http://localhost:3018",
+      "captcha_test": "真实服务器图片，经目视定位及鼠标拖动完成；一次偏移失败后刷新并通过，未读取数据库目标坐标",
+      "auto_login": "通过拼图后自动进入 /c/new，auth/me与health均200",
+      "mobile_dialog": {
+        "viewport_px": [
+          320,
+          568
+        ],
+        "themes": [
+          "dark",
+          "light"
+        ],
+        "dialog_x_px": 16,
+        "dialog_width_px": 288,
+        "dialog_height_px": 313,
+        "horizontal_overflow": false
+      },
+      "final_centered_button": {
+        "real_origin": "http://127.0.0.1:3018",
+        "size_px": [
+          48,
+          48
+        ],
+        "horizontal_center_delta_px": 0,
+        "visible_text": "",
+        "initial_captcha_elements": 0,
+        "initial_captcha_requests": 0
+      },
+      "sidebar_final_collapsed": true,
+      "final_authenticated_viewport_px": [
+        1192,
+        892
+      ]
+    },
+    "api_migration": {
+      "database": "PostgreSQL",
+      "from": "cloud_0007",
+      "to": "cloud_0008",
+      "private_backup_before_migration": true,
+      "api_gracefully_restarted_once": true,
+      "worker_restarted": false,
+      "existing_tenant_containers_modified": false
+    },
+    "test_session_incident": {
+      "test_session_identifier_exposed_in_tool_exception": true,
+      "affected_session_revoked_and_confirmed_401": true,
+      "private_temporary_copy_removed": true,
+      "fresh_session_authenticated": true
+    }
+  },
+  "runtime": {
+    "url": "http://localhost:3018",
+    "web_dist": ".next-ui-login-centered",
+    "build_id": "wv4xP6Xm8luj0DsHkU69Y",
+    "status": "running",
+    "build_exit_code": 0,
+    "api": "http://127.0.0.1:8018",
+    "readiness_status": 200,
+    "existing_tenant_containers": {
+      "before": 5,
+      "after": 5,
+      "all_previous_still_running": true,
+      "modified": false
+    },
+    "docker_image_updated": false,
+    "public_deployment_performed": false
+  },
+  "limitations": [
+    "Playwright业务API使用隔离fixture；另行完成真实API及浏览器手动登录验证。",
+    "本轮没有新增付费模型请求；工作台仍显示已配置的DeepSeek。",
+    "未启动原生桌面客户端；桌面兼容性以源码审查及浏览器工作台回归验证。",
+    "可选外部集成测试包含环境未配置而跳过的项目，未声称全部生产验收通过。",
+    "Docker镜像仍为上一版本；此前4GB宿主构建OOM限制保留，未操作现有用户容器。"
+  ]
+}

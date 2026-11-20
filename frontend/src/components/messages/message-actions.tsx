@@ -26,12 +26,12 @@ export function MessageActions({ content, onRegenerate, activityData, activityKe
   }, [content]);
 
   return (
-    <div className="flex items-center gap-0.5 pt-2">
+    <div className="flex max-w-full flex-wrap items-center gap-1 pt-2">
       {/* Copy */}
       <button
         type="button"
         onClick={handleCopy}
-        className="flex items-center justify-center h-7 w-7 rounded-md text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-secondary)] transition-colors"
+        className="flex items-center justify-center h-11 w-11 lg:h-9 lg:w-9 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:min-w-11 rounded-md text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-secondary)] transition-colors"
         aria-label={copied ? t("copied") : t("copy")}
       >
         <AnimatePresence mode="wait" initial={false}>
@@ -66,7 +66,7 @@ export function MessageActions({ content, onRegenerate, activityData, activityKe
         <button
           type="button"
           onClick={onRegenerate}
-          className="flex items-center justify-center h-7 w-7 rounded-md text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-secondary)] transition-colors"
+          className="flex items-center justify-center h-11 w-11 lg:h-9 lg:w-9 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:min-w-11 rounded-md text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-secondary)] transition-colors"
           aria-label={t("regenerate")}
         >
           <RefreshCw className="h-4 w-4" />
@@ -78,7 +78,7 @@ export function MessageActions({ content, onRegenerate, activityData, activityKe
         <button
           type="button"
           onClick={() => toggleForMessage(activityKey, activityData)}
-          className="flex items-center justify-center h-7 w-7 rounded-md text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-secondary)] transition-colors"
+          className="flex items-center justify-center h-11 w-11 lg:h-9 lg:w-9 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:min-w-11 rounded-md text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-secondary)] transition-colors"
           aria-label={t("viewActivity")}
         >
           <ListTree className="h-4 w-4" />
@@ -89,7 +89,7 @@ export function MessageActions({ content, onRegenerate, activityData, activityKe
       <button
         type="button"
         onClick={() => setLiked(liked === "up" ? null : "up")}
-        className={`flex items-center justify-center h-7 w-7 rounded-md transition-colors ${
+        className={`flex items-center justify-center h-11 w-11 lg:h-9 lg:w-9 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:min-w-11 rounded-md transition-colors ${
           liked === "up"
             ? "text-[var(--text-primary)] bg-[var(--surface-secondary)]"
             : "text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-secondary)]"
@@ -104,7 +104,7 @@ export function MessageActions({ content, onRegenerate, activityData, activityKe
       <button
         type="button"
         onClick={() => setLiked(liked === "down" ? null : "down")}
-        className={`flex items-center justify-center h-7 w-7 rounded-md transition-colors ${
+        className={`flex items-center justify-center h-11 w-11 lg:h-9 lg:w-9 [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:min-w-11 rounded-md transition-colors ${
           liked === "down"
             ? "text-[var(--text-primary)] bg-[var(--surface-secondary)]"
             : "text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-secondary)]"

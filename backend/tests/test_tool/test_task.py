@@ -416,3 +416,59 @@ async def test_folderless_parent_task_child_inherits_exact_managed_workspace(
         "allowed": parent_workspace.resolve(),
         "canonical": str(parent_workspace.resolve()),
     }
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("resume", ["new", "matching", "legacy-without-project"])
+async def test_project_subtask_admits_real_child_checkpoint_without_changing_provenance(
+    session_factory, monkeypatch, tmp_path, resume,
+):
+    from sqlalchemy import select
+    from app.models.project import Project
+    from app.models.session import Session
+    from app.models.turn_run import TurnRun
+    from app.runtime.checkpoint_runtime import admit_turn_checkpoint, finish_turn_checkpoint
+    from app.streaming.manager import GenerationJob
+
+    workspace = tmp_path / "project"
+    workspace.mkdir()
+    async with session_factory() as db, db.begin():
+        db.add(Project(id="task-project", name="Task project", worktree=str(workspace)))
+        await db.flush()
+        await create_session(db, id="test-session", project_id="task-project", directory=str(workspace))
+        if resume != "new":
+            await create_session(db, id="existing-child", parent_id="test-session",
+                project_id="task-project" if resume == "matching" else None, directory=str(workspace))
+    parent_job = GenerationJob("project-task-parent", "test-session")
+    parent_binding = await admit_turn_checkpoint(session_factory, job=parent_job,
+        workspace=str(workspace), request_message_id=None, todo_snapshot=[])
+    ctx = _make_ctx(workspace=str(workspace))
+    ctx._job = parent_job
+    ctx._app_state = {"session_factory": session_factory, "provider_registry": MagicMock(),
+        "agent_registry": MagicMock(), "tool_registry": MagicMock()}
+    captured = []
+
+    async def child_generation(job, request, **_kwargs):
+        binding = await admit_turn_checkpoint(session_factory, job=job,
+            workspace=request.workspace, request_message_id=None, todo_snapshot=[])
+        assert binding.workspace_instance_id == parent_binding.workspace_instance_id
+        assert job.parent_turn_id == parent_job.turn_run_id
+        async with session_factory() as db:
+            assert (await db.get(Session, job.session_id)).project_id == "task-project"
+        await finish_turn_checkpoint(session_factory, job=job, binding=binding,
+            status="completed", response_message_id=None)
+        captured.append(job.session_id)
+        job.publish(SSEEvent("text-delta", {"text": "checkpoint admitted"}))
+
+    monkeypatch.setattr("app.session.processor.run_generation", child_generation)
+    args = {"description": "project child", "prompt": "Check the project"}
+    if resume != "new":
+        args["task_id"] = "existing-child"
+    result = await TaskTool().execute(args, ctx)
+    assert result.success, result.error
+    assert len(captured) == 1
+    assert (captured[0] == "existing-child") is (resume == "matching")
+    async with session_factory() as db:
+        child_turn = await db.scalar(select(TurnRun).where(TurnRun.parent_turn_id == parent_job.turn_run_id))
+        assert child_turn is not None and child_turn.status == "completed"
+        assert (await db.get(TurnRun, parent_job.turn_run_id)).status == "running"

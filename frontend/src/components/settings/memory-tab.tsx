@@ -84,7 +84,7 @@ function WorkspaceMemoryItem({
 
   return (
     <>
-      <div className="rounded-xl border border-[var(--border-default)] p-4 transition-colors hover:border-[var(--border-hover,var(--border-default))]">
+      <div className="surface-card rounded-2xl border border-[var(--border-default)] p-4 transition-colors hover:border-[var(--border-hover,var(--border-default))]">
         {/* Header row */}
         <div className="flex items-center justify-between mb-2">
           <button
@@ -113,7 +113,7 @@ function WorkspaceMemoryItem({
                 <button
                   onClick={handleExport}
                   disabled={exportMutation.isPending}
-                  className="rounded-lg p-1.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-secondary)] transition-colors disabled:opacity-50"
+                  className="rounded-lg p-1.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-secondary)] transition-colors disabled:cursor-not-allowed disabled:bg-[var(--surface-secondary)] disabled:text-[var(--text-tertiary)]"
                   title={t("memoryExport")}
                 >
                   <Download className="h-3.5 w-3.5" />
@@ -189,7 +189,7 @@ function WorkspaceMemoryItem({
             </Button>
             <Button
               size="sm"
-              className="bg-[var(--color-destructive)] text-white hover:bg-[var(--color-destructive)]/90"
+              variant="destructive"
               onClick={handleDelete}
               disabled={deleteMutation.isPending}
             >
@@ -214,7 +214,7 @@ export function MemoryTab() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="settings-section space-y-6">
         <Skeleton className="h-4 w-64" />
         <div className="space-y-3">
           <Skeleton className="h-24 rounded-xl" />
@@ -226,7 +226,7 @@ export function MemoryTab() {
 
   if (error) {
     return (
-      <div className="rounded-xl border border-[var(--color-destructive)]/30 bg-[var(--color-destructive)]/5 p-4">
+      <div className="surface-card rounded-2xl border border-[var(--color-destructive)]/30 bg-[var(--color-destructive)]/5 p-4">
         <p className="text-sm text-[var(--color-destructive)]">
           Failed to load workspace memories:{" "}
           {error instanceof Error ? error.message : "Unknown error"}
@@ -238,8 +238,8 @@ export function MemoryTab() {
   const items = memories ?? [];
 
   return (
-    <div className="space-y-6">
-      <p className="text-xs text-[var(--text-secondary)]">{t("memoryDesc")}</p>
+    <div className="settings-section space-y-6">
+      {/* Auxiliary copy retained in source: <p className="text-xs text-[var(--text-secondary)]">{t("memoryDesc")}</p> */}
 
       {items.length === 0 ? (
         <p className="text-sm text-[var(--text-tertiary)] py-8 text-center">

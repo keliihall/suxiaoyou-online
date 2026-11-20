@@ -57,18 +57,16 @@ export function AutomationCard({ automation: a, onEdit }: { automation: Automati
 
   return (
     <>
-      <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-primary)] p-4 hover:bg-[var(--surface-secondary)]/50 transition-colors">
+      <div className="surface-card rounded-2xl border border-[var(--border-default)] bg-[var(--surface-primary)] p-5 shadow-[var(--shadow-sm)] transition-colors hover:border-[var(--border-heavy)]">
         {/* Row 1: Name + actions */}
-        <div className="flex items-center gap-3">
-          <div className="flex-1 min-w-0 cursor-pointer" onClick={() => onEdit(a.id)}>
+        <div className="flex flex-wrap items-center gap-3">
+          <button type="button" className="min-w-0 flex-1 basis-40 text-left" onClick={() => onEdit(a.id)}>
             <span className="text-sm font-medium text-[var(--text-primary)] hover:underline">{a.name}</span>
-            {a.description && (
-              <p className="text-ui-2xs text-[var(--text-tertiary)] mt-0.5 truncate">{a.description}</p>
-            )}
-          </div>
+            {/* Auxiliary automation description retained in source: {a.description && <p>{a.description}</p>} */}
+          </button>
 
           <Button
-            variant="ghost" size="sm" className="h-7 gap-1.5 text-xs px-2"
+            variant="ghost" size="sm" className="h-10 gap-2 rounded-xl px-3 text-[13px]"
             onClick={handleRun} disabled={isRunning}
           >
             {isRunning
@@ -78,13 +76,15 @@ export function AutomationCard({ automation: a, onEdit }: { automation: Automati
           </Button>
 
           <button
-            type="button" className="inline-flex items-center justify-center h-7 w-7 rounded-md text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-secondary)] transition-colors"
+            type="button" className="inline-flex items-center justify-center icon-action h-10 w-10 rounded-xl text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-secondary)] transition-colors"
             onClick={() => onEdit(a.id)}
+            aria-label={t("editAutomation")}
           >
             <Pencil className="h-3.5 w-3.5" />
           </button>
 
           <Switch
+            aria-label={a.name}
             checked={a.enabled}
             onCheckedChange={(enabled) => toggleMut.mutate({ id: a.id, data: { enabled } })}
           />
@@ -92,19 +92,20 @@ export function AutomationCard({ automation: a, onEdit }: { automation: Automati
           <button
             type="button"
             disabled={deleteMut.isPending}
-            className={`inline-flex items-center justify-center h-7 w-7 rounded-md transition-colors ${
+            className={`inline-flex items-center justify-center icon-action h-10 w-10 rounded-xl transition-colors ${
               deleteMut.isPending
-                ? "opacity-50 cursor-not-allowed text-[var(--text-tertiary)]"
-                : "text-[var(--text-tertiary)] hover:text-red-500 hover:bg-[var(--surface-secondary)]"
+                ? "cursor-not-allowed bg-[var(--surface-secondary)] text-[var(--text-tertiary)]"
+                : "text-[var(--text-tertiary)] hover:text-[var(--color-destructive)] hover:bg-[var(--surface-secondary)]"
             }`}
             onClick={() => setDeleteTarget({ id: a.id, name: a.name })}
+            aria-label={t("delete")}
           >
             {deleteMut.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
           </button>
         </div>
 
         {/* Row 2: Schedule + status meta */}
-        <div className="flex items-center gap-3 mt-2 text-ui-2xs text-[var(--text-tertiary)]">
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-[var(--text-secondary)]">
           <span className="inline-flex items-center gap-1">
             {a.loop_max_iterations ? (
               <>
@@ -149,15 +150,15 @@ export function AutomationCard({ automation: a, onEdit }: { automation: Automati
 
         {/* Row 3: Last run result */}
         {a.last_run_at && (
-          <div className="flex items-center gap-2 mt-2 pt-2 border-t border-[var(--border-default)]/50">
+          <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-[var(--border-subtle)] pt-4">
             <StatusBadge status={a.last_run_status} sessionId={a.last_session_id} t={t} />
-            <span className="text-ui-3xs text-[var(--text-tertiary)]">
+            <span className="text-[12px] text-[var(--text-tertiary)]">
               {relativeTime(a.last_run_at, t)}
             </span>
             {a.last_session_id && a.last_run_status !== "running" && (
               <Link
                 href={getChatRoute(a.last_session_id)}
-                className="ml-auto text-ui-3xs text-[var(--text-tertiary)] hover:text-[var(--text-primary)] inline-flex items-center gap-0.5"
+                className="ml-auto text-[12px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] inline-flex items-center gap-0.5"
               >
                 {t("viewResult")}
                 <ArrowUpRight className="h-3 w-3" />

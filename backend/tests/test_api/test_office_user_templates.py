@@ -35,6 +35,13 @@ pytestmark = pytest.mark.asyncio
 _PLACEHOLDERS = ("body", "client", "footer", "header", "table")
 
 
+def _approval_identity(session_id, instance_id, template):
+    return {"session_id": session_id, "workspace_instance_id": instance_id,
+        "revision": template["revision"], "expected_state_version": template["state_version"],
+        "expected_source_sha256": template["source"]["sha256"],
+        "expected_render_cache_key": template["render_evidence"]["cache_key"]}
+
+
 class _NeverPolicies:
     def resolve_create(self, request: object) -> object:
         raise AssertionError("readiness probe must not resolve a policy")
@@ -202,6 +209,81 @@ async def test_user_template_beta_is_composed_closed_and_local_only(
     finally:
         app_client.app.dependency_overrides.pop(require_local_session, None)
     assert denied.status_code == 403
+
+
+async def test_renderer_upgrade_revalidation_preserves_revision_and_requires_fresh_approval(
+    app_client, session_factory, tmp_path, monkeypatch,
+):
+    _release_beta(monkeypatch)
+    provider = _install_service(app_client, tmp_path, quality="authoritative")
+    sid, wid, _ = await _workspace(session_factory, tmp_path, suffix="revalidate")
+    data, files = _import_request(session_id=sid, workspace_instance_id=wid)
+    response = await app_client.post("/api/office-v2/user-templates/import", data=data, files=files)
+    assert response.status_code == 201
+    original = response.json()["template"]
+    url = "/api/office-v2/user-templates/" + original["template_ref"]
+    response = await app_client.post(url + "/approve", json=_approval_identity(sid, wid, original))
+    approved = response.json()["template"]
+    assert approved["can_instantiate"]
+    provider._descriptor = RendererDescriptor(renderer_id="upgraded-renderer", renderer_version="2",
+        font_digest="d" * 64, quality="authoritative")
+    old_body = _approval_identity(sid, wid, approved)
+    response = await app_client.post(url + "/approve", json=old_body)
+    assert response.json()["idempotent"] and not response.json()["template"]["can_instantiate"]
+    response = await app_client.post(url + "/revalidate", json=old_body)
+    assert response.status_code == 201, response.text
+    refreshed = response.json()["template"]
+    assert refreshed["template_ref"] == approved["template_ref"]
+    assert refreshed["revision"] == 2 and refreshed["state_version"] == 1
+    assert refreshed["source"]["sha256"] == approved["source"]["sha256"]
+    assert refreshed["render_evidence"]["cache_key"] != approved["render_evidence"]["cache_key"]
+    assert refreshed["status"] == "needs_confirmation" and not refreshed["can_instantiate"]
+    assert refreshed["can_approve"] and refreshed["time_approved"] is None
+    async with session_factory() as db:
+        records = (await db.execute(select(OfficeUserTemplate).order_by(OfficeUserTemplate.revision))).scalars().all()
+        assert len(records) == 2
+        assert records[0].render_cache_key == approved["render_evidence"]["cache_key"]
+        assert records[0].status == "approved" and records[0].state_version == 3
+    service = app_client.app.state.office_user_template_service
+    assert service.registry.read_source(approved["template_ref"], "1")[1] == service.registry.read_source(approved["template_ref"], "2")[1]
+    stale = await app_client.post(url + "/revalidate", json=old_body)
+    assert stale.status_code == 409
+    preview = await app_client.get(url + "/page", params={"session_id": sid, "workspace_instance_id": wid,
+        "revision": 2, "expected_state_version": 1, "page_number": 1})
+    assert preview.status_code == 200 and preview.content.startswith(b"\x89PNG")
+    response = await app_client.post(url + "/approve", json=_approval_identity(sid, wid, refreshed))
+    assert response.status_code == 200 and response.json()["template"]["can_instantiate"]
+
+
+@pytest.mark.parametrize("failure", ["audit", "source", "workspace"])
+async def test_revalidation_failure_does_not_publish_or_change_existing_revision(
+    app_client, session_factory, tmp_path, monkeypatch, failure,
+):
+    _release_beta(monkeypatch)
+    _install_service(app_client, tmp_path, quality="authoritative")
+    sid, wid, _ = await _workspace(session_factory, tmp_path, suffix="failure-" + failure)
+    data, files = _import_request(session_id=sid, workspace_instance_id=wid)
+    imported = await app_client.post("/api/office-v2/user-templates/import", data=data, files=files)
+    template = imported.json()["template"]
+    body = _approval_identity(sid, wid, template)
+    if failure == "audit":
+        async def unavailable(*args, **kwargs):
+            if kwargs.get("required"):
+                raise AuditPersistenceError("required audit unavailable")
+        monkeypatch.setattr(user_template_api, "record_security_event", unavailable)
+    elif failure == "source":
+        service = app_client.app.state.office_user_template_service
+        record, _ = service.registry.read_source(template["template_ref"], "1")
+        record.content_path.chmod(0o600)
+        record.content_path.write_bytes(b"corrupt source")
+    else:
+        body["workspace_instance_id"] = "foreign-workspace"
+    response = await app_client.post("/api/office-v2/user-templates/" + template["template_ref"] + "/revalidate", json=body)
+    assert response.status_code in {404, 409, 503}, response.text
+    async with session_factory() as db:
+        records = (await db.execute(select(OfficeUserTemplate))).scalars().all()
+        assert len(records) == 1 and records[0].state_version == 1
+        assert records[0].render_cache_key == template["render_evidence"]["cache_key"]
 
 
 async def test_authoritative_import_idempotency_approval_cas_and_tombstone(

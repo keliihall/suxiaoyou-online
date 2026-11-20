@@ -88,12 +88,12 @@ const validationBadges: Record<
   Exclude<RuntimeValidationStatus, "not_requested">,
   { label: string; className: string }
 > = {
-  pass: { label: "runtimeValidationPass", className: "border-emerald-500/25 bg-emerald-500/10 text-emerald-500" },
-  fail: { label: "runtimeValidationFail", className: "border-red-500/25 bg-red-500/10 text-red-500" },
-  needs_review: { label: "runtimeValidationNeedsReview", className: "border-amber-500/25 bg-amber-500/10 text-amber-500" },
-  failed_closed: { label: "runtimeValidationFailedClosed", className: "border-orange-500/25 bg-orange-500/10 text-orange-500" },
-  cancelled: { label: "runtimeValidationCancelled", className: "border-white/10 bg-white/[0.04] text-[var(--text-tertiary)]" },
-  invalid: { label: "runtimeValidationInvalid", className: "border-red-500/25 bg-red-500/10 text-red-500" },
+  pass: { label: "runtimeValidationPass", className: "border-[var(--color-success)]/25 bg-[var(--color-success)]/10 text-[var(--color-success)]" },
+  fail: { label: "runtimeValidationFail", className: "border-[var(--color-destructive)]/25 bg-[var(--color-destructive)]/10 text-[var(--color-destructive)]" },
+  needs_review: { label: "runtimeValidationNeedsReview", className: "border-[var(--color-warning)]/25 bg-[var(--color-warning)]/10 text-[var(--color-warning)]" },
+  failed_closed: { label: "runtimeValidationFailedClosed", className: "border-[var(--color-warning)]/25 bg-[var(--color-warning)]/10 text-[var(--color-warning)]" },
+  cancelled: { label: "runtimeValidationCancelled", className: "border-[var(--border-default)] bg-[var(--surface-secondary)] text-[var(--text-tertiary)]" },
+  invalid: { label: "runtimeValidationInvalid", className: "border-[var(--color-destructive)]/25 bg-[var(--color-destructive)]/10 text-[var(--color-destructive)]" },
 };
 
 function validationBadge(
@@ -315,12 +315,12 @@ export function RuntimeControlCard({ sessionId }: { sessionId: string | null }) 
   if (unavailable && !loading) return null;
   if (failure && !context && !loading) {
     return (
-      <div className="rounded-3xl border border-amber-500/30 bg-amber-500/5 p-4">
+      <div className="rounded-[var(--radius-card)] border border-[var(--border-default)] bg-[var(--surface-primary)] p-4">
         <p className="flex items-center gap-2 text-[13px] font-medium text-[var(--text-primary)]">
-          <ShieldAlert className="h-4 w-4 text-amber-500" />
+          <ShieldAlert className="h-4 w-4 text-[var(--color-warning)]" />
           {t("runtimeControlTitle")}
         </p>
-        <p className="mt-2 break-words text-[11px] text-[var(--text-secondary)]">{failure}</p>
+        <p className="mt-2 break-words text-xs text-[var(--text-secondary)]">{failure}</p>
         <Button className="mt-3" size="sm" variant="outline" onClick={() => void load()}>
           {t("retry")}
         </Button>
@@ -330,10 +330,10 @@ export function RuntimeControlCard({ sessionId }: { sessionId: string | null }) 
   if (!context && !loading) return null;
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-white/8 bg-white/[0.03] shadow-[0_0_0_1px_rgba(255,255,255,0.02)_inset] backdrop-blur-sm">
-      <button className="flex w-full items-start justify-between px-4 py-4 text-left transition-colors hover:bg-white/[0.02]" onClick={() => setCollapsed((value) => !value)}>
+    <div className="surface-card overflow-hidden">
+      <button className="flex w-full items-start justify-between px-4 py-4 text-left transition-colors hover:bg-[var(--surface-secondary)]" onClick={() => setCollapsed((value) => !value)}>
         <div className="flex min-w-0 flex-1 items-start gap-3">
-          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl border border-white/8 bg-white/[0.04]">
+          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl border border-[var(--border-default)] bg-[var(--surface-secondary)]">
             <History className="h-4 w-4 text-[var(--text-tertiary)]" />
           </div>
           <div className="min-w-0">
@@ -348,34 +348,34 @@ export function RuntimeControlCard({ sessionId }: { sessionId: string | null }) 
       <AnimatePresence initial={false}>
         {!collapsed && context && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-            <div className="space-y-3 border-t border-white/6 px-4 py-3">
-              <div className="rounded-xl border border-emerald-500/15 bg-emerald-500/[0.04] px-3 py-2.5">
+            <div className="space-y-3 border-t border-[var(--border-subtle)] px-4 py-3">
+              <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-secondary)] px-3 py-2.5">
                 <p className="flex items-center gap-2 text-xs font-medium text-[var(--text-primary)]">
-                <BadgeCheck className="h-3.5 w-3.5 text-emerald-500" />
+                <BadgeCheck className="h-3.5 w-3.5 text-[var(--color-success)]" />
                   {t("runtimeProtectionReady")}
                 </p>
-                <p className="mt-1 pl-5.5 text-[11px] text-[var(--text-tertiary)]">
+                {/* Auxiliary copy retained in source: <p className="mt-1 pl-5.5 text-xs text-[var(--text-tertiary)]">
                   {t("runtimeProtectionReadyDesc")}
-                </p>
+                </p> */}
               </div>
 
               {checkpoints.length === 0 ? (
-                <p className="py-2 text-[12px] text-[var(--text-quaternary)]">{t("runtimeNoCheckpoints")}</p>
+                <p className="py-2 text-[12px] text-[var(--text-tertiary)]">{t("runtimeNoCheckpoints")}</p>
               ) : (
                 <ul className="max-h-64 space-y-2 overflow-y-auto">
                   {checkpoints.slice(0, 20).map((checkpoint) => (
-                    <li key={checkpoint.checkpoint_id} className="rounded-xl border border-white/8 p-2.5">
-                      <div className="flex items-center justify-between gap-2">
+                    <li key={checkpoint.checkpoint_id} className="rounded-xl border border-[var(--border-default)] p-2.5">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="min-w-0">
                           <p className="text-xs font-medium text-[var(--text-primary)]">{t("runtimeCheckpointLabel", { sequence: checkpoint.sequence })}</p>
                           <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                            <p className="text-[10px] text-[var(--text-tertiary)]">{t(checkpointStateLabelKey(checkpoint.state))}</p>
+                            <p className="text-xs text-[var(--text-tertiary)]">{t(checkpointStateLabelKey(checkpoint.state))}</p>
                             {(() => {
                               const badge = validationBadge(checkpoint.validation.overall_status);
                               return badge ? (
                                 <span
                                   data-testid={`runtime-validation-${checkpoint.validation.overall_status}`}
-                                  className={cn("rounded-full border px-1.5 py-0.5 text-[9px] font-medium", badge.className)}
+                                  className={cn("rounded-md border px-2 py-1 text-xs font-medium", badge.className)}
                                 >
                                   {t(badge.label)}
                                 </span>
@@ -389,34 +389,34 @@ export function RuntimeControlCard({ sessionId }: { sessionId: string | null }) 
                         </Button>
                       </div>
                       {checkpoint.has_irreversible_side_effects && (
-                        <p className="mt-2 flex items-start gap-1.5 text-[10px] text-amber-500"><ShieldAlert className="mt-0.5 h-3 w-3 shrink-0" />{t("runtimeExternalEffectsWarning")}</p>
+                        <p className="mt-2 flex items-start gap-1.5 text-xs text-[var(--color-warning)]"><ShieldAlert className="mt-0.5 h-3 w-3 shrink-0" />{t("runtimeExternalEffectsWarning")}</p>
                       )}
                     </li>
                   ))}
                 </ul>
               )}
 
-              <details className="group rounded-xl border border-white/8">
+              <details className="group rounded-xl border border-[var(--border-default)]">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 [&::-webkit-details-marker]:hidden">
                   <div className="min-w-0">
                     <p className="text-xs font-medium text-[var(--text-primary)]">{t("runtimeAdvancedOptions")}</p>
-                    <p className="mt-0.5 text-[10px] text-[var(--text-tertiary)]">{t("runtimeAdvancedOptionsDesc")}</p>
+                    {/* Auxiliary copy retained in source: <p className="mt-0.5 text-xs text-[var(--text-tertiary)]">{t("runtimeAdvancedOptionsDesc")}</p> */}
                   </div>
                   <ChevronDown className="h-3.5 w-3.5 shrink-0 text-[var(--text-tertiary)] transition-transform group-open:rotate-180" />
                 </summary>
-                <div className="space-y-2.5 border-t border-white/6 px-3 py-3">
+                <div className="space-y-2.5 border-t border-[var(--border-subtle)] px-3 py-3">
                   {context.managed_worktrees_released && (
-                    <div className="rounded-xl border border-white/8 p-2.5">
-                      <div className="flex items-center justify-between gap-2">
+                    <div className="rounded-xl border border-[var(--border-default)] p-2.5">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="min-w-0">
                           <p className="flex items-center gap-1.5 text-xs font-medium text-[var(--text-primary)]">
                             <GitBranch className="h-3.5 w-3.5" />
                             {t("runtimeWorktreeTitle")}
-                            <span className="rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-normal text-amber-500">
+                            <span className="rounded-full bg-amber-500/10 px-1.5 py-0.5 text-xs font-normal text-[var(--color-warning)]">
                               {t("runtimePreviewFeature")}
                             </span>
                           </p>
-                          <p className="mt-1 text-[11px] text-[var(--text-tertiary)]">
+                          <p className="mt-1 text-xs text-[var(--text-tertiary)]">
                             {context.workspace_kind === "git_worktree"
                               ? t("runtimeWorktreeActive")
                               : t("runtimeWorktreeDirect")}
@@ -440,19 +440,19 @@ export function RuntimeControlCard({ sessionId }: { sessionId: string | null }) 
                         )}
                       </div>
                       {context.workspace_kind !== "git_worktree" && context.worktree_creation_available !== true && (
-                        <p className="mt-2 text-[11px] text-amber-500">
+                        <p className="mt-2 text-xs text-[var(--color-warning)]">
                           {t(worktreeUnavailableLabelKey(context.worktree_creation_reason))}
                         </p>
                       )}
-                      {worktree?.clean === false && <p className="mt-2 text-[11px] text-amber-500">{t("runtimeWorktreeDirty")}</p>}
+                      {worktree?.clean === false && <p className="mt-2 text-xs text-[var(--color-warning)]">{t("runtimeWorktreeDirty")}</p>}
                     </div>
                   )}
 
-                  <details className="rounded-lg border border-white/8 px-2.5 py-2">
-                    <summary className="cursor-pointer list-none text-[11px] font-medium text-[var(--text-secondary)] [&::-webkit-details-marker]:hidden">
+                  <details className="rounded-lg border border-[var(--border-default)] px-2.5 py-2">
+                    <summary className="cursor-pointer list-none text-xs font-medium text-[var(--text-secondary)] [&::-webkit-details-marker]:hidden">
                       {t("runtimeTechnicalDetails")}
                     </summary>
-                    <dl className="mt-2 grid grid-cols-[auto_minmax(0,1fr)] gap-x-2 gap-y-1 text-[10px] text-[var(--text-tertiary)]">
+                    <dl className="mt-2 grid grid-cols-[auto_minmax(0,1fr)] gap-x-2 gap-y-1 text-xs text-[var(--text-tertiary)]">
                       <dt>{t("runtimeTechnicalWorkspaceType")}</dt>
                       <dd>{t(workspaceKindLabelKey(context.workspace_kind))}</dd>
                       <dt>{t("runtimeTechnicalWorkspaceId")}</dt>
@@ -465,9 +465,9 @@ export function RuntimeControlCard({ sessionId }: { sessionId: string | null }) 
                       )}
                     </dl>
                     {checkpoints.length > 0 && (
-                      <ul className="mt-2 space-y-1 border-t border-white/6 pt-2 text-[10px] text-[var(--text-tertiary)]">
+                      <ul className="mt-2 space-y-1 border-t border-[var(--border-subtle)] pt-2 text-xs text-[var(--text-tertiary)]">
                         {checkpoints.slice(0, 20).map((checkpoint) => (
-                          <li key={`technical-${checkpoint.checkpoint_id}`} className="flex items-center justify-between gap-2">
+                          <li key={`technical-${checkpoint.checkpoint_id}`} className="flex flex-wrap items-center justify-between gap-2">
                             <span>{t("runtimeCheckpointLabel", { sequence: checkpoint.sequence })}</span>
                             <span className="truncate font-mono" title={checkpoint.checkpoint_id}>{checkpoint.checkpoint_id.slice(0, 12)}</span>
                           </li>

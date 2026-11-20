@@ -24,6 +24,8 @@ class SessionFile(Base, TimestampMixin):
     file_path: Mapped[str] = mapped_column(String, nullable=False)
     file_name: Mapped[str] = mapped_column(String, nullable=False)
     tool_id: Mapped[str] = mapped_column(String, nullable=False)
+    # working = mutation evidence; deliverable = explicit user delivery.
+    # Legacy generated records remain unknown until explicitly presented.
     file_type: Mapped[str] = mapped_column(String, nullable=False, default="generated")
 
     session: Mapped[Session] = relationship()

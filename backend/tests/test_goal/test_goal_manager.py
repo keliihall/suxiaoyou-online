@@ -698,3 +698,35 @@ async def test_archiving_interrupts_active_goal_and_requires_review(
     assert archived.needs_review is True
     assert archived.blocker_code == "session_archived"
     assert await pause_active_goal_for_archive(db, "goal-session") is False
+
+
+@pytest.mark.asyncio
+async def test_explicit_resume_allows_zero_autonomous_continuations(db: AsyncSession) -> None:
+    await _session(db)
+    goal = await create_session_goal(db, "goal-session", _create_body(max_continuations=0))
+    paused = await pause_session_goal(db, "goal-session", GoalControlRequest(
+        client_request_id="zero-auto-safe-pause", expected_revision=goal.revision,
+    ))
+    resumed = await resume_session_goal(db, "goal-session", GoalControlRequest(
+        client_request_id="zero-auto-manual-resume", expected_revision=paused.revision,
+    ))
+    assert resumed.status == "active"
+    assert resumed.max_continuations == 0 and resumed.continuation_count == 0
+    reserved = await reserve_goal_run(db, goal_id=goal.id, expected_revision=resumed.revision,
+        idempotency_key="zero-auto-manual-run", trigger="resume")
+    assert reserved.run.trigger == "resume" and reserved.run.status == "reserved"
+    assert reserved.goal.continuation_count == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("budget", ["token_budget", "cost_budget_microusd", "time_budget_seconds"])
+async def test_explicit_resume_still_rejects_exhausted_execution_budget(db: AsyncSession, budget: str) -> None:
+    await _session(db)
+    goal = await create_session_goal(db, "goal-session", _create_body(max_continuations=0, **{budget: 0}))
+    paused = await pause_session_goal(db, "goal-session", GoalControlRequest(
+        client_request_id="exhausted-budget-pause", expected_revision=goal.revision,
+    ))
+    with pytest.raises(GoalInvalidTransitionError, match="budget is increased"):
+        await resume_session_goal(db, "goal-session", GoalControlRequest(
+            client_request_id="exhausted-budget-resume", expected_revision=paused.revision,
+        ))

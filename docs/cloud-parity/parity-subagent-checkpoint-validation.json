@@ -1,0 +1,219 @@
+{
+  "kind": "actual-sqlite-and-real-private-runtime-checkpoint-validation",
+  "date": "2026-11-15",
+  "fixes": [
+    "task_batch admits the durable parent turn/checkpoint before child sessions or tools",
+    "task_batch closes parent checkpoint before DONE and settles cancelled siblings first",
+    "task_batch and TaskTool retain parent project provenance; mismatched legacy TaskTool child is retained but not reused"
+  ],
+  "pre_fix_task_tool_reproduction": {
+    "project_new_child": "CheckpointConflictError: Workspace identity is already registered with different provenance",
+    "project_legacy_child_without_project": "CheckpointConflictError: Workspace identity is already registered with different provenance",
+    "matching_project_resume": "passed"
+  },
+  "regression": {
+    "passed": 63,
+    "files": [
+      "backend/tests/test_tool/test_task.py",
+      "backend/tests/test_session/test_task_batch.py",
+      "backend/tests/test_runtime/test_checkpoint_runtime.py"
+    ],
+    "model_calls": 0,
+    "checks": [
+      "real parent/child TurnRun and SessionCheckpoint rows",
+      "parallel/sequential with and without project_id",
+      "parent request/response anchors and todo snapshot",
+      "child failure parent failed",
+      "cancelled siblings settle while parent remains running",
+      "ledger admission failure dispatches no child",
+      "TaskTool new/correct resume/legacy mismatched resume"
+    ]
+  },
+  "container_real_model_task_batch": {
+    "passed": true,
+    "provider": "DeepSeek",
+    "runtime_image": "sha256:c18f546bc41655f6250b851c9a9fb6580c51188981b67bff9dfce6939dcfc5b2",
+    "mode": "parallel",
+    "provider_attempts": 4,
+    "actual_token_delta": 14328,
+    "parent_session_id": "01M7ES329MF5X69H1K2VRBCK08",
+    "children": [
+      {
+        "session_id": "01M7ES329QDMNP16T68823YNNP",
+        "marker_in_persisted_messages": true
+      },
+      {
+        "session_id": "01M7ES329QDMNP16T68823YNNR",
+        "marker_in_persisted_messages": true
+      }
+    ],
+    "durable_turns": [
+      {
+        "id": "01M7ES329QDMNP16T68823YNNK",
+        "session_id": "01M7ES329MF5X69H1K2VRBCK08",
+        "workspace_instance_id": "01M7EPT88TWCN64NSE73TA6D84",
+        "root_turn_id": "01M7ES329QDMNP16T68823YNNK",
+        "parent_turn_id": null,
+        "depth": 0,
+        "status": "completed",
+        "time_finished": "2026-11-15 04:57:47.511596"
+      },
+      {
+        "id": "01M7ES32B87MKH7TB9ZP18W1B2",
+        "session_id": "01M7ES329QDMNP16T68823YNNP",
+        "workspace_instance_id": "01M7EPT88TWCN64NSE73TA6D84",
+        "root_turn_id": "01M7ES329QDMNP16T68823YNNK",
+        "parent_turn_id": "01M7ES329QDMNP16T68823YNNK",
+        "depth": 1,
+        "status": "completed",
+        "time_finished": "2026-11-15 04:57:47.195642"
+      },
+      {
+        "id": "01M7ES32BB10SJ3W1HXV612EFT",
+        "session_id": "01M7ES329QDMNP16T68823YNNR",
+        "workspace_instance_id": "01M7EPT88TWCN64NSE73TA6D84",
+        "root_turn_id": "01M7ES329QDMNP16T68823YNNK",
+        "parent_turn_id": "01M7ES329QDMNP16T68823YNNK",
+        "depth": 1,
+        "status": "completed",
+        "time_finished": "2026-11-15 04:57:47.501649"
+      }
+    ],
+    "accounting_after_deferred_memory": {
+      "total_tokens": 230342,
+      "reserved_tokens": 0,
+      "states": {
+        "settled": 30
+      },
+      "requests": 30,
+      "sources": {
+        "agent": 30
+      },
+      "request_ids": [
+        "7f8277c65e234cf29f3e45cea0a73bd6",
+        "6a12547ab1e14ab5a8d765729810f1e0",
+        "01fb9bbffe114796ac210a88ad50c0fb",
+        "53c77c7eb05c45bf92a27f80e7f331c7",
+        "0603a98dad0448af905582bd86447c3a",
+        "64fd0baa1992417b8ab4db286a8dd5e2",
+        "29e8baa379f4420caeab4386a8d5e464",
+        "0374e456eaec42b38dcc4e18ccd59595",
+        "cde86347d17d4ea6b9e5da702c65b06a",
+        "b40982dd77ee4798be9f5ac7d6fe82aa",
+        "fc1ef10337a14fcaade44f632b1b19ae",
+        "cf2353235a4947108758535e6ae3a48a",
+        "d01da32c950a4aa0a8182e29d13b6d1c",
+        "9c9ea5a7ee1e4c66a132e3e985abd191",
+        "58bbd9cd1c264df29c4f5316d7222301",
+        "e7cdbffad603423f9444c391eded913c",
+        "59609b5e11664047ac1404d688f59632",
+        "904cc1eab0134c78b60c928782dc4388",
+        "2485c337a87b41029fe94d2cf7c4fd93",
+        "a2bfa997ca574facae6bc5cc7ecc91b7",
+        "8d70ccedcb894aaea05ace6a69ecab82",
+        "f7cf7dbd07034dc6a97e5581074d7885",
+        "6e641c28f85e41859eae1c0030d3eeeb",
+        "04a150bcd113486099339e19db827c8b",
+        "24736c2602b24f608162e42c02bc9b96",
+        "27d52a812a53491ea946a7fe2f4a2405",
+        "d3b11bd26a7c4c19af7ff6a464c35bce",
+        "599636ac1f77429e915b77bf96ddb9aa",
+        "b1909f2d72e54a9880f56fb9194c3b37",
+        "2db916273fda46b69d3a60ce52574dca"
+      ]
+    },
+    "source_evidence": "parity-persistent-validation.json"
+  },
+  "final_image_persistence": {
+    "passed": true,
+    "runtime_image": "sha256:d2a754e0528386f7e3c6a6ec2a91417f626fb236629a3f38cc6899ff26d5eb86",
+    "goal_status": "complete",
+    "parent_session_id": "01M7ES329MF5X69H1K2VRBCK08",
+    "children": [
+      {
+        "session_id": "01M7ES329QDMNP16T68823YNNP",
+        "marker_in_persisted_messages": true,
+        "completed_read_tool_parts": 1
+      },
+      {
+        "session_id": "01M7ES329QDMNP16T68823YNNR",
+        "marker_in_persisted_messages": true,
+        "completed_read_tool_parts": 1
+      }
+    ],
+    "plugin_reloaded_after_restart": true,
+    "skill_reloaded_after_restart": true,
+    "sentinel_sha256": "dd05dc77a99eb8c8dc477b0ed290a142e55ff7946349d00bce7d8c940719b80b",
+    "automation_remained_disabled": true,
+    "durable_turns": [
+      {
+        "id": "01M7ES329QDMNP16T68823YNNK",
+        "parent_turn_id": null,
+        "root_turn_id": "01M7ES329QDMNP16T68823YNNK",
+        "workspace_instance_id": "01M7EPT88TWCN64NSE73TA6D84",
+        "status": "completed",
+        "time_finished": "2026-11-15 04:57:47.511596"
+      },
+      {
+        "id": "01M7ES32B87MKH7TB9ZP18W1B2",
+        "parent_turn_id": "01M7ES329QDMNP16T68823YNNK",
+        "root_turn_id": "01M7ES329QDMNP16T68823YNNK",
+        "workspace_instance_id": "01M7EPT88TWCN64NSE73TA6D84",
+        "status": "completed",
+        "time_finished": "2026-11-15 04:57:47.195642"
+      },
+      {
+        "id": "01M7ES32BB10SJ3W1HXV612EFT",
+        "parent_turn_id": "01M7ES329QDMNP16T68823YNNK",
+        "root_turn_id": "01M7ES329QDMNP16T68823YNNK",
+        "workspace_instance_id": "01M7EPT88TWCN64NSE73TA6D84",
+        "status": "completed",
+        "time_finished": "2026-11-15 04:57:47.501649"
+      }
+    ],
+    "no_new_model_calls": true,
+    "accounting": {
+      "total_tokens": 230342,
+      "reserved_tokens": 0,
+      "states": {
+        "settled": 30
+      },
+      "requests": 30,
+      "sources": {
+        "agent": 30
+      },
+      "request_ids": [
+        "7f8277c65e234cf29f3e45cea0a73bd6",
+        "6a12547ab1e14ab5a8d765729810f1e0",
+        "01fb9bbffe114796ac210a88ad50c0fb",
+        "53c77c7eb05c45bf92a27f80e7f331c7",
+        "0603a98dad0448af905582bd86447c3a",
+        "64fd0baa1992417b8ab4db286a8dd5e2",
+        "29e8baa379f4420caeab4386a8d5e464",
+        "0374e456eaec42b38dcc4e18ccd59595",
+        "cde86347d17d4ea6b9e5da702c65b06a",
+        "b40982dd77ee4798be9f5ac7d6fe82aa",
+        "fc1ef10337a14fcaade44f632b1b19ae",
+        "cf2353235a4947108758535e6ae3a48a",
+        "d01da32c950a4aa0a8182e29d13b6d1c",
+        "9c9ea5a7ee1e4c66a132e3e985abd191",
+        "58bbd9cd1c264df29c4f5316d7222301",
+        "e7cdbffad603423f9444c391eded913c",
+        "59609b5e11664047ac1404d688f59632",
+        "904cc1eab0134c78b60c928782dc4388",
+        "2485c337a87b41029fe94d2cf7c4fd93",
+        "a2bfa997ca574facae6bc5cc7ecc91b7",
+        "8d70ccedcb894aaea05ace6a69ecab82",
+        "f7cf7dbd07034dc6a97e5581074d7885",
+        "6e641c28f85e41859eae1c0030d3eeeb",
+        "04a150bcd113486099339e19db827c8b",
+        "24736c2602b24f608162e42c02bc9b96",
+        "27d52a812a53491ea946a7fe2f4a2405",
+        "d3b11bd26a7c4c19af7ff6a464c35bce",
+        "599636ac1f77429e915b77bf96ddb9aa",
+        "b1909f2d72e54a9880f56fb9194c3b37",
+        "2db916273fda46b69d3a60ce52574dca"
+      ]
+    }
+  }
+}

@@ -170,12 +170,14 @@ export function ChatView({ sessionId }: ChatViewProps) {
       }
     }).catch(() => {});
 
+    const fileScope = useWorkspaceStore.getState().fileScope;
+    const fileRevision = useWorkspaceStore.getState().beginFileRequest();
     api.get<{ files: Array<{ name: string; path: string; type: string; tool: string }> }>(
-      API.SESSIONS.FILES(sessionId),
+      `${API.SESSIONS.FILES(sessionId)}?scope=${fileScope}`,
     ).then((res) => {
-      if (!isFreshSessionHydration()) return;
-      if (res.files && res.files.length > 0) {
-        useWorkspaceStore.getState().setWorkspaceFiles(
+      if (!isFreshSessionHydration() || useWorkspaceStore.getState().fileScope !== fileScope) return;
+      if (res.files) {
+        useWorkspaceStore.getState().commitFileRequest(fileRevision,
           res.files.map((f) => ({ name: f.name, path: f.path, type: f.type as WorkspaceFile["type"] })),
         );
       }

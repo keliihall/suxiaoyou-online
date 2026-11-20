@@ -81,7 +81,7 @@ function SessionStatsImpl({ sessionId }: SessionStatsProps) {
           <span className="tabular-nums">{tokensLabel}</span>
           {costLabel && (
             <>
-              <span className="opacity-40">·</span>
+              <span aria-hidden="true">·</span>
               <span className="tabular-nums">{costLabel}</span>
             </>
           )}
@@ -128,12 +128,7 @@ function SessionStatsImpl({ sessionId }: SessionStatsProps) {
                 value={`≈${formatCost(usage.cost as number)}`}
                 emphasize
               />
-              <div className="mt-1 text-[10px] text-[var(--text-tertiary)]">
-                {t(
-                  "sessionStats.costNote",
-                  "Estimated from provider pricing.",
-                )}
-              </div>
+              {/* Estimated from provider pricing; the value and label already carry ≈. */}
             </div>
           )}
         </div>

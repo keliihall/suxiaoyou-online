@@ -1,0 +1,74 @@
+{
+  "production_http": true,
+  "real_docker_original_engine": true,
+  "actual_mac_model": true,
+  "user_id": "943a5a82a3c74cbf8510751dcf41e2e8",
+  "stream_id": "01M7EPGG00XBY41EBS4Y613624",
+  "session_id": "01M7EPGFZZR5XFH6FE9Y7EA39Z",
+  "model": {
+    "id": "rapid-mlx/mlx-community/Qwen2.5-0.5B-Instruct-4bit",
+    "name": "mlx-community/Qwen2.5-0.5B-Instruct-4bit",
+    "provider_id": "rapid-mlx",
+    "capabilities": {
+      "function_calling": true,
+      "vision": false,
+      "reasoning": true,
+      "json_output": true,
+      "max_context": 32768,
+      "max_output": 8192,
+      "prompt_caching": true
+    },
+    "pricing": {
+      "prompt": 0.0,
+      "completion": 0.0
+    },
+    "metadata": {
+      "local": true
+    }
+  },
+  "events": {
+    "step-start": 1,
+    "text-delta": 1,
+    "step-finish": 1,
+    "title-update": 1,
+    "done": 1
+  },
+  "text": "4",
+  "errors": [],
+  "usage_requests": [
+    {
+      "id": "1f7cc1cd5185447782b9a91a832db23f",
+      "user_id": "943a5a82a3c74cbf8510751dcf41e2e8",
+      "job_id": null,
+      "model_id": "tenant/rapid-mlx/mlx-community/Qwen2.5-0.5B-Instruct-4bit",
+      "source": "mlx-node",
+      "state": "settled",
+      "reserved_tokens": 124281,
+      "total_tokens": 14438,
+      "cost_microusd": 0,
+      "price_snapshot": {
+        "version": 1,
+        "status": "unknown",
+        "route_id": "tenant/rapid-mlx/mlx-community/Qwen2.5-0.5B-Instruct-4bit",
+        "currency": "USD",
+        "calculation": "input_output_total_ceil_microusd_v1"
+      },
+      "normalized_usage": {
+        "input_total": 14436,
+        "output_total": 2,
+        "cache_read": 5,
+        "cache_write": 0,
+        "reasoning": 0,
+        "total_tokens": 14438,
+        "usage_status": "complete",
+        "provider_total": 14438,
+        "cost_status": "unknown"
+      },
+      "error": "",
+      "created_at": "2026-11-15T04:12:39.324443+00:00",
+      "dispatched_at": "2026-11-15T04:12:39.331307+00:00",
+      "settled_at": "2026-11-15T04:12:47.071382+00:00"
+    }
+  ],
+  "time": 1794715967.136519
+}

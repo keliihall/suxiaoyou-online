@@ -13,6 +13,7 @@ function backendApiDestination(): string {
 
 const nextConfig: NextConfig = {
   devIndicators: false,
+  distDir: process.env.SUXIAOYOU_NEXT_DIST_DIR || ".next",
 
   turbopack: {
     root: path.resolve(__dirname),

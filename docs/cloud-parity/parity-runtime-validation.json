@@ -1,0 +1,18 @@
+{
+  "python": true,
+  "pandas": true,
+  "network_denied": true,
+  "private_paths_hidden": true,
+  "secrets_scrubbed": true,
+  "metadata": {
+    "sandbox": "linux-bubblewrap",
+    "filesystem_isolated": true,
+    "network_isolated": true,
+    "environment_sanitized": true,
+    "process_tree_isolated": true,
+    "execution_environment_scope": "ephemeral",
+    "home_persistent": false
+  },
+  "file_bytes_correct": true,
+  "descendant_tree_terminated": true
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { X, ClipboardList, FileCode2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -11,10 +11,7 @@ import { useIsDesktop, useIsMacOS } from "@/hooks/use-platform";
 import {
   Sheet,
   SheetContent,
-  SheetTitle,
-  SheetDescription,
 } from "@/components/ui/sheet";
-import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { usePlanReviewStore } from "@/stores/plan-review-store";
 
 /** Read-only plan content viewer */
@@ -25,13 +22,13 @@ function PlanReviewContent() {
   if (!planData) return null;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex min-h-0 flex-col h-full">
       {/* Header */}
       <div className="flex items-center gap-3 px-5 py-3 border-b border-[var(--border-default)]">
         <ClipboardList className="h-4 w-4 text-[var(--text-secondary)] shrink-0" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-[var(--brand-primary)] bg-[var(--brand-primary)]/10 px-2 py-0.5 rounded-full">
+            <span className="text-xs font-medium text-[var(--text-secondary)] bg-[var(--surface-tertiary)] px-2 py-0.5 rounded-full">
               {t("planReadyForReview")}
             </span>
           </div>
@@ -41,7 +38,8 @@ function PlanReviewContent() {
         </div>
         <button
           onClick={() => usePlanReviewStore.getState().close()}
-          className="p-1.5 rounded-md hover:bg-[var(--surface-secondary)] transition-colors"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-control)] hover:bg-[var(--surface-secondary)] transition-colors"
+          aria-label={t("panelClose")}
         >
           <X className="h-4 w-4 text-[var(--text-tertiary)]" />
         </button>
@@ -55,8 +53,8 @@ function PlanReviewContent() {
       </div>
 
       {/* Plan content */}
-      <div className="flex-1 overflow-y-auto px-5 pb-4 scrollbar-auto">
-        <div className="prose prose-sm prose-invert max-w-none text-[var(--text-primary)] [&>h1]:text-lg [&>h1]:font-semibold [&>h2]:text-base [&>h2]:font-semibold [&>h3]:text-sm [&>h3]:font-semibold [&>p]:text-sm [&>p]:leading-relaxed [&>ul]:text-sm [&>ol]:text-sm [&_li]:leading-relaxed [&_code]:text-xs [&_pre]:text-xs [&_pre]:bg-[var(--surface-secondary)] [&_pre]:rounded-lg [&_pre]:p-3 [&_strong]:text-[var(--text-primary)]">
+      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto px-5 pb-4 scrollbar-auto">
+        <div className="prose prose-sm dark:prose-invert max-w-none text-[var(--text-primary)] [&>h1]:text-lg [&>h1]:font-semibold [&>h2]:text-base [&>h2]:font-semibold [&>h3]:text-sm [&>h3]:font-semibold [&>p]:text-sm [&>p]:leading-relaxed [&>ul]:text-sm [&>ol]:text-sm [&_li]:leading-relaxed [&_code]:text-xs [&_pre]:text-xs [&_pre]:bg-[var(--surface-secondary)] [&_pre]:rounded-lg [&_pre]:p-3 [&_strong]:text-[var(--text-primary)]">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {planData.plan}
           </ReactMarkdown>
@@ -73,7 +71,7 @@ function PlanReviewContent() {
               {planData.filesToModify.map((file) => (
                 <span
                   key={file}
-                  className="inline-flex items-center px-2 py-1 rounded-md bg-[var(--surface-secondary)] text-xs text-[var(--text-secondary)] font-mono"
+                  className="inline-flex max-w-full break-all items-center px-2 py-1 rounded-md bg-[var(--surface-secondary)] text-xs text-[var(--text-secondary)] font-mono"
                 >
                   {file}
                 </span>
@@ -87,6 +85,7 @@ function PlanReviewContent() {
 }
 
 export function PlanReviewPanel() {
+  const previousFocusRef = useRef<HTMLElement | null>(null);
   const { t } = useTranslation("chat");
   const isOpen = usePlanReviewStore((s) => s.isOpen);
   const close = usePlanReviewStore((s) => s.close);
@@ -122,13 +121,17 @@ export function PlanReviewPanel() {
   // Mobile: Sheet overlay from right
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
-      <SheetContent side="right" className="w-[90vw] sm:max-w-[520px] p-0">
-        <VisuallyHidden.Root asChild>
-          <SheetTitle>{t("planReview")}</SheetTitle>
-        </VisuallyHidden.Root>
-        <VisuallyHidden.Root asChild>
-          <SheetDescription>{t("planReviewDesc")}</SheetDescription>
-        </VisuallyHidden.Root>
+      <SheetContent
+        title={t("planReview")}
+        showCloseButton={false}
+        onOpenAutoFocus={() => {
+          previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        }}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          previousFocusRef.current?.focus();
+        }}
+        aria-describedby={undefined} side="right" className="w-full sm:max-w-[520px] p-0">
         <PlanReviewContent />
       </SheetContent>
     </Sheet>

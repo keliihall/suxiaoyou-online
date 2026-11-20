@@ -5,6 +5,7 @@ import { AlertCircle, Loader2, LogOut, Pencil } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { api, ApiError } from "@/lib/api";
 import { errorToMessage } from "@/lib/errors";
 import { API, queryKeys } from "@/lib/constants";
@@ -105,10 +106,10 @@ export function CustomEndpointPanel({
   const hasLegacyLocal = !!localStatus?.is_configured;
 
   return (
-    <div className="space-y-6">
-      <p className="text-xs text-[var(--text-secondary)]">
+    <div className="settings-section space-y-6">
+      {/* Auxiliary copy retained in source: <p className="text-xs text-[var(--text-secondary)]">
         {t("customEndpointDesc")}
-      </p>
+      </p> */}
 
       {(hasLegacyLocal || customProviders.length > 0) && (
         <div className="space-y-4">
@@ -117,16 +118,16 @@ export function CustomEndpointPanel({
           </h4>
           {hasLegacyLocal && (
             <div
-              className={`p-3 border border-[var(--border-primary)] rounded-lg bg-[var(--surface-secondary)] ${localStatus?.status === "error" ? "border-[var(--color-destructive)]/40" : ""}`}
+              className={`rounded-2xl border border-[var(--border-default)] bg-[var(--surface-primary)] p-4 ${localStatus?.status === "error" ? "border-[var(--color-destructive)]/40" : ""}`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex min-w-0 items-center gap-2 text-xs">
                   <span className="font-semibold">{t("localProvider")}</span>
-                  <span className="text-[var(--text-secondary)] font-mono ml-2 text-ui-3xs bg-[var(--surface-primary)] px-2 py-0.5 rounded truncate">
+                  <span className="text-[var(--text-secondary)] font-mono ml-2 text-[12px] bg-[var(--surface-primary)] px-2 py-0.5 rounded truncate">
                     {localStatus?.base_url}
                   </span>
                   {localStatus?.status === "error" && (
-                    <span className="text-[var(--color-destructive)] text-ui-3xs">
+                    <span className="text-[var(--color-destructive)] text-[12px]">
                       {t("localProviderConnectError")}
                     </span>
                   )}
@@ -163,7 +164,7 @@ export function CustomEndpointPanel({
             return (
             <div
               key={p.id}
-              className={`p-3 border border-[var(--border-primary)] rounded-lg bg-[var(--surface-secondary)] ${!p.enabled ? "opacity-50" : ""}`}
+              className="rounded-2xl border border-[var(--border-default)] bg-[var(--surface-primary)] p-4"
             >
               <div className="flex items-center justify-between gap-2">
                 <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs">
@@ -171,21 +172,21 @@ export function CustomEndpointPanel({
                     {p.name || t("customEndpoint")}
                   </span>
                   {p.slug && (
-                    <span className="text-[var(--text-tertiary)] font-mono text-ui-3xs bg-[var(--surface-primary)] px-1.5 py-0.5 rounded">
+                    <span className="text-[var(--text-tertiary)] font-mono text-[12px] bg-[var(--surface-primary)] px-1.5 py-0.5 rounded">
                       {p.slug}
                     </span>
                   )}
-                  <span className="text-[var(--text-secondary)] font-mono text-ui-3xs bg-[var(--surface-primary)] px-2 py-0.5 rounded truncate max-w-[260px]">
+                  <span className="text-[var(--text-secondary)] font-mono text-[12px] bg-[var(--surface-primary)] px-2 py-0.5 rounded truncate max-w-[260px]">
                     {p.base_url}
                   </span>
                   {p.masked_key && (
-                    <span className="text-[var(--text-tertiary)] font-mono text-ui-3xs">
+                    <span className="text-[var(--text-tertiary)] font-mono text-[12px]">
                       Key: {p.masked_key}
                     </span>
                   )}
                   {headerCount > 0 && (
                     <span
-                      className="text-[var(--text-tertiary)] text-ui-3xs bg-[var(--surface-primary)] px-1.5 py-0.5 rounded"
+                      className="text-[var(--text-tertiary)] text-[12px] bg-[var(--surface-primary)] px-1.5 py-0.5 rounded"
                       title={Object.keys(p.headers ?? {}).join(", ")}
                     >
                       {t("customHeadersBadge", {
@@ -197,7 +198,7 @@ export function CustomEndpointPanel({
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <span
-                    className="text-ui-3xs text-[var(--text-tertiary)]"
+                    className="text-[12px] text-[var(--text-tertiary)]"
                     title={
                       manualModelCount > 0
                         ? t("customModelsManualTitle", {
@@ -218,32 +219,21 @@ export function CustomEndpointPanel({
                           count: p.model_count,
                         })}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() =>
+                  <Switch
+                    checked={p.enabled}
+                    onCheckedChange={() =>
                       updateCustomEndpoint.mutate({
                         id: p.id,
                         enabled: !p.enabled,
                       })
                     }
                     disabled={updateCustomEndpoint.isPending}
-                    className={`relative inline-flex h-4 w-7 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none ${
-                      p.enabled
-                        ? "bg-[var(--color-success)]"
-                        : "bg-[var(--surface-tertiary)]"
-                    }`}
-                    title={
+                    aria-label={
                       p.enabled
                         ? t("disableProvider")
                         : t("enableProvider")
                     }
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow-sm transition-transform ${
-                        p.enabled ? "translate-x-3" : "translate-x-0"
-                      }`}
-                    />
-                  </button>
+                  />
                   <Button
                     variant="ghost"
                     size="sm"

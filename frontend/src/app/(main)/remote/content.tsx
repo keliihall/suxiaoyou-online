@@ -138,18 +138,18 @@ export function RemoteTabContent() {
   }
 
   return (
-    <div className="space-y-6">
-      <p className="text-xs text-[var(--text-secondary)]">{t("remoteDesc")}</p>
+    <div className="page-content space-y-6">
+      {/* Auxiliary copy retained in source: <p className="text-xs text-[var(--text-secondary)]">{t("remoteDesc")}</p> */}
 
       {/* Tunnel URL changed warning */}
       {tunnelChanged && status?.enabled && (
-        <div className="flex items-start gap-3 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 animate-slide-up">
-          <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+        <div className="flex items-start gap-3 rounded-lg border border-[var(--color-warning)]/30 bg-[var(--status-warning-bg)] p-3 animate-slide-up">
+          <AlertTriangle className="h-4 w-4 text-[var(--status-warning-text)] shrink-0 mt-0.5" />
           <div className="flex-1">
             <p className="text-sm font-medium text-[var(--text-primary)]">{t("tunnelUrlChanged")}</p>
-            <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+            {/* Auxiliary copy retained in source: <p className="text-xs text-[var(--text-secondary)] mt-0.5">
               {t("tunnelUrlChangedDesc")}
-            </p>
+            </p> */}
           </div>
           <Button variant="outline" size="sm" className="h-7 text-xs shrink-0" onClick={handleShowQr}>
             <QrCode className="h-3 w-3 mr-1" />
@@ -159,37 +159,37 @@ export function RemoteTabContent() {
       )}
 
       {/* Enable/Disable toggle */}
-      <div className="flex items-center justify-between rounded-lg border border-[var(--border-default)] p-3">
+      <div className="surface-card flex items-center justify-between gap-4 rounded-2xl border border-[var(--border-default)] bg-[var(--surface-primary)] p-5 shadow-[var(--shadow-sm)]">
         <div className="flex items-center gap-3">
-          {toggling ? <Loader2 className="h-4 w-4 animate-spin text-[var(--text-secondary)]" /> : status?.enabled ? <Wifi className="h-4 w-4 text-green-500" /> : <WifiOff className="h-4 w-4 text-[var(--text-tertiary)]" />}
+          {toggling ? <Loader2 className="h-4 w-4 animate-spin text-[var(--text-secondary)]" /> : status?.enabled ? <Wifi className="h-4 w-4 text-[var(--color-success)]" /> : <WifiOff className="h-4 w-4 text-[var(--text-tertiary)]" />}
           <div>
             <p className="text-sm font-medium text-[var(--text-primary)]">{toggling ? t("remoteStarting") : status?.enabled ? t("remoteActive") : t("remoteDisabled")}</p>
             {status?.enabled && status.tunnel_url && <p className="text-xs text-[var(--text-secondary)] truncate max-w-[280px]">{status.tunnel_url}</p>}
           </div>
         </div>
-        <Switch checked={status?.enabled ?? false} onCheckedChange={handleToggle} disabled={toggling} />
+        <Switch aria-label={t("remoteActive")} checked={status?.enabled ?? false} onCheckedChange={handleToggle} disabled={toggling} />
       </div>
 
       {/* When enabled: show controls */}
       {status?.enabled && (
-        <div className="space-y-3">
+        <div className="surface-card space-y-4 rounded-2xl border border-[var(--border-default)] bg-[var(--surface-primary)] p-5">
           {status.tunnel_url && (
             <div className="flex items-center gap-2">
               <div className="flex-1 px-3 py-2 rounded-lg bg-[var(--surface-tertiary)] text-xs font-mono text-[var(--text-secondary)] truncate">
                 {status.tunnel_url}/m{fullToken ? `?token=${fullToken.slice(0, 12)}...` : ""}
               </div>
-              <Button variant="outline" size="sm" className="h-8 shrink-0" onClick={handleCopyUrl}>
+              <Button variant="outline" size="sm" className="h-10 shrink-0 rounded-xl px-4" onClick={handleCopyUrl}>
                 {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                 <span className="ml-1 text-xs">{copied ? t("remoteCopied") : t("remoteCopy")}</span>
               </Button>
             </div>
           )}
 
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="h-8" onClick={handleShowQr}>
+          <div className="flex flex-wrap gap-3">
+            <Button variant="outline" size="sm" className="h-10 rounded-xl px-4" onClick={handleShowQr}>
               <QrCode className="h-3 w-3" /><span className="ml-1 text-xs">{showQr ? t("remoteHideQr") : t("remoteShowQr")}</span>
             </Button>
-            <Button variant="outline" size="sm" className="h-8" onClick={handleRotateToken}>
+            <Button variant="outline" size="sm" className="h-10 rounded-xl px-4" onClick={handleRotateToken}>
               <RefreshCw className="h-3 w-3" /><span className="ml-1 text-xs">{t("remoteRotateToken")}</span>
             </Button>
           </div>
@@ -214,9 +214,9 @@ export function RemoteTabContent() {
             <Shield className="h-4 w-4 text-[var(--text-secondary)] shrink-0" />
             <div className="flex-1">
               <p className="text-sm font-medium text-[var(--text-primary)]">{t("remotePermission")}</p>
-              <p className="text-xs text-[var(--text-secondary)]">{t("remotePermissionDesc")}</p>
+              {/* Auxiliary copy retained in source: <p className="text-xs text-[var(--text-secondary)]">{t("remotePermissionDesc")}</p> */}
             </div>
-            <select value={permMode} onChange={(e) => handlePermModeChange(e.target.value)} className="px-2 py-1 rounded-md bg-[var(--surface-tertiary)] text-xs border border-[var(--border-default)] text-[var(--text-primary)]">
+            <select aria-label={t("remotePermission")} value={permMode} onChange={(e) => handlePermModeChange(e.target.value)} className="ui-control min-h-10 rounded-xl border border-[var(--control-border)] bg-[var(--surface-primary)] px-3 text-[13px] text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]">
               <option value="auto">{t("remotePermAuto")}</option>
               <option value="ask">{t("remotePermAsk")}</option>
               <option value="deny">{t("remotePermDeny")}</option>

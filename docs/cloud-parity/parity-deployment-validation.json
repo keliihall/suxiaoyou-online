@@ -1,0 +1,19 @@
+{
+  "deployment": "real Docker Compose",
+  "dedicated_rootless_daemon": true,
+  "network_mode": "private per user bridge",
+  "snapshot_format": 2,
+  "tenant_archive_verified": true,
+  "empty_target_restore": true,
+  "restored_old_session_revoked": true,
+  "restored_private_file_verified": true,
+  "restored_encrypted_model_key_working": true,
+  "real_provider": "DeepSeek",
+  "restored_real_agent_session": "01M7EQQY5H0FM3RQX8MVAY158B",
+  "receipt_count": 1,
+  "total_tokens": 14514,
+  "all_receipts_settled": true,
+  "nginx_readonly_tmp_paths_fixed": true,
+  "restored_secret_directory_permissions_preserved": true,
+  "second_snapshot_resumed_exact_containers_without_restarting_migration": true
+}

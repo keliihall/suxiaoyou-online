@@ -83,7 +83,7 @@ export function PlanAcceptPrompt({ review, onRespond, onRecover, onStop }: PlanA
   if (isMobile) {
     return (
       <div ref={containerRef} className="px-3 pb-[max(env(safe-area-inset-bottom),8px)]">
-        <div className="rounded-2xl border border-[var(--border-default)] bg-[var(--surface-primary)] shadow-lg p-4 space-y-3 animate-slide-up">
+        <div className="max-h-[70dvh] overflow-y-auto rounded-[var(--radius-card)] border border-[var(--border-default)] bg-[var(--surface-primary)] shadow-[var(--shadow-sm)] p-4 space-y-3 animate-slide-up">
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
@@ -135,6 +135,7 @@ export function PlanAcceptPrompt({ review, onRespond, onRecover, onStop }: PlanA
               if (e.key === "Enter") handleFeedbackSubmit();
             }}
             placeholder={t("planFeedbackPlaceholder")}
+            aria-label={t("planFeedbackPlaceholder")}
             className="w-full rounded-xl border border-[var(--border-default)] bg-[var(--surface-secondary)] px-4 py-3 text-base text-[var(--text-primary)] outline-none focus:ring-1 focus:ring-[var(--ring)] placeholder:text-[var(--text-secondary)]"
           />
         </div>
@@ -146,7 +147,7 @@ export function PlanAcceptPrompt({ review, onRespond, onRecover, onStop }: PlanA
   return (
     <div ref={containerRef} className="px-4 pb-4 pt-2">
       <div className="mx-auto max-w-3xl xl:max-w-4xl">
-        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-primary)] p-4 space-y-3 animate-slide-up">
+        <div className="max-h-[70dvh] overflow-y-auto rounded-[var(--radius-card)] border border-[var(--border-default)] bg-[var(--surface-primary)] p-4 space-y-3 animate-slide-up">
           {/* Header */}
           <div>
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">
@@ -193,7 +194,8 @@ export function PlanAcceptPrompt({ review, onRespond, onRecover, onStop }: PlanA
               if (e.key === "Enter") handleFeedbackSubmit();
             }}
             placeholder={t("planFeedbackPlaceholder")}
-            className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--surface-secondary)] px-4 py-2.5 text-sm text-[var(--text-primary)] outline-none focus:ring-1 focus:ring-[var(--ring)] placeholder:text-[var(--text-secondary)]"
+            aria-label={t("planFeedbackPlaceholder")}
+            className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--surface-secondary)] px-4 py-2.5 text-base sm:text-sm text-[var(--text-primary)] outline-none focus:ring-1 focus:ring-[var(--ring)] placeholder:text-[var(--text-secondary)]"
           />
 
           {/* Esc hint */}

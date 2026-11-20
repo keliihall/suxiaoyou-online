@@ -159,7 +159,7 @@ export function NotRunningPanel({
           <h3 className="text-xs font-medium text-[var(--text-primary)]">
             Recommended local models
           </h3>
-          <span className="text-ui-3xs text-[var(--text-tertiary)]">
+          <span className="text-[12px] text-[var(--text-tertiary)]">
             Start Ollama to pull
           </span>
         </div>
@@ -167,17 +167,17 @@ export function NotRunningPanel({
           {LOCAL_MODEL_RECOMMENDATIONS.map((model) => (
             <div
               key={model.id}
-              className="flex min-h-12 items-center justify-between gap-3 rounded-md border border-[var(--border-default)] px-3 py-2 opacity-75"
+              className="flex min-h-12 items-center justify-between gap-3 rounded-md border border-[var(--border-default)] px-3 py-2"
             >
               <div className="min-w-0">
                 <div className="truncate text-xs font-medium text-[var(--text-primary)]">
                   {model.name}
                 </div>
-                <div className="truncate font-mono text-ui-3xs text-[var(--text-tertiary)]">
+                <div className="truncate font-mono text-[12px] text-[var(--text-tertiary)]">
                   {model.ollamaTag}
                 </div>
               </div>
-              <span className="shrink-0 rounded bg-[var(--surface-secondary)] px-1.5 py-0.5 text-ui-3xs text-[var(--text-tertiary)]">
+              <span className="shrink-0 rounded bg-[var(--surface-secondary)] px-1.5 py-0.5 text-[12px] text-[var(--text-tertiary)]">
                 {model.memory}
               </span>
             </div>
@@ -240,7 +240,7 @@ export function StatusBar({
               Ollama {status.version && `v${status.version}`}
             </span>
           </div>
-          <div className="flex items-center gap-3 text-ui-3xs text-[var(--text-tertiary)]">
+          <div className="flex items-center gap-3 text-[12px] text-[var(--text-tertiary)]">
             <span className="flex items-center gap-1">
               <HardDrive className="h-3 w-3" />
               {formatBytes(status.disk_usage_bytes)}
@@ -248,7 +248,7 @@ export function StatusBar({
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 px-2 text-ui-3xs"
+              className="h-6 px-2 text-[12px]"
               onClick={() => stopMutation.mutate()}
               disabled={stopMutation.isPending}
               title={t("ollamaStop", "Stop Ollama")}
@@ -262,7 +262,7 @@ export function StatusBar({
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 px-2 text-ui-3xs text-[var(--text-tertiary)] hover:text-[var(--color-destructive)]"
+              className="h-6 px-2 text-[12px] text-[var(--text-tertiary)] hover:text-[var(--color-destructive)]"
               onClick={() => setShowRemoveConfirm(true)}
               title={t("ollamaRemove", "Remove Ollama")}
             >

@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.agent.agent import AgentRegistry
@@ -18,7 +19,13 @@ from app.agent.permission import (
     tighten_permission_snapshot,
 )
 from app.i18n import localize
+from app.models.todo import Todo
 from app.provider.registry import ProviderRegistry
+from app.runtime.checkpoint_runtime import (
+    TurnFinishStatus,
+    admit_turn_checkpoint,
+    finish_turn_checkpoint,
+)
 from app.schemas.chat import PromptRequest, TaskBatchRequest, TaskBatchTask
 from app.session.manager import create_message, create_part, create_session, get_session
 from app.session.processor import run_generation
@@ -218,7 +225,7 @@ async def _ensure_parent_session_and_user_message(
     session_factory: async_sessionmaker[AsyncSession],
     session_id: str,
     body: TaskBatchRequest,
-) -> tuple[str | None, list[dict[str, Any]]]:
+) -> tuple[str, list[dict[str, Any]], str]:
     async with session_factory() as db:
         async with db.begin():
             session = await get_session(db, session_id)
@@ -270,7 +277,7 @@ async def _ensure_parent_session_and_user_message(
                 session_id=session_id,
                 data={"type": "text", "text": _format_user_text(body)},
             )
-            return parent_workspace, serialize_permission_snapshot(child_ceiling)["rules"]
+            return parent_workspace, serialize_permission_snapshot(child_ceiling)["rules"], user_msg.id
 
 
 async def _create_child_sessions(
@@ -282,11 +289,15 @@ async def _create_child_sessions(
 ) -> None:
     async with session_factory() as db:
         async with db.begin():
+            parent = await get_session(db, parent_session_id)
+            if parent is None:
+                raise RuntimeError("Task batch parent disappeared before child creation")
             directory = workspace or "."
             for state in states:
                 await create_session(
                     db,
                     id=state.session_id,
+                    project_id=parent.project_id,
                     parent_id=parent_session_id,
                     directory=directory,
                     title=state.title,
@@ -299,7 +310,7 @@ async def _persist_assistant_result(
     session_id: str,
     text: str,
     states: list[BatchTaskState],
-) -> None:
+) -> str:
     async with session_factory() as db:
         async with db.begin():
             assistant_msg = await create_message(
@@ -339,6 +350,7 @@ async def _persist_assistant_result(
                 session_id=session_id,
                 data={"type": "step-finish", "reason": "stop", "tokens": {}, "cost": 0.0},
             )
+            return assistant_msg.id
 
 
 async def run_task_batch(
@@ -357,12 +369,28 @@ async def run_task_batch(
         _task_state_from_spec(spec, parent_session_id=job.session_id, index=index)
         for index, spec in enumerate(body.tasks)
     ]
+    checkpoint_binding = None
+    checkpoint_finished = False
+    response_message_id = None
+    finish_status: TurnFinishStatus = "failed"
 
     try:
-        parent_workspace, child_permission_ceiling = await _ensure_parent_session_and_user_message(
+        parent_workspace, child_permission_ceiling, request_message_id = await _ensure_parent_session_and_user_message(
             session_factory=session_factory,
             session_id=job.session_id,
             body=body,
+        )
+        # Children inherit this exact turn/workspace owner. It must be durable
+        # before a child can admit its own checkpoint or execute any tool.
+        async with session_factory() as db:
+            todos = list((await db.scalars(select(Todo).where(
+                Todo.session_id == job.session_id).order_by(Todo.position, Todo.id))).all())
+        checkpoint_binding = await admit_turn_checkpoint(
+            session_factory, job=job, workspace=parent_workspace,
+            request_message_id=request_message_id, todo_snapshot=[{
+                "id": item.id, "goal_id": item.goal_id, "content": item.content,
+                "status": item.status, "active_form": item.active_form, "position": item.position,
+            } for item in todos],
         )
         await _create_child_sessions(
             session_factory=session_factory,
@@ -431,6 +459,9 @@ async def run_task_batch(
                     )
                 else:
                     state.status = "completed"
+            except asyncio.CancelledError:
+                state.status = "cancelled"
+                raise
             except Exception:
                 logger.exception("Task batch child task failed: %s", state.title)
                 state.status = "failed"
@@ -458,15 +489,34 @@ async def run_task_batch(
                     job.publish(SSEEvent(TASK_BATCH_UPDATE, _snapshot(batch_id, body.mode, states)))
                     break
         else:
-            await asyncio.gather(*(run_one(state) for state in states))
+            children = [asyncio.create_task(run_one(state)) for state in states]
+            try:
+                await asyncio.gather(*children)
+            except BaseException:
+                # Settle every child before closing its root owner. A child
+                # cancellation must not leave a sibling executing tools under
+                # an already-terminal parent turn.
+                for child in children:
+                    child.cancel()
+                await asyncio.gather(*children, return_exceptions=True)
+                raise
 
         aggregate = _format_aggregate(states, language=body.language)
-        await _persist_assistant_result(
+        response_message_id = await _persist_assistant_result(
             session_factory=session_factory,
             session_id=job.session_id,
             text=aggregate,
             states=states,
         )
+
+        finish_status = (
+            "cancelled" if job.abort_event.is_set()
+            else "failed" if any(state.status == "failed" for state in states)
+            else "completed"
+        )
+        await finish_turn_checkpoint(session_factory, job=job, binding=checkpoint_binding,
+            status=finish_status, response_message_id=response_message_id)
+        checkpoint_finished = True
 
         job.publish(SSEEvent(TEXT_DELTA, {"session_id": job.session_id, "text": aggregate}))
         job.publish(SSEEvent(TASK_BATCH_FINISH, _snapshot(batch_id, body.mode, states)))
@@ -479,6 +529,9 @@ async def run_task_batch(
                 },
             )
         )
+    except asyncio.CancelledError:
+        finish_status = "cancelled"
+        raise
     except (
         TaskBatchWorkspaceConflict,
         TaskBatchWorkspaceInvalid,
@@ -506,4 +559,10 @@ async def run_task_batch(
             ),
         }))
     finally:
-        job.complete()
+        try:
+            if checkpoint_binding is not None and not checkpoint_finished:
+                await finish_turn_checkpoint(session_factory, job=job,
+                    binding=checkpoint_binding, status=finish_status,
+                    response_message_id=response_message_id)
+        finally:
+            job.complete()

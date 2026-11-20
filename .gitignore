@@ -8,6 +8,7 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .venv/
+.venv-*/
 venv/
 venv*/
 backend/venv
@@ -18,6 +19,12 @@ backend/venv
 .env
 .env.local
 .env.*.local
+.cloud-dev.json
+/.env.cloud
+/.env.cloud.local
+/.env.cloud.local.tmp-*
+/.cloud-dev.json.tmp-*
+/backups/cloud/
 backend/session_token.json
 session_token.json
 
@@ -67,6 +74,7 @@ frontend/test-results/
 frontend/playwright-report/
 
 # === Build artifacts ===
+/frontend/.next-*/
 /dist*/
 /build*/
 *.egg

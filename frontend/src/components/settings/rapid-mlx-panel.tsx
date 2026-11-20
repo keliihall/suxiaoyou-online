@@ -312,14 +312,14 @@ export function RapidMLXPanel() {
               </div>
               <div className="flex items-center gap-2">
                 {status.base_url && (
-                  <span className="truncate rounded bg-[var(--surface-secondary)] px-2 py-0.5 font-mono text-ui-3xs text-[var(--text-tertiary)]">
+                  <span className="truncate rounded bg-[var(--surface-secondary)] px-2 py-0.5 font-mono text-[12px] text-[var(--text-tertiary)]">
                     {status.base_url}
                   </span>
                 )}
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 px-2 text-ui-3xs text-[var(--text-tertiary)] hover:text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10"
+                  className="h-7 px-2 text-[12px] text-[var(--text-tertiary)] hover:text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10"
                   onClick={() => {
                     setUninstallResult(null);
                     setUninstallOpen(true);
@@ -408,7 +408,7 @@ export function RapidMLXPanel() {
                   placeholder="qwen3.5-4b"
                   className="h-9 font-mono text-xs"
                 />
-                <span className="flex h-9 items-center rounded-md bg-[var(--surface-secondary)] px-2 text-ui-3xs text-[var(--text-tertiary)]">
+                <span className="flex h-9 items-center rounded-md bg-[var(--surface-secondary)] px-2 text-[12px] text-[var(--text-tertiary)]">
                   manual alias
                 </span>
               </div>
@@ -478,7 +478,7 @@ export function RapidMLXPanel() {
                 )}
               </div>
             </div>
-            <p className="mt-2 text-ui-3xs text-[var(--text-tertiary)]">
+            <p className="mt-2 text-[12px] text-[var(--text-tertiary)]">
               {isStarting
                 ? "Rapid-MLX is starting. Stop is available if you need to cancel."
                 : selectedModelIsRunning
@@ -496,7 +496,7 @@ export function RapidMLXPanel() {
               <h3 className="text-xs font-medium text-[var(--text-primary)]">
                 Recommended local models
               </h3>
-              <span className="text-ui-3xs text-[var(--text-tertiary)]">
+              <span className="text-[12px] text-[var(--text-tertiary)]">
                 Download status
               </span>
             </div>
@@ -535,13 +535,13 @@ export function RapidMLXPanel() {
                       <div className="truncate text-xs font-medium text-[var(--text-primary)]">
                         {model.name}
                       </div>
-                      <div className="truncate text-ui-3xs text-[var(--text-tertiary)]">
+                      <div className="truncate text-[12px] text-[var(--text-tertiary)]">
                         {installedCount}/{variants.length} installed
                       </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-1.5">
                       <span
-                        className={`rounded px-1.5 py-0.5 text-ui-3xs ${
+                        className={`rounded px-1.5 py-0.5 text-[12px] ${
                           installedCount > 0
                             ? "bg-[var(--color-success)]/10 text-[var(--color-success)]"
                             : "bg-[var(--surface-secondary)] text-[var(--text-tertiary)]"
@@ -564,7 +564,7 @@ export function RapidMLXPanel() {
                             uninstallMutation.isPending ||
                             removableAliasIsActive
                           }
-                          className="rounded p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--surface-secondary)] hover:text-[var(--color-destructive)] disabled:opacity-60"
+                          className="rounded p-1 text-[var(--text-tertiary)] transition-colors hover:bg-[var(--surface-secondary)] hover:text-[var(--color-destructive)] disabled:cursor-not-allowed disabled:bg-[var(--surface-secondary)] disabled:text-[var(--text-tertiary)]"
                           title={
                             removableAliasIsActive
                               ? "Stop Rapid-MLX before removing the running model"
@@ -638,7 +638,7 @@ export function RapidMLXPanel() {
                 <div className="text-xs font-medium text-[var(--text-primary)]">
                   {pendingRemoval.name}
                 </div>
-                <div className="mt-1 truncate font-mono text-ui-3xs text-[var(--text-tertiary)]">
+                <div className="mt-1 truncate font-mono text-[12px] text-[var(--text-tertiary)]">
                   {pendingRemoval.alias}
                 </div>
               </div>
@@ -693,7 +693,7 @@ export function RapidMLXPanel() {
                 <div className="font-medium text-[var(--text-primary)]">
                   {t("rapidMlxWhatThisDoes")}
                 </div>
-                <ul className="mt-1 list-inside list-disc space-y-0.5 text-ui-3xs">
+                <ul className="mt-1 list-inside list-disc space-y-0.5 text-[12px]">
                   <li>{t("rapidMlxUninstallStopProcess")}</li>
                   <li>{t("rapidMlxUninstallDeleteModels")}</li>
                   <li>{t("rapidMlxUninstallClearSettings")}</li>
@@ -704,14 +704,14 @@ export function RapidMLXPanel() {
                 <div className="text-xs font-medium text-[var(--text-primary)]">
                   {t("rapidMlxRemoveBinaryTitle")}
                 </div>
-                <p className="mt-0.5 text-ui-3xs text-[var(--text-tertiary)]">
+                <p className="mt-0.5 text-[12px] text-[var(--text-tertiary)]">
                   {t("rapidMlxRemoveBinaryDescription")}
                 </p>
                 <div className="mt-2 space-y-1">
-                  <code className="block rounded bg-[var(--surface-primary)] px-2 py-1 font-mono text-ui-3xs">
+                  <code className="block rounded bg-[var(--surface-primary)] px-2 py-1 font-mono text-[12px]">
                     brew uninstall raullenchai/rapid-mlx/rapid-mlx
                   </code>
-                  <code className="block rounded bg-[var(--surface-primary)] px-2 py-1 font-mono text-ui-3xs">
+                  <code className="block rounded bg-[var(--surface-primary)] px-2 py-1 font-mono text-[12px]">
                     pip uninstall rapid-mlx
                   </code>
                 </div>
@@ -759,7 +759,7 @@ export function RapidMLXPanel() {
                 <div className="font-medium text-[var(--text-primary)]">
                   {t("rapidMlxCleanedUp")}
                 </div>
-                <ul className="mt-1 list-inside list-disc space-y-0.5 text-ui-3xs text-[var(--text-secondary)]">
+                <ul className="mt-1 list-inside list-disc space-y-0.5 text-[12px] text-[var(--text-secondary)]">
                   <li>
                     {t("rapidMlxRuntimeStopped", {
                       status: uninstallResult.stopped
@@ -788,7 +788,7 @@ export function RapidMLXPanel() {
                   {uninstallResult.binary_install_commands.map((cmd) => (
                     <code
                       key={cmd}
-                      className="block rounded bg-[var(--surface-primary)] px-2 py-1 font-mono text-ui-3xs"
+                      className="block rounded bg-[var(--surface-primary)] px-2 py-1 font-mono text-[12px]"
                     >
                       {cmd}
                     </code>

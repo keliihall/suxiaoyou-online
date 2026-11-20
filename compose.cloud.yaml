@@ -1,0 +1,172 @@
+name: suxiaoyou-cloud
+
+x-runtime: &runtime
+  init: true
+  restart: unless-stopped
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  pids_limit: 128
+  tmpfs:
+    - /tmp:size=128m,mode=1777
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
+x-cloud-environment: &cloud-environment
+  SUXIAOYOU_CLOUD_DATABASE_URL: postgresql+asyncpg://suxiaoyou:${CLOUD_DB_PASSWORD:?Set CLOUD_DB_PASSWORD in .env.cloud}@db:5432/suxiaoyou_cloud
+  SUXIAOYOU_CLOUD_DATA_DIR: /var/lib/suxiaoyou
+  SUXIAOYOU_CLOUD_ENVIRONMENT: ${SUXIAOYOU_CLOUD_ENVIRONMENT:-development}
+  SUXIAOYOU_CLOUD_ALLOWED_ORIGIN: ${SUXIAOYOU_CLOUD_ALLOWED_ORIGIN:-http://localhost:8080}
+  SUXIAOYOU_CLOUD_COOKIE_SECURE: ${SUXIAOYOU_CLOUD_COOKIE_SECURE:-false}
+  SUXIAOYOU_CLOUD_AUTO_MIGRATE: "false"
+  SUXIAOYOU_CLOUD_ALLOW_MOCK_PROVIDER: ${SUXIAOYOU_CLOUD_ALLOW_MOCK_PROVIDER:-false}
+  SUXIAOYOU_CLOUD_DEFAULT_TOKEN_LIMIT: ${SUXIAOYOU_CLOUD_DEFAULT_TOKEN_LIMIT:-1000000}
+  SUXIAOYOU_CLOUD_MAX_UPLOAD_BYTES: ${SUXIAOYOU_CLOUD_MAX_UPLOAD_BYTES:-52428800}
+  SUXIAOYOU_CLOUD_STORAGE_BACKEND: ${SUXIAOYOU_CLOUD_STORAGE_BACKEND:-local}
+  SUXIAOYOU_CLOUD_S3_BUCKET: ${SUXIAOYOU_CLOUD_S3_BUCKET:-}
+  SUXIAOYOU_CLOUD_S3_ENDPOINT_URL: ${SUXIAOYOU_CLOUD_S3_ENDPOINT_URL:-}
+  SUXIAOYOU_CLOUD_S3_REGION: ${SUXIAOYOU_CLOUD_S3_REGION:-us-east-1}
+  # Add additional SUXIAOYOU_MODEL_* variables here for named model routes.
+  SUXIAOYOU_MODEL_DEEPSEEK_KEY: ${SUXIAOYOU_MODEL_DEEPSEEK_KEY:-}
+  SUXIAOYOU_MODEL_TEAM_KEY: ${SUXIAOYOU_MODEL_TEAM_KEY:-}
+  AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+  AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+  AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}
+  AWS_EC2_METADATA_DISABLED: "true"
+
+x-api: &api
+  <<: *runtime
+  image: suxiaoyou-cloud-api:local
+  build:
+    context: .
+    dockerfile: deploy/cloud/Dockerfile.api
+  environment: *cloud-environment
+  volumes:
+    - cloud_objects:/var/lib/suxiaoyou
+  mem_limit: 1g
+  cpus: 1.0
+
+services:
+  db:
+    <<: *runtime
+    image: postgres:17-alpine
+    user: postgres
+    environment:
+      POSTGRES_DB: suxiaoyou_cloud
+      POSTGRES_USER: suxiaoyou
+      POSTGRES_PASSWORD: ${CLOUD_DB_PASSWORD:?Set CLOUD_DB_PASSWORD in .env.cloud}
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+    volumes:
+      - cloud_postgres:/var/lib/postgresql/data
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+      - /var/run/postgresql:size=16m,mode=1777
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    mem_limit: 512m
+    cpus: 1.0
+
+  migrate:
+    <<: *api
+    restart: "no"
+    command: [python, -m, app.cloud.manage, migrate]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    <<: *api
+    environment:
+      <<: *cloud-environment
+      SUXIAOYOU_CLOUD_FULL_RUNTIME_ENABLED: "true"
+      SUXIAOYOU_CLOUD_RUNTIME_DOCKER_HOST: unix:///var/run/docker.sock
+      SUXIAOYOU_CLOUD_RUNTIME_IMAGE: suxiaoyou-online-runtime:local
+      SUXIAOYOU_CLOUD_RUNTIME_NETWORK_MODE: "true"
+      SUXIAOYOU_CLOUD_RUNTIME_GATEWAY_URL: http://suxiaoyou-control:8000/api/cloud/internal/inference/v1
+      SUXIAOYOU_CLOUD_RUNTIME_OFFICE_URL: http://suxiaoyou-control:8000/api/cloud/internal/office
+    group_add:
+      - "${CLOUD_DOCKER_GID:-0}"
+    volumes:
+      - cloud_objects:/var/lib/suxiaoyou
+      # Only the control plane supervises tenants. Use a dedicated rootless
+      # daemon; the socket is never inherited by worker or user containers.
+      - ${CLOUD_DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock
+    command: [python, -m, uvicorn, app.cloud.main:create_app, --factory, --host, 0.0.0.0, --port, "8000", --no-proxy-headers]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/readyz', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  worker:
+    <<: *api
+    command: [python, -m, app.cloud.worker]
+    stop_grace_period: 120s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    <<: *runtime
+    image: suxiaoyou-cloud-web:local
+    build:
+      context: .
+      dockerfile: deploy/cloud/Dockerfile.web
+      args:
+        NEXT_PUBLIC_API_URL: http://api:8000
+    environment:
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_CLOUD_MODE: "true"
+      NEXT_PUBLIC_API_URL: http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/cloud').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    mem_limit: 768m
+    cpus: 1.0
+
+  proxy:
+    <<: *runtime
+    image: nginx:1.28-alpine
+    user: "101:101"
+    entrypoint: [nginx, -g, "daemon off;"]
+    ports:
+      - "127.0.0.1:${CLOUD_HTTP_PORT:-8080}:8080"
+    volumes:
+      - ${CLOUD_NGINX_CONFIG:-./deploy/cloud/nginx.conf}:/etc/nginx/nginx.conf:ro
+    depends_on:
+      web:
+        condition: service_healthy
+    mem_limit: 128m
+    cpus: 0.5
+
+  runtime-image:
+    profiles: [build-runtime]
+    image: suxiaoyou-online-runtime:local
+    build:
+      context: .
+      dockerfile: deploy/cloud/Dockerfile.runtime
+    # This target only builds the shared immutable engine image. User instances
+    # are created by the supervisor with their own volume and private network.
+    entrypoint: [python, -c, "print('runtime image ready')"]
+    network_mode: none
+
+volumes:
+  cloud_postgres:
+  cloud_objects:

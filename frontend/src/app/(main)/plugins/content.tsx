@@ -55,14 +55,13 @@ import {
 import type { PluginInfo, SkillInfo, StoreSkill } from "@/types/plugins";
 import type { ConnectorInfo } from "@/types/connectors";
 
-const SOURCE_COLORS: Record<string, string> = {
-  builtin: "bg-blue-500/10 text-blue-400",
-  global: "bg-amber-500/10 text-amber-400",
-  project: "bg-emerald-500/10 text-emerald-400",
-  plugin: "bg-purple-500/10 text-purple-400",
-  bundled: "bg-blue-500/10 text-blue-400",
-  custom: "bg-orange-500/10 text-orange-400",
-};
+// Source is metadata; reserve semantic color for connection health.
+const SOURCE_COLORS: Record<string, string> = Object.fromEntries(
+  ["builtin", "global", "project", "plugin", "bundled", "custom"].map((source) => [
+    source,
+    "border border-[var(--border-default)] bg-[var(--surface-secondary)] text-[var(--text-secondary)]",
+  ]),
+);
 
 /** Derive i18n key from category slug: "dev-tools" → "category_dev_tools" */
 const categoryKey = (cat: string) => `category_${cat.replace(/-/g, "_")}`;
@@ -79,17 +78,18 @@ export function PluginsTabContent() {
   const [search, setSearch] = useState("");
 
   return (
-    <div className="space-y-4">
+    <div className="page-content space-y-6">
       {/* Tabs */}
-      <div className="flex items-center gap-1 border-b border-[var(--border-default)]">
+      <div className="segmented-nav inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-xl bg-[var(--surface-secondary)] p-1">
         {(["connectors", "plugins", "skills"] as Tab[]).map((tabKey) => (
           <button
             key={tabKey}
             onClick={() => { setTab(tabKey); setSearch(""); }}
-            className={`px-3 py-2 text-xs font-medium transition-colors border-b-2 -mb-px ${
+            aria-pressed={tab === tabKey}
+            className={`min-h-10 whitespace-nowrap rounded-lg px-4 text-[13px] font-medium transition-colors ${
               tab === tabKey
-                ? "border-[var(--text-primary)] text-[var(--text-primary)]"
-                : "border-transparent text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
+                ? "bg-[var(--surface-primary)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]"
+                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             }`}
           >
             {tabKey === "connectors"
@@ -108,7 +108,8 @@ export function PluginsTabContent() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={t("searchPlaceholder")}
-          className="w-full h-8 rounded-md border border-[var(--border-default)] bg-transparent px-3 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--border-focus)]"
+          aria-label={t("searchPlaceholder")}
+          className="ui-control h-11 w-full rounded-xl border border-[var(--control-border)] bg-[var(--surface-primary)] px-4 text-[13px] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] lg:h-10"
         />
       </div>
 
@@ -130,10 +131,10 @@ export function PluginsTabContent() {
 /* ------------------------------------------------------------------ */
 
 const STATUS_COLORS: Record<string, string> = {
-  connected: "bg-emerald-500",
-  needs_auth: "bg-amber-500",
-  needs_approval: "bg-amber-500",
-  failed: "bg-red-500",
+  connected: "bg-[var(--color-success)]",
+  needs_auth: "bg-[var(--color-warning)]",
+  needs_approval: "bg-[var(--color-warning)]",
+  failed: "bg-[var(--color-destructive)]",
   disconnected: "bg-[var(--text-tertiary)]",
   disabled: "bg-[var(--text-tertiary)]",
 };
@@ -179,16 +180,16 @@ function ConnectorsTab({ search }: { search: string }) {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-3">
+      <div className="page-toolbar mb-4 flex flex-wrap items-center justify-between gap-3">
         {!isLoading && (
-          <p className="text-ui-2xs text-[var(--text-tertiary)]">
+          <p className="text-[12px] text-[var(--text-tertiary)]">
             {t("connectedCount", { count: connectedCount })} / {entries.length}
           </p>
         )}
         <Button
           variant="outline"
           size="sm"
-          className="h-7 text-ui-2xs px-2.5"
+          className="h-10 rounded-xl px-4 text-[13px]"
           onClick={() => setShowAdd(!showAdd)}
         >
           <Plus className="h-3 w-3 mr-1" />
@@ -215,10 +216,10 @@ function ConnectorsTab({ search }: { search: string }) {
         <div className="space-y-5">
           {sortedCategories.map((cat) => (
             <div key={cat}>
-              <h3 className="text-ui-2xs font-semibold text-[var(--text-tertiary)] uppercase tracking-wider mb-2">
+              <h3 className="mb-3 text-[12px] font-semibold text-[var(--text-secondary)]">
                 {t(categoryKey(cat), cat)} ({byCategory[cat].length})
               </h3>
-              <div className="space-y-1.5">
+              <div className="divide-y divide-[var(--border-subtle)] overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--surface-primary)]">
                 {byCategory[cat].map(([id, connector]) => (
                   <ConnectorRow key={id} id={id} connector={connector} />
                 ))}
@@ -248,11 +249,11 @@ function ConnectorRow({
   const [tokenInput, setTokenInput] = useState("");
   const usesPersonalToken = connector.auth_mode === "raw_authorization";
   const displayName = localizeConnectorName(t, id, connector.name);
-  const displayDescription = localizeConnectorDescription(
+  /* Auxiliary catalog description: const displayDescription = localizeConnectorDescription(
     t,
     id,
     connector.description,
-  );
+  ); */
 
   const isPending =
     toggle.isPending || connect.isPending || disconnect.isPending ||
@@ -350,7 +351,7 @@ function ConnectorRow({
   };
 
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-[var(--border-default)] p-2.5">
+    <div className="flex flex-wrap items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--surface-secondary)] sm:flex-nowrap">
       {/* Status dot */}
       <span
         className={`h-2 w-2 rounded-full shrink-0 ${
@@ -360,31 +361,31 @@ function ConnectorRow({
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-[var(--text-primary)]">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[14px] font-medium text-[var(--text-primary)]">
             {displayName}
           </span>
           {connector.type === "local" && id !== "google-workspace" && (
-            <span className="text-ui-3xs px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400">
+            <span className="text-[12px] px-1.5 py-0.5 rounded-md bg-[var(--status-warning-bg)] text-[var(--status-warning-text)]">
               {t("localSetup")}
             </span>
           )}
           {connector.source === "custom" && (
-            <span className={`text-ui-3xs px-1.5 py-0.5 rounded-full ${SOURCE_COLORS.custom}`}>
+            <span className={`text-[12px] px-1.5 py-0.5 rounded-full ${SOURCE_COLORS.custom}`}>
               {t("custom")}
             </span>
           )}
           {connector.status === "connected" && connector.tools_count > 0 && (
-            <span className="text-ui-3xs text-[var(--text-tertiary)]">
+            <span className="text-[12px] text-[var(--text-tertiary)]">
               {connector.tools_count} {t("tools")}
             </span>
           )}
         </div>
-        <p className="text-ui-3xs text-[var(--text-tertiary)] truncate mt-0.5">
+        {/* Auxiliary catalog description: <p className="text-[12px] text-[var(--text-tertiary)] truncate mt-0.5">
           {displayDescription}
-        </p>
+        </p> */}
         {connector.status === "needs_approval" && (
-          <p className="text-ui-3xs text-amber-400 mt-0.5">
+          <p className="text-[12px] text-[var(--status-warning-text)] mt-0.5">
             {connector.local_approval?.error
               ? t("localApprovalUnavailable")
               : t("localApprovalRequired")}
@@ -401,7 +402,7 @@ function ConnectorRow({
           <Button
             variant="outline"
             size="sm"
-            className="h-6 text-ui-3xs px-2"
+            className="h-8 rounded-lg text-[12px] px-2"
             onClick={handleApproveLocalStartup}
             disabled={isPending}
             title={t("localApprovalReview")}
@@ -419,7 +420,7 @@ function ConnectorRow({
           <Button
             variant="outline"
             size="sm"
-            className="h-6 text-ui-3xs px-2"
+            className="h-8 rounded-lg text-[12px] px-2"
             onClick={handleConnect}
             disabled={isPending}
           >
@@ -455,13 +456,13 @@ function ConnectorRow({
                 : t("tokenPatPlaceholder")}
               autoComplete="off"
               spellCheck={false}
-              className="h-6 w-28 rounded border border-[var(--border-default)] bg-transparent px-1.5 text-ui-3xs text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--border-focus)]"
+              className="ui-control h-8 w-40 rounded-lg border border-[var(--control-border)] bg-transparent px-1.5 text-[12px] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--border-focus)]"
             />
             <Button
               type="submit"
               variant="outline"
               size="sm"
-              className="h-6 text-ui-3xs px-2"
+              className="h-8 rounded-lg text-[12px] px-2"
               disabled={!tokenInput.trim() || setToken.isPending}
             >
               {setToken.isPending ? (
@@ -475,7 +476,7 @@ function ConnectorRow({
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-6 text-ui-3xs px-1.5"
+                className="h-8 rounded-lg text-[12px] px-1.5"
                 title={t("getPersonalToken")}
                 onClick={() => {
                   if (IS_DESKTOP) {
@@ -495,7 +496,7 @@ function ConnectorRow({
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 text-ui-3xs px-1.5 text-[var(--text-tertiary)]"
+            className="h-8 rounded-lg text-[12px] px-1.5 text-[var(--text-tertiary)]"
             onClick={() => disconnect.mutate(id)}
             disabled={isPending}
             title={t("disconnect")}
@@ -508,7 +509,7 @@ function ConnectorRow({
           <Button
             variant="outline"
             size="sm"
-            className="h-6 text-ui-3xs px-2"
+            className="h-8 rounded-lg text-[12px] px-2"
             onClick={() => reconnect.mutate(id)}
             disabled={isPending}
           >
@@ -523,6 +524,7 @@ function ConnectorRow({
 
         {/* Enable/disable toggle */}
         <Switch
+          aria-label={displayName}
           checked={connector.enabled}
           onCheckedChange={async (checked) => {
             try {
@@ -574,7 +576,7 @@ function AddConnectorForm({ onClose }: { onClose: () => void }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="mb-4 rounded-lg border border-[var(--border-default)] bg-[var(--surface-secondary)] p-3 space-y-2.5"
+      className="surface-card mb-6 space-y-3 rounded-2xl border border-[var(--border-default)] bg-[var(--surface-secondary)] p-5"
     >
       <h4 className="text-xs font-semibold text-[var(--text-primary)]">
         {t("addConnector")}
@@ -584,7 +586,7 @@ function AddConnectorForm({ onClose }: { onClose: () => void }) {
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder={t("connectorName")}
-        className="w-full h-7 rounded-md border border-[var(--border-default)] bg-transparent px-2.5 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--border-focus)]"
+        className="ui-control w-full h-10 rounded-xl border border-[var(--control-border)] bg-transparent px-2.5 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--border-focus)]"
         required
       />
       <input
@@ -592,14 +594,14 @@ function AddConnectorForm({ onClose }: { onClose: () => void }) {
         value={url}
         onChange={(e) => setUrl(e.target.value)}
         placeholder="https://mcp.example.com/mcp"
-        className="w-full h-7 rounded-md border border-[var(--border-default)] bg-transparent px-2.5 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--border-focus)]"
+        className="ui-control w-full h-10 rounded-xl border border-[var(--control-border)] bg-transparent px-2.5 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--border-focus)]"
         required
       />
       <div className="flex justify-end gap-2">
-        <Button variant="ghost" size="sm" className="h-7 text-ui-2xs" onClick={onClose} type="button">
+        <Button variant="ghost" size="sm" className="h-10 rounded-xl text-[13px]" onClick={onClose} type="button">
           {t("cancel")}
         </Button>
-        <Button size="sm" className="h-7 text-ui-2xs" type="submit" disabled={addConnector.isPending}>
+        <Button size="sm" className="h-10 rounded-xl text-[13px]" type="submit" disabled={addConnector.isPending}>
           {addConnector.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
           {t("add")}
         </Button>
@@ -642,7 +644,7 @@ function PluginsTab({ search }: { search: string }) {
   return (
     <>
       {!isLoading && (
-        <p className="text-ui-2xs text-[var(--text-tertiary)] mb-3">
+        <p className="text-[12px] text-[var(--text-tertiary)] mb-3">
           {t("enabledCount", { count: enabledCount })} / {entries.length}
         </p>
       )}
@@ -829,11 +831,11 @@ function SkillStoreSection({
   };
 
   return (
-    <div className="rounded-lg border border-[var(--border-default)]">
+    <div className="surface-card rounded-2xl border border-[var(--border-default)] bg-[var(--surface-primary)] shadow-[var(--shadow-sm)]">
       {/* Header */}
       <button
         onClick={onToggle}
-        className="flex w-full items-center gap-2 px-3 py-2 text-left"
+        className="flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left"
       >
         {open ? (
           <ChevronDown className="h-3.5 w-3.5 text-[var(--text-tertiary)]" />
@@ -844,9 +846,9 @@ function SkillStoreSection({
         <span className="text-xs font-semibold text-[var(--text-primary)]">
           {t("storeTitle")}
         </span>
-        <span className="text-ui-3xs text-[var(--text-tertiary)]">
+        {/* Auxiliary copy retained in source: <span className="text-[12px] text-[var(--text-tertiary)]">
           {t("storeSubtitle")}
-        </span>
+        </span> */}
       </button>
 
       {open && (
@@ -866,9 +868,9 @@ function SkillStoreSection({
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={t("storeSearchPlaceholder")}
-                  className="flex-1 h-8 rounded-md border border-[var(--border-default)] bg-transparent px-3 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--border-focus)]"
+                  className="ui-control flex-1 h-10 rounded-xl border border-[var(--control-border)] bg-transparent px-3 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--border-focus)]"
                 />
-                <div className="flex items-center rounded-md border border-[var(--border-default)] text-ui-2xs overflow-hidden">
+                <div className="flex items-center rounded-md border border-[var(--border-default)] text-[12px] overflow-hidden">
                   {(["stars", "recent"] as const).map((s) => (
                     <button
                       key={s}
@@ -896,7 +898,7 @@ function SkillStoreSection({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 text-ui-2xs"
+                    className="h-10 rounded-xl text-[13px]"
                     onClick={() => refetch()}
                   >
                     <RotateCw className="h-3 w-3 mr-1" />
@@ -918,13 +920,13 @@ function SkillStoreSection({
                 </p>
               ) : (
                 <>
-                  <p className="text-ui-3xs text-[var(--text-tertiary)]">
+                  <p className="text-[12px] text-[var(--text-tertiary)]">
                     {t("storeResultCount", {
                       shown: results.length,
                       total,
                     })}
                   </p>
-                  <div className="space-y-1.5">
+                  <div className="space-y-3">
                     {results.map((skill) => (
                       <StoreSkillRow
                         key={skill.id}
@@ -963,26 +965,26 @@ function StoreSkillRow({
 }) {
   const { t } = useTranslation("plugins");
   return (
-    <div className="flex items-start gap-3 rounded-lg border border-[var(--border-default)] p-2.5">
+    <div className="surface-card flex flex-wrap items-start gap-3 rounded-2xl border border-[var(--border-default)] bg-[var(--surface-primary)] p-4 shadow-[var(--shadow-sm)] sm:flex-nowrap">
       <Sparkles className="h-3.5 w-3.5 text-[var(--text-tertiary)] mt-0.5 shrink-0" />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="text-xs font-mono font-medium text-[var(--text-primary)] truncate">
             {skill.name}
           </span>
-          <span className="text-ui-3xs text-[var(--text-tertiary)] truncate">
+          <span className="text-[12px] text-[var(--text-tertiary)] truncate">
             {t("storeByAuthor", { author: skill.author })}
           </span>
           {skill.stars > 0 && (
-            <span className="inline-flex items-center gap-0.5 text-ui-3xs text-[var(--text-tertiary)]">
+            <span className="inline-flex items-center gap-0.5 text-[12px] text-[var(--text-tertiary)]">
               <Star className="h-2.5 w-2.5" />
               {skill.stars}
             </span>
           )}
         </div>
-        <p className="text-ui-2xs text-[var(--text-tertiary)] mt-0.5 line-clamp-2">
+        {/* Auxiliary catalog description: <p className="text-[12px] text-[var(--text-tertiary)] mt-0.5 line-clamp-2">
           {skill.description}
-        </p>
+        </p> */}
       </div>
       <div className="flex items-center gap-1 shrink-0">
         <a
@@ -995,7 +997,7 @@ function StoreSkillRow({
           <ExternalLink className="h-3 w-3" />
         </a>
         {installed ? (
-          <span className="inline-flex items-center gap-1 text-ui-3xs text-[var(--text-tertiary)] px-2 py-1">
+          <span className="inline-flex items-center gap-1 text-[12px] text-[var(--text-tertiary)] px-2 py-1">
             <Check className="h-3 w-3" />
             {t("storeInstalledBadge")}
           </span>
@@ -1003,7 +1005,7 @@ function StoreSkillRow({
           <Button
             variant="outline"
             size="sm"
-            className="h-7 text-ui-2xs px-2.5"
+            className="h-10 rounded-xl px-4 text-[13px]"
             disabled={installing}
             onClick={onInstall}
           >
@@ -1040,7 +1042,7 @@ function SkillGroup({
         <h3 className="text-xs font-semibold text-[var(--text-secondary)]">
           {title}
         </h3>
-        <span className="text-ui-3xs text-[var(--text-tertiary)]">
+        <span className="text-[12px] text-[var(--text-tertiary)]">
           ({skills.length})
         </span>
       </div>
@@ -1050,9 +1052,9 @@ function SkillGroup({
           const displayName = useCatalog
             ? localizeSkillName(t, skill.name)
             : skill.name;
-          const displayDescription = useCatalog
+          /* Auxiliary catalog description: const displayDescription = useCatalog
             ? localizeSkillDescription(t, skill.name, skill.description)
-            : skill.description;
+            : skill.description; */
           const pluginId = skill.name.includes(":")
             ? skill.name.split(":")[0]
             : null;
@@ -1060,20 +1062,20 @@ function SkillGroup({
           return (
             <div
               key={skill.name}
-              className="flex items-center gap-3 rounded-lg border border-[var(--border-default)] p-2.5"
+              className="surface-card flex flex-wrap items-center gap-3 rounded-2xl border border-[var(--border-default)] bg-[var(--surface-primary)] p-4 shadow-[var(--shadow-sm)] sm:flex-nowrap"
             >
-              <div className={`flex items-start gap-3 min-w-0 flex-1 ${!skill.enabled ? "opacity-50" : ""}`}>
+              <div className="flex min-w-0 flex-1 items-start gap-3">
                 <Sparkles className="h-3.5 w-3.5 text-[var(--text-tertiary)] mt-0.5 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span
-                      className="text-xs font-medium text-[var(--text-primary)]"
+                      className="text-[14px] font-medium text-[var(--text-primary)]"
                       title={skill.name}
                     >
                       {displayName}
                     </span>
                     <span
-                      className={`text-ui-3xs px-1.5 py-0.5 rounded-full ${
+                      className={`text-[12px] px-1.5 py-0.5 rounded-full ${
                         SOURCE_COLORS[source] ?? SOURCE_COLORS.bundled
                       }`}
                     >
@@ -1084,12 +1086,13 @@ function SkillGroup({
                         : t(source, source)}
                     </span>
                   </div>
-                  <p className="text-ui-2xs text-[var(--text-tertiary)] mt-0.5 line-clamp-2">
+                  {/* Auxiliary catalog description: <p className="text-[12px] text-[var(--text-tertiary)] mt-0.5 line-clamp-2">
                     {displayDescription}
-                  </p>
+                  </p> */}
                 </div>
               </div>
               <Switch
+                aria-label={displayName}
                 checked={skill.enabled}
                 onCheckedChange={(checked) =>
                   toggle.mutate({ name: skill.name, enable: checked })
@@ -1126,17 +1129,20 @@ function PluginCard({
   const displayName = useCatalog
     ? localizePluginName(t, name)
     : plugin.name || name;
-  const displayDescription = useCatalog
+  /* Auxiliary catalog description: const displayDescription = useCatalog
     ? localizePluginDescription(t, name, plugin.description)
-    : plugin.description;
+    : plugin.description; */
 
   return (
-    <div className="rounded-lg border border-[var(--border-default)] overflow-hidden">
+    <div className="surface-card overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--surface-primary)] shadow-[var(--shadow-sm)]">
       {/* Main row */}
-      <div className="flex items-center gap-3 p-3">
+      <div className="flex flex-wrap items-center gap-3 p-4 sm:flex-nowrap">
         <button
+          type="button"
+          aria-label={displayName}
+          aria-expanded={expanded}
           onClick={onToggleExpand}
-          className="shrink-0 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
+          className="icon-action h-8 w-8 shrink-0 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
         >
           {expanded ? (
             <ChevronDown className="h-4 w-4" />
@@ -1147,32 +1153,32 @@ function PluginCard({
 
         <span
           className={`h-2 w-2 rounded-full shrink-0 ${
-            plugin.enabled ? "bg-emerald-500" : "bg-[var(--text-tertiary)]"
+            plugin.enabled ? "bg-[var(--color-success)]" : "bg-[var(--text-tertiary)]"
           }`}
         />
 
-        <div className="flex-1 min-w-0" onClick={onToggleExpand} role="button">
+        <button type="button" className="min-w-0 flex-1 text-left" onClick={onToggleExpand} aria-expanded={expanded}>
           <div className="flex items-center gap-2">
             <p className="text-sm font-medium text-[var(--text-primary)] truncate">
               {displayName}
             </p>
-            <span className="text-ui-3xs text-[var(--text-tertiary)]">
+            <span className="text-[12px] text-[var(--text-tertiary)]">
               {t("version", { version: plugin.version })}
             </span>
             <span
-              className={`text-ui-3xs px-1.5 py-0.5 rounded-full ${
+              className={`text-[12px] px-1.5 py-0.5 rounded-full ${
                 SOURCE_COLORS[plugin.source] ?? SOURCE_COLORS.builtin
               }`}
             >
               {t(plugin.source)}
             </span>
           </div>
-          <p className="text-ui-2xs text-[var(--text-tertiary)] truncate mt-0.5">
+          {/* Auxiliary catalog description: <p className="text-[12px] text-[var(--text-tertiary)] truncate mt-0.5">
             {displayDescription}
-          </p>
-        </div>
+          </p> */}
+        </button>
 
-        <div className="flex items-center gap-3 shrink-0 text-ui-2xs text-[var(--text-tertiary)]">
+        <div className="flex items-center gap-3 shrink-0 text-[12px] text-[var(--text-tertiary)]">
           <span className="flex items-center gap-1">
             <Sparkles className="h-3 w-3" />
             {plugin.skills_count}
@@ -1186,6 +1192,7 @@ function PluginCard({
         </div>
 
         <Switch
+          aria-label={displayName}
           checked={plugin.enabled}
           onCheckedChange={(checked) =>
             toggle.mutate({ name, enable: checked })
@@ -1225,7 +1232,7 @@ function PluginDetailPanel({ name }: { name: string }) {
       {/* Skills */}
       {data.skills.length > 0 && (
         <div className="mb-3">
-          <h4 className="text-ui-2xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
+          <h4 className="text-[12px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
             {t("skills")} ({data.skills.length})
           </h4>
           <div className="space-y-1">
@@ -1237,11 +1244,11 @@ function PluginDetailPanel({ name }: { name: string }) {
                 >
                   {useCatalog ? localizeSkillName(t, skill.name) : skill.name}
                 </span>
-                <span className="text-ui-2xs text-[var(--text-tertiary)] truncate">
+                {/* Auxiliary catalog description: <span className="text-[12px] text-[var(--text-tertiary)] truncate">
                   {useCatalog
                     ? localizeSkillDescription(t, skill.name, skill.description)
                     : skill.description}
-                </span>
+                </span> */}
               </div>
             ))}
           </div>
@@ -1251,7 +1258,7 @@ function PluginDetailPanel({ name }: { name: string }) {
       {/* Required connectors */}
       {connectorIds.length > 0 && (
         <div>
-          <h4 className="text-ui-2xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
+          <h4 className="text-[12px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
             {t("requiredConnectors")} ({connectorIds.length})
           </h4>
           <div className="flex flex-wrap gap-1.5">
@@ -1264,7 +1271,7 @@ function PluginDetailPanel({ name }: { name: string }) {
               return (
                 <span
                   key={cid}
-                  className="inline-flex items-center gap-1.5 text-ui-2xs text-[var(--text-primary)] rounded border border-[var(--border-default)] bg-[var(--surface-primary)] px-2 py-1"
+                  className="inline-flex items-center gap-1.5 text-[12px] text-[var(--text-primary)] rounded border border-[var(--border-default)] bg-[var(--surface-primary)] px-2 py-1"
                 >
                   <span className={`h-1.5 w-1.5 rounded-full ${statusColor}`} />
                   {connector

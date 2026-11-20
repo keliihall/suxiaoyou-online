@@ -16,6 +16,7 @@ import { useBackendLifecycle } from "@/hooks/use-backend-lifecycle";
 import { IS_DESKTOP } from "@/lib/constants";
 import type { BackendStatus } from "@/lib/backend-lifecycle";
 import { useTranslation } from "react-i18next";
+import { CloudDirectoryProvider } from "./cloud-directory-provider";
 
 type NativeLanguage = "en" | "zh";
 
@@ -124,6 +125,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
               <AppearanceInjector />
               <StreamRegistryHydration />
               <ErrorBoundary>{children}</ErrorBoundary>
+              <CloudDirectoryProvider />
               <LocalizedContextMenuGuard />
               <Toaster
                 position="top-right"

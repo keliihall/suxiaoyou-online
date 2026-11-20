@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useTranslation } from 'react-i18next';
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Share2, Loader2, List, MoreHorizontal, PanelRightClose, PanelRightOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +19,7 @@ import { useActivityStore } from "@/stores/activity-store";
 import { useArtifactStore } from "@/stores/artifact-store";
 import { usePlanReviewStore } from "@/stores/plan-review-store";
 import { useMessages } from "@/hooks/use-messages";
-import { useIsMacOS } from "@/hooks/use-platform";
+import { useIsDesktop, useIsMacOS } from "@/hooks/use-platform";
 import {
   WINDOW_TOP_ICONS_WIDTH_MAC,
   WINDOW_TOP_ICONS_WIDTH_OTHER,
@@ -29,6 +29,7 @@ import { API, IS_DESKTOP } from "@/lib/constants";
 import { isRemoteMode } from "@/lib/remote-connection";
 import { downloadBlob } from "@/lib/browser-files";
 import { GoalStatusControl } from "@/components/goal/goal-status-control";
+import { IS_CLOUD } from "@/lib/cloud-session";
 
 interface ChatHeaderProps {
   sessionId?: string;
@@ -38,10 +39,12 @@ interface ChatHeaderProps {
 export function ChatHeader({ sessionId, title }: ChatHeaderProps) {
   const { t } = useTranslation(['chat', 'common']);
   const router = useRouter();
+  const pathname = usePathname();
   const isCollapsed = useSidebarStore((s) => s.isCollapsed);
   const { messages } = useMessages(sessionId);
   const isMac = useIsMacOS();
-  const remote = isRemoteMode();
+  const isWide = useIsDesktop();
+  const remote = isRemoteMode() || (IS_CLOUD && pathname.startsWith("/m/"));
   // When sidebar is collapsed on desktop, the floating WindowTopIcons sit
   // over the left edge of the chat area — reserve space so our own content
   // doesn't hide beneath them. Remote mode has its own leading List button
@@ -141,15 +144,15 @@ export function ChatHeader({ sessionId, title }: ChatHeaderProps) {
   return (
     <TooltipProvider delayDuration={200}>
       <header
-        className="relative z-10 flex h-13 items-center gap-1 pr-3 backdrop-blur-sm"
-        style={{ paddingLeft: leftPad }}
+        className={`relative z-10 flex min-h-16 shrink-0 items-center gap-2 bg-[var(--surface-chat)]/95 pr-4 backdrop-blur-sm${sessionId ? " border-b border-[var(--border-subtle)]" : ""}`}
+        style={{ paddingLeft: isWide ? leftPad + 8 : remote ? 12 : 60 }}
       >
         {/* Remote mode: task list button */}
         {remote && (
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9"
+            className="icon-action h-11 w-11 lg:h-10 lg:w-10"
             onClick={() => router.push("/m")}
             aria-label="Task list"
           >
@@ -161,9 +164,9 @@ export function ChatHeader({ sessionId, title }: ChatHeaderProps) {
             (desktop non-remote) so they stay at the window's left edge across
             sidebar states. */}
 
-        <div className="flex min-w-0 max-w-[min(360px,42vw)] items-center gap-1">
+        {sessionId && <div className="flex min-w-0 max-w-[min(480px,55vw)] items-center gap-1">
           <span
-            className="truncate px-2 text-[13px] font-semibold text-[var(--text-primary)]"
+            className="truncate px-1 text-[14px] font-semibold text-[var(--text-primary)]"
             title={title || t("common:newChat")}
           >
             {title || t("common:newChat")}
@@ -174,7 +177,7 @@ export function ChatHeader({ sessionId, title }: ChatHeaderProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 shrink-0 rounded-lg"
+                  className="icon-action h-10 w-10 shrink-0 rounded-xl"
                   aria-label={t("chat:conversationMenu")}
                 >
                   <MoreHorizontal className="h-4 w-4" />
@@ -195,7 +198,7 @@ export function ChatHeader({ sessionId, title }: ChatHeaderProps) {
               </DropdownMenuContent>
             </DropdownMenu>
           )}
-        </div>
+        </div>}
 
         <div
           {...macDragProps}
@@ -218,7 +221,7 @@ export function ChatHeader({ sessionId, title }: ChatHeaderProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9"
+                className="icon-action h-11 w-11 lg:h-10 lg:w-10"
                 aria-label={workspaceVisible ? t("hideWorkspace") : t("showWorkspace")}
                 onClick={handleToggleWorkspace}
               >

@@ -1,17 +1,34 @@
-# 苏小有
+# suxiaoyou-online
 
-[![CI](https://github.com/keliihall/suxiaoyou/actions/workflows/ci.yml/badge.svg)](https://github.com/keliihall/suxiaoyou/actions/workflows/ci.yml)
+[![CI](https://github.com/keliihall/suxiaoyou-online/actions/workflows/ci.yml/badge.svg)](https://github.com/keliihall/suxiaoyou-online/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
 <p align="center">
   <img src="Suxiaoyou-Logo/mascot.png" width="120" alt="苏小有 Logo" />
 </p>
 
-苏小有是安装在电脑端的 AI 工作助理，面向日常办公材料处理与知识工作。
+苏小有 Online 是面向浏览器的 AI 工作助理，基于[苏小有客户端](https://github.com/keliihall/suxiaoyou)改造，复用完整工作台与 Agent 引擎。
 
-它能读懂 Word、Excel、PPT 和本地资料，帮助你自动生成报告、纪要、分析、计划、邮件等工作成果。
+支持多用户登录、独立云工作区、后台任务、模型配置、管理员控制台，以及 Token 用量统计和额度限制。文件与会话按用户隔离；生成的文件可直接在页面预览、下载。
 
-苏小有的价值，是可以直接处理电脑里的办公材料，同时让文件、数据和工作流程尽量留在自己的电脑上，更安全，也更高效。
+模型服务商和 API Key 可在管理界面配置，密钥只写入、不回显。平台通过统一模型网关调用真实模型，并记录用量。
+
+## Online 部署与使用
+
+需要 Docker Engine / Compose v2、Node.js 22 和对应镜像要求的 Python 环境。完整部署使用专用 rootless Docker daemon，为每个用户创建独立运行时、网络和持久卷。
+
+1. 按[云端部署与测试说明](docs/cloud-testing.md)从 `.env.cloud.example` 生成私有配置。
+2. 构建用户运行时镜像，再启动 `compose.cloud.yaml` 中的平台服务并执行迁移。
+3. 使用管理 CLI 创建首个管理员，访问 `/cloud` 登录。
+4. 在 `/cloud?manage=1` 配置真实模型、密钥、用户及额度；登录后进入 `/c/new` 使用完整工作台。
+
+相关文档：
+
+- [完整部署、升级、测试与备份恢复](docs/cloud-testing.md)
+- [中央模型网关与模型配置](docs/cloud-model-gateway.md)
+- [客户端能力移植与逐项验收](docs/cloud-parity/README.md)
+
+实际调用、受控 API 回归和外部环境待验项目分别记录在验收文档中。不要提交 `.env.cloud`、供应商密钥、数据库、会话令牌、租户文件或构建产物。
 
 ## 能做什么
 
@@ -30,13 +47,13 @@
 - 根据 PPT 或方案材料生成讲稿、摘要和汇报邮件。
 - 批量读取、分类和汇总本地办公文件，并生成整理建议或受支持的输出文件。
 
-## 本地优先
+## 桌面版与云端版
 
-苏小有以电脑端工作为中心。文件、对话、生成结果和工作流程默认围绕本机展开。
+本仓库保留原桌面端代码。Online 的文件、对话和任务运行于服务器上按用户隔离的云工作区；浏览器通过上传、预览和下载处理文件。
 
-当你使用本地模型或本地兼容接口时，材料处理可以在自己的电脑上完成。需要使用云端模型时，也由你自行配置可用的模型服务商和密钥。
+下方安装与本地开发说明适用于保留的桌面版；Online 的启动、任务持久化和运行边界以[云端说明](docs/cloud-testing.md)为准。
 
-## 安装与使用
+## 桌面版安装与使用
 
 > 发布状态：`v1.1.0` 以公开的 `UNSIGNED-DEGRADED` 预发布配置交付。七个安装包均在文件名中带有
 > `UNSIGNED-DEGRADED`，Release 不设为 latest；Windows/Linux 包未做发行方签名，macOS 应用仅为
@@ -66,8 +83,7 @@
 4. 直接提出目标，例如“生成一份调研报告”“整理会议纪要”“分析这张表格”“写一封汇报邮件”。
 5. 根据结果继续追问、修改或生成新的文件。
 
-目标模式当前只面向本地桌面单客户端。Remote/移动端、多窗口实时同步和应用退出后的云端执行不在
-发布范围；详细的命令、安全边界、恢复语义和验证状态见[目标模式说明](docs/goal-mode-development-plan.md)。
+原桌面版目标模式的发布范围为本地单客户端，详细的命令、安全边界、恢复语义和验证状态见[目标模式说明](docs/goal-mode-development-plan.md)。Online 的持续任务由用户云运行时执行，具体移植状态见[云端验收表](docs/cloud-parity/parity-acceptance.md)。
 
 ## 项目结构
 
@@ -75,6 +91,9 @@
 desktop-tauri/    桌面端外壳与系统集成
 frontend/         应用界面、对话、设置与文件展示
 backend/          助手服务、工具调用、文件处理与模型连接
+backend/app/cloud/ 云端身份、模型网关、配额与运行时管理
+deploy/cloud/     容器构建、部署、升级与验收脚本
+compose.cloud.yaml 云端服务编排
 ```
 
 ## 本地开发
@@ -103,8 +122,7 @@ cd backend && venv/bin/pytest -q
 
 ## 开源信息
 
-苏小有面向中文办公、桌面集成、安全和发布流程持续改进。公开源码历史从
-`v0.7.3` 基线开始。
+苏小有 Online 基于苏小有客户端持续开发，保留原项目源码与提交历史。
 
 项目采用 [Apache License 2.0](LICENSE)。
 第三方组件说明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

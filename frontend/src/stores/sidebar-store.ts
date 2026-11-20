@@ -1,11 +1,15 @@
 "use client";
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { SIDEBAR_WIDTH, SIDEBAR_MIN_WIDTH, SIDEBAR_MAX_WIDTH } from "@/lib/constants";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { userStorage } from "@/lib/cloud-session";
+import { IS_DESKTOP, SIDEBAR_WIDTH, SIDEBAR_MIN_WIDTH, SIDEBAR_MAX_WIDTH } from "@/lib/constants";
 
 export type OrganizeMode = "by-project" | "chronological" | "chats-first";
 export type SortBy = "created" | "updated";
+
+/** Web keeps essential navigation available when the conversation list is folded. */
+export const COLLAPSED_SIDEBAR_WIDTH = 64;
 
 interface SidebarStore {
   /** Mobile drawer open state */
@@ -47,7 +51,7 @@ export const useSidebarStore = create<SidebarStore>()(
   persist(
     (set) => ({
       isOpen: false,
-      isCollapsed: false,
+      isCollapsed: !IS_DESKTOP,
       isSearchOpen: false,
       searchQuery: "",
       collapsedProjects: {},
@@ -84,7 +88,15 @@ export const useSidebarStore = create<SidebarStore>()(
     }),
     {
       name: "suxiaoyou-sidebar",
+      storage: createJSONStorage(() => userStorage),
+      version: 1,
+      // Fold existing Web sidebars once; subsequent choices persist in version 1.
+      migrate: (persisted) => {
+        const saved = persisted as Partial<SidebarStore>;
+        return { ...saved, isCollapsed: IS_DESKTOP ? saved.isCollapsed === true : true };
+      },
       partialize: (s) => ({
+        isCollapsed: s.isCollapsed,
         collapsedProjects: s.collapsedProjects,
         organizeMode: s.organizeMode,
         sortBy: s.sortBy,
@@ -92,7 +104,11 @@ export const useSidebarStore = create<SidebarStore>()(
       }),
       merge: (persisted, current) => {
         const merged = { ...current, ...(persisted as Partial<SidebarStore>) };
-        return { ...merged, width: clampWidth(merged.width ?? SIDEBAR_WIDTH) };
+        return {
+          ...merged,
+          isCollapsed: merged.isCollapsed === true,
+          width: clampWidth(merged.width ?? SIDEBAR_WIDTH),
+        };
       },
     },
   ),

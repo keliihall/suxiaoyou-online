@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { MessageSquareText, Search } from "lucide-react";
@@ -34,6 +34,8 @@ export function SearchCommandDialog() {
   const open = useSidebarStore((s) => s.isSearchModalOpen);
   const setOpen = useSidebarStore((s) => s.setSearchModalOpen);
   const [query, setQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
 
   const { data: sessionPages } = useSessions();
   const { data: searchResults } = useSearchSessions(query);
@@ -113,14 +115,24 @@ export function SearchCommandDialog() {
       <DialogContent
         className="top-[96px] max-w-[640px] translate-y-0 gap-0 overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--surface-primary)] p-0 shadow-[var(--shadow-lg)] data-[state=closed]:slide-out-to-top-[96px] data-[state=open]:slide-in-from-top-[96px] [&>button]:hidden"
         style={IS_DESKTOP ? { top: desktopTopOffset } : undefined}
-        onOpenAutoFocus={(e) => e.preventDefault()}
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          returnFocusRef.current = document.activeElement instanceof HTMLElement
+            ? document.activeElement
+            : null;
+          inputRef.current?.focus();
+        }}
+        onCloseAutoFocus={(e) => {
+          e.preventDefault();
+          if (returnFocusRef.current?.isConnected) returnFocusRef.current.focus();
+        }}
       >
         <DialogTitle className="sr-only">{t("searchChats")}</DialogTitle>
         <Command shouldFilter={false} className="bg-transparent">
           <div className="flex items-center gap-2 border-b border-[var(--border-subtle)] px-4 py-3">
             <Search className="h-[14px] w-[14px] shrink-0 text-[var(--text-tertiary)]" />
             <input
-              autoFocus
+              ref={inputRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("searchChats")}

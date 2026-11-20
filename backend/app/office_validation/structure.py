@@ -120,6 +120,7 @@ def inspect_ooxml_path(
             document_format,
             expected_placeholders=None,
             limits=selected,
+            allow_chart_workbooks=document_format == "pptx",
         )
     except Exception as exc:
         raise OfficeValidationSecurityError("OOXML package safety validation failed") from exc

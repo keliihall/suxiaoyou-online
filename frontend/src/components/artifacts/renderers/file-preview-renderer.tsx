@@ -49,6 +49,9 @@ export function FilePreviewRenderer({ filePath, content: initialContent, languag
   const { t } = useTranslation("chat");
   // Check if this is a binary format that handles its own fetching
   const artifactType = filePath ? artifactTypeFromExtension(filePath) : null;
+  // Unknown formats such as archives are downloadable in the panel header;
+  // never ask the text endpoint to decode their binary bytes.
+  const unsupportedFile = Boolean(filePath && !artifactType && !initialContent);
   const isBinary =
     artifactType === "docx" ||
     artifactType === "xlsx" ||
@@ -65,7 +68,7 @@ export function FilePreviewRenderer({ filePath, content: initialContent, languag
 
   // Fetch text content from disk (skip for binary formats)
   useEffect(() => {
-    if (isBinary) return;
+    if (isBinary || unsupportedFile) return;
 
     if (initialContent) {
       setContent(initialContent);
@@ -102,11 +105,19 @@ export function FilePreviewRenderer({ filePath, content: initialContent, languag
     return () => {
       cancelled = true;
     };
-  }, [filePath, initialContent, isBinary, t, workspace]);
+  }, [filePath, initialContent, isBinary, t, unsupportedFile, workspace]);
 
   // Binary formats delegate to their own renderers
   if (isBinary) {
     return <BinaryFilePreview filePath={filePath} />;
+  }
+
+  if (unsupportedFile) {
+    return (
+      <div className="flex flex-1 items-center justify-center p-4" data-testid="file-preview-unsupported">
+        <p className="text-sm text-[var(--text-secondary)]">{t("filePreviewUnsupported")}</p>
+      </div>
+    );
   }
 
   if (loading) {

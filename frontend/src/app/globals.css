@@ -1,6 +1,7 @@
 @import "tailwindcss";
+@import "../styles/design-system.css";
 
-/* ─── 苏小有 — Codex-aligned defaults ─── */
+/* 苏小有 Online: shared semantic palette; component/layout rules live in design-system.css. */
 
 :root {
   /* Offline, platform-native font stacks. Keeping these as Tailwind-compatible
@@ -12,19 +13,19 @@
 
   /* Surface */
   --surface-primary: #FFFFFF;
-  --surface-secondary: #F6F6F6;
-  --surface-tertiary: #EFEFEF;
-  --surface-chat: #FFFFFF;
+  --surface-secondary: #F3F5F8;
+  --surface-tertiary: #E9EDF3;
+  --surface-chat: #FAFBFD;
 
   /* Text */
-  --text-primary: #1A1C1F;
-  --text-secondary: #5F6368;
-  --text-tertiary: #8A8F98;
+  --text-primary: #172033;
+  --text-secondary: #526176;
+  --text-tertiary: #5B687D;
 
   /* Border */
-  --border-default: #E3E4E7;
-  --border-heavy: #D2D5DA;
-  --border-subtle: rgba(26, 28, 31, 0.08);
+  --border-default: #DCE2EB;
+  --border-heavy: #C5CFDD;
+  --border-subtle: rgba(23, 32, 51, 0.07);
 
   /* Code block surfaces (light theme uses dark code blocks like ChatGPT/Claude) */
   --code-block-bg: #2F2F2F;
@@ -35,58 +36,58 @@
   --code-block-success: #4EC9B0;
 
   /* Brand */
-  --brand-primary: #339CFF;
-  --brand-primary-hover: #238EFF;
+  --brand-primary: #2563EB;
+  --brand-primary-hover: #1D4ED8;
   --brand-primary-text: #FFFFFF;
 
   /* Semantic */
-  --color-success: #22C55E;
-  --color-warning: #EAB308;
-  --color-destructive: #EF4444;
+  --color-success: #15803D;
+  --color-warning: #A16207;
+  --color-destructive: #DC2626;
 
   /* Sidebar */
-  --sidebar-bg: #F7F7F8;
+  --sidebar-bg: #F3F5F8;
   /* Translucent bg over macOS vibrancy / unpredictable wallpapers. Light mode
      needs high alpha so dark text stays readable regardless of what's behind. */
-  --sidebar-translucent-bg: rgba(247, 247, 248, 0.88);
-  --sidebar-hover: #EEEEF0;
-  --sidebar-active: #E7E9ED;
+  --sidebar-translucent-bg: rgba(243, 245, 248, 0.94);
+  --sidebar-hover: #E9EDF3;
+  --sidebar-active: #FFFFFF;
   --sidebar-active-shadow: 0 1px 2px rgba(26, 28, 31, 0.05);
-  --sidebar-active-border: rgba(26, 28, 31, 0.05);
+  --sidebar-active-border: #DCE2EB;
 
   /* User message bubble */
-  --user-bubble-bg: #F4F5F7;
+  --user-bubble-bg: #EDF2FA;
 
   /* Ring */
-  --ring: #339CFF;
+  --ring: #2563EB;
 
   /* Radius */
   --radius: 0.625rem;
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.07);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.08);
+  --shadow-sm: 0 1px 2px rgba(23, 32, 51, 0.04);
+  --shadow-md: 0 4px 16px -4px rgba(23, 32, 51, 0.10), 0 2px 4px rgba(23, 32, 51, 0.03);
+  --shadow-lg: 0 20px 64px -16px rgba(23, 32, 51, 0.20), 0 4px 16px rgba(23, 32, 51, 0.05);
 
   /* Switch */
-  --switch-checked: #171717;
+  --switch-checked: #2563EB;
 
   /* Tool colors */
-  --tool-pending: #EAB308;
-  --tool-running: #171717;
-  --tool-completed: #22C55E;
+  --tool-pending: #A16207;
+  --tool-running: #2563EB;
+  --tool-completed: #15803D;
   --tool-adjusted: #A16207;
-  --tool-error: #EF4444;
+  --tool-error: #DC2626;
 
   /* Prose — content styling */
-  --prose-body: #212121;
-  --prose-link: #2563EB;
-  --prose-accent: #3B82F6;
+  --prose-body: #263247;
+  --prose-link: #1D4ED8;
+  --prose-accent: #2563EB;
   --prose-blockquote-bg: rgba(59, 130, 246, 0.04);
-  --prose-marker: #A3A3A3;
+  --prose-marker: var(--text-tertiary);
 
   /* Typography scale */
-  --ui-font-size-base: 13px;
+  --ui-font-size-base: 14px;
   --ui-code-font-size-base: 12px;
   --ui-size-3xs: max(10px, calc(var(--ui-font-size-base) - 3px));
   --ui-size-2xs: max(11px, calc(var(--ui-font-size-base) - 2px));
@@ -110,20 +111,20 @@
 
 .dark {
   /* Surface */
-  --surface-primary: #000000;
-  --surface-secondary: #080808;
-  --surface-tertiary: #111111;
-  --surface-chat: #000000;
+  --surface-primary: #171D29;
+  --surface-secondary: #1E2635;
+  --surface-tertiary: #283346;
+  --surface-chat: #101620;
 
   /* Text */
-  --text-primary: #FFFFFF;
-  --text-secondary: #C2C2C2;
-  --text-tertiary: #95979D;
+  --text-primary: #EDF2FA;
+  --text-secondary: #AEBBD0;
+  --text-tertiary: #8C9CB3;
 
   /* Border */
-  --border-default: #313131;
-  --border-heavy: #404040;
-  --border-subtle: rgba(255, 255, 255, 0.065);
+  --border-default: #2C384B;
+  --border-heavy: #43516A;
+  --border-subtle: rgba(237, 242, 250, 0.08);
 
   /* Code block surfaces */
   --code-block-bg: #1b1b1b;
@@ -134,32 +135,32 @@
   --code-block-success: #55d6a6;
 
   /* Brand */
-  --brand-primary: #339CFF;
-  --brand-primary-hover: #4AA8FF;
-  --brand-primary-text: #FFFFFF;
+  --brand-primary: #6B9EFF;
+  --brand-primary-hover: #8CB4FF;
+  --brand-primary-text: #101B30;
 
   /* Semantic */
-  --color-success: #3ed08f;
-  --color-warning: #d7b565;
-  --color-destructive: #e86d73;
+  --color-success: #5DDA9A;
+  --color-warning: #F0C15A;
+  --color-destructive: #FF858C;
 
   /* Sidebar */
-  --sidebar-bg: #000000;
+  --sidebar-bg: #131A25;
   /* Keep the preset as readable as the custom-color path under macOS vibrancy. */
-  --sidebar-translucent-bg: rgba(0, 0, 0, 0.88);
-  --sidebar-hover: rgba(255, 255, 255, 0.05);
-  --sidebar-active: rgba(255, 255, 255, 0.09);
+  --sidebar-translucent-bg: rgba(19, 26, 37, 0.94);
+  --sidebar-hover: #1E2838;
+  --sidebar-active: #243249;
   --sidebar-active-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
-  --sidebar-active-border: rgba(255, 255, 255, 0.04);
+  --sidebar-active-border: #354967;
 
   /* User message bubble / composer family */
-  --user-bubble-bg: #0A0A0A;
+  --user-bubble-bg: #202E44;
 
   /* Ring */
-  --ring: #339CFF;
+  --ring: #6B9EFF;
 
   /* Switch */
-  --switch-checked: #339CFF;
+  --switch-checked: #6B9EFF;
 
   /* Recoverable tool detours should stay distinct from task-level errors. */
   --tool-adjusted: #d7b565;
@@ -170,11 +171,11 @@
   --shadow-lg: 0 24px 64px -30px rgba(0, 0, 0, 0.58);
 
   /* Prose */
-  --prose-body: #e8e8e8;
-  --prose-link: #8ab4ff;
-  --prose-accent: #9fc1ff;
+  --prose-body: #DEE6F3;
+  --prose-link: #93BAFF;
+  --prose-accent: #93BAFF;
   --prose-blockquote-bg: rgba(138, 180, 255, 0.06);
-  --prose-marker: #727272;
+  --prose-marker: var(--text-tertiary);
 }
 
 /* ─── Base Styles ─── */
@@ -445,40 +446,40 @@ pre code {
 :root {
   --code-bg: #1E1E1E;
   --code-text: #D4D4D4;
-  --code-comment: #6A9955;
-  --code-keyword: #569CD6;
+  --code-comment: #85B570;
+  --code-keyword: #6CA9E0;
   --code-string: #CE9178;
   --code-function: #DCDCAA;
   --code-variable: #9CDCFE;
   --code-number: #B5CEA8;
   --code-operator: #D4D4D4;
   --code-class: #4EC9B0;
-  --code-tag: #569CD6;
+  --code-tag: #6CA9E0;
   --code-attr-name: #9CDCFE;
   --code-attr-value: #CE9178;
   --code-builtin: #4EC9B0;
-  --code-regex: #D16969;
-  --code-deleted: #F44747;
+  --code-regex: #E59292;
+  --code-deleted: #FF9191;
   --code-inserted: #89D185;
 }
 
 .dark {
   --code-bg: #1E1E1E;
   --code-text: #D4D4D4;
-  --code-comment: #6A9955;
-  --code-keyword: #569CD6;
+  --code-comment: #85B570;
+  --code-keyword: #6CA9E0;
   --code-string: #CE9178;
   --code-function: #DCDCAA;
   --code-variable: #9CDCFE;
   --code-number: #B5CEA8;
   --code-operator: #D4D4D4;
   --code-class: #4EC9B0;
-  --code-tag: #569CD6;
+  --code-tag: #6CA9E0;
   --code-attr-name: #9CDCFE;
   --code-attr-value: #CE9178;
   --code-builtin: #4EC9B0;
-  --code-regex: #D16969;
-  --code-deleted: #F44747;
+  --code-regex: #E59292;
+  --code-deleted: #FF9191;
   --code-inserted: #89D185;
 }
 
@@ -958,18 +959,7 @@ pre code {
 }
 
 .shimmer-text {
-  background: linear-gradient(
-    90deg,
-    var(--text-tertiary) 0%,
-    var(--text-secondary) 40%,
-    var(--text-tertiary) 60%,
-    var(--text-tertiary) 100%
-  );
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: shimmer 2.5s ease-in-out infinite;
+  color: var(--text-secondary);
 }
 
 .shimmer-icon {

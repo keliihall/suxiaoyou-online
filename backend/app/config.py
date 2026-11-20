@@ -174,6 +174,10 @@ class Settings(BaseSettings):
     # Tauri desktop shell, loopback, and the Next.js dev server — only set
     # this to extend for unusual deployments (e.g. a custom web wrapper).
     extra_allowed_origins: str = ""  # SUXIAOYOU_EXTRA_ALLOWED_ORIGINS
+    # A trusted deployment origin for browser OAuth callbacks. Desktop defaults
+    # retain their actual local backend port; tenant containers never publish
+    # their random private listen port as the user's callback destination.
+    oauth_callback_origin: str = ""
 
     # --- Messaging Channels (unreleased; code-owned release gate also applies) ---
     channels_enabled: bool = False  # SUXIAOYOU_CHANNELS_ENABLED

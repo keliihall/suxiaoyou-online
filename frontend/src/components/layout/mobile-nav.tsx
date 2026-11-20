@@ -31,14 +31,14 @@ export function MobileNav() {
         <Button
           variant="ghost"
           size="icon"
-          className="lg:hidden fixed top-3 left-3 z-40 h-8 w-8"
+          className="icon-action lg:hidden fixed top-2 left-2 z-40 h-11 w-11 rounded-xl border border-[var(--border-default)] bg-[var(--surface-primary)] shadow-[var(--shadow-sm)]"
           style={IS_DESKTOP && !isMac ? { top: TITLE_BAR_HEIGHT + 12 } : undefined}
         >
           <Menu className="h-5 w-5" />
           <span className="sr-only">Toggle sidebar</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="p-0 w-[260px]">
+      <SheetContent side="left" className="workbench-sidebar w-[min(320px,calc(100vw-40px))] p-0">
         <TooltipProvider delayDuration={200}>
           <div className="flex flex-col h-full">
             <SidebarHeader />

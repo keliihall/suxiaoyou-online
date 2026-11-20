@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, memo, useEffect, useRef } from "react";
+import { useMemo, memo, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { MessageContent } from "./message-content";
@@ -23,7 +23,6 @@ interface AssistantMessageProps {
 }
 
 export function AssistantMessage({ message, combinedParts, onRegenerate, isNew = true }: AssistantMessageProps) {
-  const [hovered, setHovered] = useState(false);
   const refreshForMessage = useActivityStore((s) => s.refreshForMessage);
   const parts = combinedParts ?? message.parts.map((p) => p.data as PartData);
   const mainParts = useMemo(
@@ -79,10 +78,7 @@ export function AssistantMessage({ message, combinedParts, onRegenerate, isNew =
 
   return (
     <>
-      <div
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-      >
+      <div className="group/message min-w-0">
         <motion.div
           initial={isNew ? { opacity: 0, y: 6 } : false}
           animate={{ opacity: 1, y: 0 }}
@@ -100,9 +96,9 @@ export function AssistantMessage({ message, combinedParts, onRegenerate, isNew =
           />
         </motion.div>
 
-        {/* Action bar — always in DOM to avoid layout shift, opacity-only toggle */}
+        {/* Keep actions in flow, visible to touch and keyboard users. */}
         <div
-          className={`transition-opacity duration-150 ${hovered ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+          className="max-w-full opacity-100 transition-opacity duration-150 lg:opacity-0 lg:group-hover/message:opacity-100 lg:group-focus-within/message:opacity-100 [@media(hover:none)]:opacity-100"
         >
           <MessageActions
             content={textContent}

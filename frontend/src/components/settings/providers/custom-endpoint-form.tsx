@@ -177,12 +177,12 @@ export function CustomEndpointForm() {
           {t("customProviderFormTitle", { defaultValue: "Custom provider" })}
         </h4>
       </div>
-      <p className="text-xs text-[var(--text-secondary)]">
+      {/* Auxiliary copy retained in source: <p className="text-xs text-[var(--text-secondary)]">
         {t("customProviderFormDesc", {
           defaultValue:
             "Configure an OpenAI-compatible provider with full control over slug, models, and request headers.",
         })}
-      </p>
+      </p> */}
 
       <div className="space-y-5 p-4 bg-[var(--surface-secondary)] rounded-lg">
         {/* Provider ID */}
@@ -203,15 +203,15 @@ export function CustomEndpointForm() {
             autoComplete="off"
             spellCheck={false}
           />
-          <p
-            className={`text-ui-3xs ${slugError ? "text-[var(--color-destructive)]" : "text-[var(--text-tertiary)]"}`}
+          {/* Auxiliary copy retained in source: <p
+            className={`text-[12px] ${slugError ? "text-[var(--color-destructive)]" : "text-[var(--text-tertiary)]"}`}
           >
             {slugError ??
               t("customProviderIdHelp", {
                 defaultValue:
                   "Lowercase letters, numbers, hyphens, or underscores",
               })}
-          </p>
+          </p> */}
         </div>
 
         {/* Display name */}
@@ -259,13 +259,15 @@ export function CustomEndpointForm() {
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder={t("apiKeyPlaceholderOptional")}
-              className="pr-8 font-mono text-xs bg-[var(--surface-primary)]"
+              className="pr-12 font-mono text-xs bg-[var(--surface-primary)]"
               autoComplete="one-time-code"
             />
             <button
               type="button"
               onClick={() => setShowKey((p) => !p)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
+              aria-label={t("customApiKeyLabel", { defaultValue: "API key" })}
+                  aria-pressed={showKey}
+                  className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
             >
               {showKey ? (
                 <EyeOff className="h-3.5 w-3.5" />
@@ -274,12 +276,12 @@ export function CustomEndpointForm() {
               )}
             </button>
           </div>
-          <p className="text-ui-3xs text-[var(--text-tertiary)]">
+          {/* Auxiliary copy retained in source: <p className="text-[12px] text-[var(--text-tertiary)]">
             {t("customApiKeyHelp", {
               defaultValue:
                 "Optional. Leave empty if you manage auth via headers.",
             })}
-          </p>
+          </p> */}
         </div>
 
         {/* Models */}
@@ -288,11 +290,11 @@ export function CustomEndpointForm() {
             <label className="text-xs font-medium text-[var(--text-secondary)]">
               {t("customModelsLabel", { defaultValue: "Models" })}
             </label>
-            <span className="text-ui-3xs text-[var(--text-tertiary)]">
+            {/* Auxiliary copy retained in source: <span className="text-[12px] text-[var(--text-tertiary)]">
               {t("customModelsHelp", {
                 defaultValue: "Leave empty to auto-discover via /v1/models",
               })}
-            </span>
+            </span> */}
           </div>
           <div className="space-y-2">
             {models.map((m, idx) => (

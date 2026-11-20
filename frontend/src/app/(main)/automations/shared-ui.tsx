@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   ArrowUpRight,
   Check,
@@ -11,6 +11,7 @@ import {
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useAutomationRuns } from "@/hooks/use-automations";
 import { getChatRoute } from "@/lib/routes";
 import { humanizeCron, relativeTime, formatDuration, parseCron, buildCron } from "./helpers";
@@ -20,23 +21,23 @@ import type { TaskRunResponse } from "@/types/automation";
 /* Shared styles                                                       */
 /* ------------------------------------------------------------------ */
 
-export const inputClass = "w-full h-8 rounded-md border border-[var(--border-default)] bg-transparent px-3 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--border-focus)]";
+export const inputClass = "ui-control w-full h-10 rounded-xl border border-[var(--control-border)] bg-[var(--surface-primary)] px-3 text-[13px] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--border-focus)]";
 
-const selectClass = "h-8 rounded-md border border-[var(--border-default)] bg-transparent px-2 text-xs text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--border-focus)] appearance-none cursor-pointer";
+const selectClass = "ui-control h-10 rounded-xl border border-[var(--control-border)] bg-[var(--surface-primary)] px-3 text-[13px] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--border-focus)] appearance-none cursor-pointer";
 
 export function AutomationReadOnlyNotice({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation("automations");
   return (
     <div
-      className={`flex items-start gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--surface-secondary)] ${compact ? "p-2" : "p-3"}`}
+      className={`surface-card flex items-center gap-3 rounded-2xl border border-[var(--border-default)] bg-[var(--surface-secondary)] ${compact ? "p-3" : "p-4"}`}
       data-testid="automation-read-only-notice"
     >
       <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[var(--brand-primary)]" />
       <div className="min-w-0">
         <p className="text-xs font-medium text-[var(--text-primary)]">{t("readOnlyTitle")}</p>
-        <p className="mt-0.5 text-ui-2xs leading-relaxed text-[var(--text-secondary)]">
+        {/* Auxiliary copy retained in source: <p className="mt-0.5 text-[12px] leading-relaxed text-[var(--text-secondary)]">
           {t("readOnlyDescription")}
-        </p>
+        </p> */}
       </div>
     </div>
   );
@@ -47,12 +48,26 @@ export function AutomationReadOnlyNotice({ compact = false }: { compact?: boolea
 /* ------------------------------------------------------------------ */
 
 export function DialogOverlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  const { t } = useTranslation("automations");
+  const returnFocus = useRef<HTMLElement | null>(
+    typeof document !== "undefined" && document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null,
+  );
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div className="w-full max-w-lg mx-4 rounded-lg border border-[var(--border-default)] bg-[var(--surface-primary)] shadow-xl" onClick={(e) => e.stopPropagation()}>
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent
+        aria-describedby={undefined}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          returnFocus.current?.focus();
+        }}
+        className="max-w-lg gap-0 p-0 [&>button:last-child]:hidden"
+      >
+        <DialogTitle className="sr-only">{t("title")}</DialogTitle>
         {children}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -66,10 +81,10 @@ export function StatusBadge({ status, sessionId, t }: { status: string | null; s
   if (!status) return null;
 
   const config: Record<string, { icon: React.ElementType; color: string; labelKey: string }> = {
-    running: { icon: Loader2, color: "text-amber-400", labelKey: "statusRunning" },
-    success: { icon: Check, color: "text-emerald-400", labelKey: "statusSuccess" },
-    error:   { icon: XCircle, color: "text-red-400", labelKey: "statusError" },
-    timeout: { icon: XCircle, color: "text-orange-400", labelKey: "statusTimeout" },
+    running: { icon: Loader2, color: "text-[var(--status-warning-text)]", labelKey: "statusRunning" },
+    success: { icon: Check, color: "text-[var(--status-success-text)]", labelKey: "statusSuccess" },
+    error:   { icon: XCircle, color: "text-[var(--status-danger-text)]", labelKey: "statusError" },
+    timeout: { icon: XCircle, color: "text-[var(--status-warning-text)]", labelKey: "statusTimeout" },
   };
 
   const normalizedStatus = status.startsWith("running") ? "running" : status;
@@ -80,7 +95,7 @@ export function StatusBadge({ status, sessionId, t }: { status: string | null; s
   const loopSuffix = loopMatch ? ` ${loopMatch[1]}` : "";
 
   const badge = (
-    <span className={`inline-flex items-center gap-1 text-ui-3xs ${c.color}`}>
+    <span className={`inline-flex items-center gap-1 text-[12px] ${c.color}`}>
       <Icon className={`h-3 w-3 ${normalizedStatus === "running" ? "animate-spin" : ""}`} />
       {t(c.labelKey)}{loopSuffix}
     </span>
@@ -90,7 +105,7 @@ export function StatusBadge({ status, sessionId, t }: { status: string | null; s
     return (
       <Link
         href={getChatRoute(sessionId)}
-        className={`inline-flex items-center gap-1 text-ui-3xs ${c.color} hover:underline`}
+        className={`inline-flex items-center gap-1 text-[12px] ${c.color} hover:underline`}
       >
         <Icon className="h-3 w-3" />
         {t(c.labelKey)}
@@ -108,12 +123,12 @@ export function StatusBadge({ status, sessionId, t }: { status: string | null; s
 
 export function TriggeredByBadge({ triggeredBy, t }: { triggeredBy: string; t: (key: string) => string }) {
   const map: Record<string, { label: string; color: string }> = {
-    schedule:         { label: t("triggerSchedule"), color: "bg-blue-500/10 text-blue-400" },
-    manual:           { label: t("triggerManual"), color: "bg-amber-500/10 text-amber-400" },
-    startup_catchup:  { label: t("triggerCatchup"), color: "bg-purple-500/10 text-purple-400" },
+    schedule:         { label: t("triggerSchedule"), color: "bg-[var(--surface-secondary)] text-[var(--text-secondary)]" },
+    manual:           { label: t("triggerManual"), color: "bg-[var(--surface-secondary)] text-[var(--text-secondary)]" },
+    startup_catchup:  { label: t("triggerCatchup"), color: "bg-[var(--surface-secondary)] text-[var(--text-secondary)]" },
   };
-  const info = map[triggeredBy] || { label: triggeredBy, color: "bg-zinc-500/10 text-zinc-400" };
-  return <span className={`text-ui-3xs px-1.5 py-0.5 rounded ${info.color}`}>{info.label}</span>;
+  const info = map[triggeredBy] || { label: triggeredBy, color: "bg-[var(--surface-secondary)] text-[var(--text-secondary)]" };
+  return <span className={`text-[12px] px-1.5 py-0.5 rounded ${info.color}`}>{info.label}</span>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -136,7 +151,7 @@ export function RunHistoryPanel({ automationId, t }: { automationId: string; t: 
     <div className="space-y-1.5 max-h-48 overflow-y-auto">
       {runs.map((run: TaskRunResponse) => (
         <div key={run.id} className="rounded px-1 py-1.5 hover:bg-[var(--surface-secondary)]/50">
-          <div className="flex items-center gap-2 text-ui-2xs">
+          <div className="flex items-center gap-2 text-[12px]">
             <StatusBadge status={run.status} sessionId={run.session_id} t={t} />
             <TriggeredByBadge triggeredBy={run.triggered_by} t={t} />
             <span className="text-[var(--text-tertiary)]">
@@ -153,7 +168,7 @@ export function RunHistoryPanel({ automationId, t }: { automationId: string; t: 
           </div>
           {run.error_message && (
             <p
-              className="mt-1 break-words rounded bg-red-500/5 px-2 py-1 text-ui-3xs leading-relaxed text-red-400"
+              className="mt-1 break-words rounded-lg bg-[var(--status-danger-bg)] px-3 py-2 text-[12px] leading-relaxed text-[var(--status-danger-text)]"
               title={run.error_message}
               data-testid="automation-run-error"
             >
@@ -184,8 +199,8 @@ export function DeleteConfirmDialog({ name, onConfirm, onCancel, isPending, t }:
         <p className="text-xs text-[var(--text-tertiary)] mt-1">{name}</p>
       </div>
       <div className="flex justify-end gap-2 px-4 py-3 border-t border-[var(--border-default)]">
-        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={onCancel}>{t("cancel")}</Button>
-        <Button size="sm" className="h-7 text-xs bg-red-600 hover:bg-red-700 text-white" onClick={onConfirm} disabled={isPending}>
+        <Button variant="ghost" size="sm" className="h-10 rounded-xl px-4 text-[13px]" onClick={onCancel}>{t("cancel")}</Button>
+        <Button variant="destructive" size="sm" className="h-10 rounded-xl px-4 text-[13px]" onClick={onConfirm} disabled={isPending}>
           {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
           {t("delete")}
         </Button>
@@ -233,8 +248,8 @@ export function ScheduleEditor({ scheduleType, setScheduleType, cronExpr, setCro
       <label className="text-xs font-medium text-[var(--text-secondary)] mb-1 block">{t("schedule")}</label>
       <div className="flex gap-2 mb-3">
         {(["cron", "interval"] as const).map((st) => (
-          <button key={st} onClick={() => setScheduleType(st)}
-            className={`px-3 py-1 text-xs rounded-md border transition-colors ${
+          <button key={st} type="button" onClick={() => setScheduleType(st)} aria-pressed={scheduleType === st}
+            className={`ui-control px-3 py-1 text-xs rounded-md border transition-colors ${
               scheduleType === st
                 ? "border-[var(--text-primary)] text-[var(--text-primary)] bg-[var(--surface-secondary)]"
                 : "border-[var(--border-default)] text-[var(--text-tertiary)]"
@@ -249,6 +264,7 @@ export function ScheduleEditor({ scheduleType, setScheduleType, cronExpr, setCro
           {/* Time picker */}
           <div className="flex items-center gap-2">
             <select
+              aria-label={t("scheduleHour")}
               value={parsed.hour}
               onChange={(e) => updateCron(Number(e.target.value), parsed.minute, parsed.dow)}
               className={selectClass + " w-16 text-center"}
@@ -259,6 +275,7 @@ export function ScheduleEditor({ scheduleType, setScheduleType, cronExpr, setCro
             </select>
             <span className="text-xs text-[var(--text-tertiary)]">:</span>
             <select
+              aria-label={t("scheduleMinute")}
               value={parsed.minute}
               onChange={(e) => updateCron(parsed.hour, Number(e.target.value), parsed.dow)}
               className={selectClass + " w-16 text-center"}
@@ -279,8 +296,9 @@ export function ScheduleEditor({ scheduleType, setScheduleType, cronExpr, setCro
               <button
                 key={p.label}
                 type="button"
+                aria-pressed={p.active}
                 onClick={() => setDayPreset([...p.days])}
-                className={`px-2 py-0.5 text-ui-3xs rounded border transition-colors ${
+                className={`ui-control px-2 py-0.5 text-[12px] rounded border transition-colors ${
                   p.active
                     ? "border-[var(--text-primary)] text-[var(--text-primary)] bg-[var(--surface-secondary)]"
                     : "border-[var(--border-default)] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
@@ -297,8 +315,9 @@ export function ScheduleEditor({ scheduleType, setScheduleType, cronExpr, setCro
               <button
                 key={d}
                 type="button"
+                aria-pressed={parsed.dow.includes(d)}
                 onClick={() => toggleDay(d)}
-                className={`flex-1 py-1.5 text-ui-2xs rounded-md border transition-colors ${
+                className={`ui-control min-w-0 flex-1 py-1.5 text-[12px] rounded-md border transition-colors ${
                   parsed.dow.includes(d)
                     ? "border-[var(--text-primary)] text-[var(--text-primary)] bg-[var(--surface-secondary)]"
                     : "border-[var(--border-default)] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
@@ -311,13 +330,15 @@ export function ScheduleEditor({ scheduleType, setScheduleType, cronExpr, setCro
 
           {/* Summary + raw cron toggle */}
           <div className="flex items-center justify-between">
-            <p className="text-ui-3xs text-[var(--text-tertiary)]">
+            <p className="text-[12px] text-[var(--text-tertiary)]">
               {humanizeCron(cronExpr, t)}
             </p>
             <button
               type="button"
+              aria-expanded={showRawCron}
+              aria-label={t("cronHelp")}
               onClick={() => setShowRawCron(!showRawCron)}
-              className="text-ui-3xs text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
+              className="ui-control px-2 text-[12px] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
             >
               {showRawCron ? "—" : "cron"}
             </button>
@@ -325,16 +346,16 @@ export function ScheduleEditor({ scheduleType, setScheduleType, cronExpr, setCro
 
           {/* Raw cron (collapsed by default) */}
           {showRawCron && (
-            <input type="text" value={cronExpr} onChange={(e) => setCronExpr(e.target.value)}
+            <input type="text" aria-label={t("cronHelp")} value={cronExpr} onChange={(e) => setCronExpr(e.target.value)}
               placeholder="0 8 * * 1" className={`${inputClass} font-mono`} />
           )}
         </div>
       ) : (
         <div className="flex items-center gap-2">
           <span className="text-xs text-[var(--text-secondary)]">{t("every")}</span>
-          <input type="number" min={1} max={168} value={intervalHours}
+          <input type="number" aria-label={`${t("interval")} (${t("hours")})`} min={1} max={168} value={intervalHours}
             onChange={(e) => setIntervalHours(Number(e.target.value) || 1)}
-            className="w-16 h-8 rounded-md border border-[var(--border-default)] bg-transparent px-3 text-xs text-[var(--text-primary)] text-center focus:outline-none focus:ring-1 focus:ring-[var(--border-focus)]"
+            className="ui-control w-16 h-10 rounded-md border border-[var(--control-border)] bg-[var(--surface-primary)] px-3 text-[13px] text-[var(--text-primary)] text-center focus:outline-none focus:ring-1 focus:ring-[var(--border-focus)]"
           />
           <span className="text-xs text-[var(--text-secondary)]">{t("hours")}</span>
         </div>

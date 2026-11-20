@@ -1,6 +1,35 @@
 import { api, apiFetch } from "./api";
 import { API, IS_DESKTOP } from "./constants";
 import type { FileAttachment } from "@/types/chat";
+import { IS_CLOUD } from "./cloud-session";
+
+export const CLOUD_DIRECTORY_EVENT = "suxiaoyou:choose-cloud-directory";
+export interface CloudDirectoryRequest {
+  title: string;
+  initialPath?: string | null;
+  resolve: (path: string | null) => void;
+}
+
+function browserFiles(): Promise<File[]> {
+  return new Promise(resolve => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.multiple = true;
+    input.hidden = true;
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      const files = Array.from(input.files || []);
+      input.remove();
+      resolve(files);
+    };
+    input.addEventListener("change", finish, { once: true });
+    input.addEventListener("cancel", finish, { once: true });
+    document.body.appendChild(input);
+    input.click();
+  });
+}
 
 export interface FileSearchResult {
   name: string;
@@ -16,11 +45,15 @@ export interface FileSearchResult {
  * Uses raw fetch (not api.post) because multipart/form-data
  * requires the browser to set Content-Type with boundary automatically.
  */
-export async function uploadFile(file: File): Promise<FileAttachment> {
+export async function uploadFile(file: File, directory?: string | null): Promise<FileAttachment> {
   const formData = new FormData();
   formData.append("file", file);
+  if (IS_CLOUD) {
+    formData.append("relative_path", file.webkitRelativePath || file.name);
+    if (directory && directory !== ".") formData.append("directory", directory);
+  }
 
-  const res = await apiFetch(API.FILES.UPLOAD, {
+  const res = await apiFetch(IS_CLOUD ? "/api/cloud-runtime/files/upload" : API.FILES.UPLOAD, {
     method: "POST",
     body: formData,
   });
@@ -36,7 +69,12 @@ export async function uploadFile(file: File): Promise<FileAttachment> {
  * Open a native OS file dialog via the backend and return selected files.
  * Files are referenced in-place — no copying to data/uploads.
  */
-export async function browseFiles(): Promise<FileAttachment[]> {
+export async function browseFiles(directory?: string | null): Promise<FileAttachment[]> {
+  if (IS_CLOUD) {
+    const results: FileAttachment[] = [];
+    for (const file of await browserFiles()) results.push(await uploadFile(file, directory));
+    return results;
+  }
   if (IS_DESKTOP) {
     try {
       const { open } = await import("@tauri-apps/plugin-dialog");
@@ -74,7 +112,14 @@ export async function browseFiles(): Promise<FileAttachment[]> {
 /**
  * Open a native OS directory picker and return selected path.
  */
-export async function browseDirectory(title = "Select directory"): Promise<string | null> {
+export async function browseDirectory(title = "Select directory", initialPath?: string | null): Promise<string | null> {
+  if (IS_CLOUD) {
+    return new Promise(resolve => {
+      window.dispatchEvent(new CustomEvent<CloudDirectoryRequest>(CLOUD_DIRECTORY_EVENT, {
+        detail: { title, initialPath, resolve },
+      }));
+    });
+  }
   if (IS_DESKTOP) {
     try {
       const { open } = await import("@tauri-apps/plugin-dialog");

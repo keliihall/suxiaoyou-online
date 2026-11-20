@@ -18,6 +18,7 @@ export interface RemoteConfig {
 
 /** Get the stored remote connection config, or null if not connected. */
 export function getRemoteConfig(): RemoteConfig | null {
+  if (process.env.NEXT_PUBLIC_CLOUD_MODE === "true") return null;
   if (typeof window === "undefined") return null;
   // Remote connections belong to the mobile/browser client. A stale value
   // left by an older desktop build must never redirect the native app away
@@ -106,6 +107,7 @@ export function saveRemoteProvider(provider: RemoteProvider): void {
  * Returns true if a new connection was established.
  */
 export function autoConnectFromUrl(): boolean {
+  if (process.env.NEXT_PUBLIC_CLOUD_MODE === "true") return false;
   if (typeof window === "undefined") return false;
   try {
     const params = new URLSearchParams(window.location.search);

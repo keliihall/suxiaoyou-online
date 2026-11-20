@@ -1,0 +1,94 @@
+{
+  "user_id": "943a5a82a3c74cbf8510751dcf41e2e8",
+  "runtime": {
+    "status": "ready",
+    "ready": true,
+    "workspace": "/tenant/workspaces"
+  },
+  "mlx_status": {
+    "configured": true,
+    "platform_supported": true,
+    "binary_installed": true,
+    "running": true,
+    "process_running": true,
+    "port": 18081,
+    "base_url": "/cloud/mlx-node/v1",
+    "version": null,
+    "current_model": "qwen2.5-0.5b",
+    "executable_path": null,
+    "install_commands": [],
+    "unavailable_reason": ""
+  },
+  "operator_model_mapping_restart": {
+    "operator_mapping": {
+      "operator-qwen-smoke": "mlx-community/Qwen2.5-0.5B-Instruct-4bit"
+    },
+    "catalog": {
+      "models": [
+        {
+          "alias": "qwen2.5-0.5b",
+          "repo": "mlx-community/Qwen2.5-0.5B-Instruct-4bit"
+        },
+        {
+          "alias": "operator-qwen-smoke",
+          "repo": "mlx-community/Qwen2.5-0.5B-Instruct-4bit"
+        }
+      ]
+    },
+    "cached_before_start": true,
+    "start_alias": "operator-qwen-smoke",
+    "restarted_node_pid": 57679,
+    "same_tls_certificate_fingerprint": "1dca340c36fa9074b5c41ca456a29671bfcbf5df181d78f18f5bb3dd3bec49ac",
+    "ready_seconds": 5.11,
+    "status": {
+      "configured": true,
+      "platform_supported": true,
+      "binary_installed": true,
+      "running": true,
+      "process_running": true,
+      "port": 18081,
+      "base_url": "/v1",
+      "version": null,
+      "current_model": "operator-qwen-smoke",
+      "executable_path": null,
+      "install_commands": [],
+      "allowed_models": [
+        "qwen2.5-0.5b",
+        "operator-qwen-smoke"
+      ],
+      "unavailable_reason": ""
+    },
+    "actual_models": {
+      "object": "list",
+      "data": [
+        {
+          "id": "mlx-community/Qwen2.5-0.5B-Instruct-4bit",
+          "object": "model",
+          "created": 0,
+          "owned_by": "exclusive-mac-node"
+        }
+      ]
+    },
+    "new_model_downloads_requested": false,
+    "chat_generation_requested": false,
+    "protocol_regression": "20 passed, SQLite + real PostgreSQL; strict mapping, approved catalog, pre-admission reject and actualSDK stream receipt tested",
+    "central_original_engine_status": {
+      "configured": true,
+      "platform_supported": true,
+      "binary_installed": true,
+      "running": true,
+      "process_running": true,
+      "port": 18081,
+      "base_url": "/cloud/mlx-node/v1",
+      "version": null,
+      "current_model": "operator-qwen-smoke",
+      "executable_path": null,
+      "install_commands": [],
+      "unavailable_reason": ""
+    },
+    "central_original_engine_models": [
+      "rapid-mlx/mlx-community/Qwen2.5-0.5B-Instruct-4bit"
+    ],
+    "central_pin_catalog_intersection_verified": true
+  }
+}

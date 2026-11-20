@@ -284,7 +284,7 @@ export function OfficeV2Renderer({ filePath, fallback }: OfficeV2RendererProps) 
     <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-[var(--surface-secondary)]">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-default)] bg-[var(--surface-primary)] px-3 py-2">
         <div className="flex min-w-0 items-center gap-2 text-[11px]">
-          <span className={authoritative ? "font-semibold text-emerald-600" : "font-semibold text-amber-600"}>
+          <span className={authoritative ? "font-semibold text-[var(--color-success)]" : "font-semibold text-[var(--color-warning)]"}>
             {authoritative ? t("officeAuthoritativePreview") : t("officeApproximateRenderer")}
           </span>
           <span className="truncate text-[var(--text-tertiary)]">

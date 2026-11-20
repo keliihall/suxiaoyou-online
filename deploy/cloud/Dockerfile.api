@@ -1,0 +1,27 @@
+FROM docker:28-cli AS docker
+FROM python:3.13-slim-bookworm
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+WORKDIR /app
+COPY --from=docker /usr/local/bin/docker /usr/local/bin/docker
+COPY backend/requirements-cloud.txt /app/requirements-cloud.txt
+RUN python -m pip install --require-hashes -r requirements-cloud.txt \
+    && groupadd --gid 10001 cloud \
+    && useradd --uid 10001 --gid cloud --no-create-home --shell /usr/sbin/nologin cloud \
+    && mkdir -p /var/lib/suxiaoyou \
+    && chown cloud:cloud /var/lib/suxiaoyou
+
+# Context is allowlisted by Dockerfile.api.dockerignore. Desktop data and secrets
+# are not sent to the builder. No environment file or credentials are copied.
+COPY backend/app /app/app
+COPY backend/release_packaging /app/release_packaging
+COPY backend/cloud_alembic.ini /app/cloud_alembic.ini
+COPY backend/cloud_alembic /app/cloud_alembic
+COPY backend/release_packaging /app/release_packaging
+USER 10001:10001
+EXPOSE 8000
+CMD ["python", "-m", "uvicorn", "app.cloud.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--no-proxy-headers"]

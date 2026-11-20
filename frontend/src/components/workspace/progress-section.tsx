@@ -119,7 +119,7 @@ function AgentTaskItem({ task }: { task: WorkspaceAgentTask }) {
 
   if (!task.session_id) return content;
   return (
-    <Link href={getChatRoute(task.session_id)} className="block rounded-md hover:bg-white/[0.03]">
+    <Link href={getChatRoute(task.session_id)} className="block rounded-md hover:bg-[var(--surface-secondary)]">
       {content}
     </Link>
   );
@@ -156,9 +156,9 @@ export function ProgressCard() {
   if (totalCount === 0) return null;
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-white/8 bg-white/[0.03] shadow-[0_0_0_1px_rgba(255,255,255,0.02)_inset] backdrop-blur-sm">
+    <div className="surface-card overflow-hidden">
       <button
-        className="flex w-full items-start justify-between px-4 py-4 text-left transition-colors hover:bg-white/[0.02]"
+        className="flex w-full items-start justify-between px-4 py-4 text-left transition-colors hover:bg-[var(--surface-secondary)]"
         onClick={() => toggleSection("progress")}
       >
         <div className="min-w-0 flex-1">
@@ -177,12 +177,12 @@ export function ProgressCard() {
                   className={cn(
                     "h-6 w-6 rounded-full border flex items-center justify-center",
                     item.status === "completed"
-                      ? "border-white/20 bg-white/[0.06] text-[var(--tool-completed)]"
+                      ? "border-[var(--border-heavy)] bg-[var(--surface-tertiary)] text-[var(--tool-completed)]"
                       : item.status === "in_progress" || item.status === "running"
                         ? "border-[var(--text-accent)]/50 bg-[var(--text-accent)]/10 text-[var(--text-accent)]"
                         : item.status === "failed"
                           ? "border-[var(--tool-error)]/40 bg-[var(--tool-error)]/10 text-[var(--tool-error)]"
-                        : "border-white/15 text-[var(--text-quaternary)]",
+                        : "border-[var(--border-heavy)] text-[var(--text-quaternary)]",
                   )}
                 >
                   {item.status === "completed" ? (
@@ -196,14 +196,14 @@ export function ProgressCard() {
                   )}
                 </span>
                 {i < previewItems.length - 1 && (
-                  <span className="h-px w-3 bg-white/10" />
+                  <span className="h-px w-3 bg-[var(--border-default)]" />
                 )}
               </div>
             ))}
           </div>
         </div>
         <div className="ml-3 flex items-center gap-2">
-          <span className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[10px] font-medium text-[var(--text-tertiary)]">
+          <span className="rounded-full border border-[var(--border-default)] bg-[var(--surface-secondary)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-tertiary)]">
             {totalCount}
           </span>
           <ChevronDown
@@ -223,7 +223,7 @@ export function ProgressCard() {
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="overflow-hidden"
           >
-            <div className="border-t border-white/6 px-4 pb-4 pt-2 space-y-0.5">
+            <div className="border-t border-[var(--border-subtle)] px-4 pb-4 pt-2 space-y-0.5">
               {taskBatch && (
                 <div className="pb-1">
                   <p className="px-0 pb-1 pt-1 text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--text-quaternary)]">

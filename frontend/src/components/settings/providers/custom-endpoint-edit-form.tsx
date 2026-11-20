@@ -310,12 +310,12 @@ export function CustomEndpointEditForm({
           <Lock className="h-3 w-3 shrink-0" />
           <span className="truncate">{endpoint.slug ?? endpoint.id}</span>
         </div>
-        <p className="text-ui-3xs text-[var(--text-tertiary)]">
+        {/* Auxiliary copy retained in source: <p className="text-[12px] text-[var(--text-tertiary)]">
           {t("customSlugLockedHelp", {
             defaultValue:
               "Provider ID cannot be changed. Delete and recreate to rename.",
           })}
-        </p>
+        </p> */}
       </div>
 
       {/* Display name */}
@@ -363,7 +363,7 @@ export function CustomEndpointEditForm({
                 setClearApiKey(true);
                 setApiKey("");
               }}
-              className="text-ui-3xs text-[var(--text-tertiary)] hover:text-[var(--color-destructive)] underline-offset-2 hover:underline"
+              className="text-[12px] text-[var(--text-tertiary)] hover:text-[var(--color-destructive)] underline-offset-2 hover:underline"
             >
               {t("customApiKeyClear", { defaultValue: "Clear key" })}
             </button>
@@ -372,7 +372,7 @@ export function CustomEndpointEditForm({
             <button
               type="button"
               onClick={() => setClearApiKey(false)}
-              className="text-ui-3xs text-[var(--text-tertiary)] hover:text-[var(--text-primary)] underline-offset-2 hover:underline"
+              className="text-[12px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] underline-offset-2 hover:underline"
             >
               {t("undo", { defaultValue: "Undo" })}
             </button>
@@ -400,13 +400,15 @@ export function CustomEndpointEditForm({
                       defaultValue: "Enter a key to add one (optional)",
                     })
             }
-            className="pr-8 font-mono text-xs bg-[var(--surface-primary)]"
+            className="pr-12 font-mono text-xs bg-[var(--surface-primary)]"
             autoComplete="one-time-code"
           />
           <button
             type="button"
             onClick={() => setShowKey((p) => !p)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
+            aria-label={t("customApiKeyLabel", { defaultValue: "API key" })}
+                  aria-pressed={showKey}
+                  className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
           >
             {showKey ? (
               <EyeOff className="h-3.5 w-3.5" />
@@ -415,8 +417,8 @@ export function CustomEndpointEditForm({
             )}
           </button>
         </div>
-        <p
-          className={`text-ui-3xs ${
+        {/* Auxiliary copy retained in source: <p
+          className={`text-[12px] ${
             clearApiKey
               ? "text-[var(--color-destructive)]"
               : "text-[var(--text-tertiary)]"
@@ -430,7 +432,7 @@ export function CustomEndpointEditForm({
             : t("customApiKeyEditHelp", {
                 defaultValue: "Leave blank to keep the existing key.",
               })}
-        </p>
+        </p> */}
       </div>
 
       {/* Models */}
@@ -439,9 +441,9 @@ export function CustomEndpointEditForm({
           <label className="text-xs font-medium text-[var(--text-secondary)]">
             {t("customModelsLabel", { defaultValue: "Models" })}
           </label>
-          <span className="text-ui-3xs text-[var(--text-tertiary)]">
+          {/* Auxiliary copy retained in source: <span className="text-[12px] text-[var(--text-tertiary)]">
             {t("customModelsHelp")}
-          </span>
+          </span> */}
         </div>
         <div className="space-y-2">
           {models.map((m, idx) => (
@@ -489,19 +491,19 @@ export function CustomEndpointEditForm({
         <label className="text-xs font-medium text-[var(--text-secondary)]">
           {t("customHeadersLabel", { defaultValue: "Headers (optional)" })}
         </label>
-        <p className="text-ui-3xs text-[var(--text-tertiary)]">
+        {/* Auxiliary copy retained in source: <p className="text-[12px] text-[var(--text-tertiary)]">
           {t("customHeadersEditHint", {
             defaultValue:
               "Leave a value blank to keep it. Trash deletes the header. Add new rows below.",
           })}
-        </p>
+        </p> */}
         <div className="space-y-2">
           {headerRows.map((row, idx) => {
             if (row.kind === "existing" && row.deleted) {
               return (
                 <div
                   key={`existing-${row.name}`}
-                  className="flex items-center gap-2 opacity-60"
+                  className="flex items-center gap-2 text-[var(--text-secondary)]"
                 >
                   <div
                     className="flex flex-1 items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[var(--surface-primary)] border border-[var(--border-primary)] text-xs font-mono text-[var(--text-tertiary)]"
@@ -510,7 +512,7 @@ export function CustomEndpointEditForm({
                     <Lock className="h-3 w-3 shrink-0" />
                     <span className="truncate line-through">{row.name}</span>
                   </div>
-                  <div className="flex flex-1 items-center text-ui-3xs text-[var(--color-destructive)]">
+                  <div className="flex flex-1 items-center text-[12px] text-[var(--color-destructive)]">
                     {t("customHeaderDeletedHint", {
                       defaultValue:
                         "Will be removed on save.",
@@ -519,7 +521,7 @@ export function CustomEndpointEditForm({
                   <button
                     type="button"
                     onClick={() => undoDeleteHeader(idx)}
-                    className="text-ui-3xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] underline-offset-2 hover:underline px-1"
+                    className="text-[12px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] underline-offset-2 hover:underline px-1"
                   >
                     {t("undo", { defaultValue: "Undo" })}
                   </button>

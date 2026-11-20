@@ -20,6 +20,7 @@ from app.schemas.agent import PermissionRule, Ruleset
 from app.schemas.chat import PromptRequest
 from app.schemas.provider import ModelInfo
 from app.session import processor as processor_module
+from app.session.compaction import CompactionResult
 from app.session.middleware import MiddlewareContext
 from app.session.processor import SessionProcessor
 from app.session.prompt import SessionPrompt
@@ -450,7 +451,7 @@ async def test_compaction_boundaries_are_paired_once(
     prompt.agent_registry = object()
     prompt.model_id = "hook-test-model"
     _attach_runtime(prompt, tmp_path)
-    compact = AsyncMock()
+    compact = AsyncMock(return_value=CompactionResult(summary="complete summary"))
     monkeypatch.setattr("app.session.compaction.run_compaction", compact)
 
     assert await prompt._handle_compact_result() is False

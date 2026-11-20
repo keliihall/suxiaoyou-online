@@ -39,7 +39,10 @@ def _task(title: str, prompt: str, *, model: str | None = None) -> dict:
 async def test_parallel_task_batch_streams_progress_and_persists_children(
     session_factory,
     monkeypatch,
+    tmp_path,
 ) -> None:
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
     calls: list[
         tuple[str, str | None, str, str | None, object, Ruleset, bool, bool, str, str | None]
     ] = []
@@ -75,7 +78,7 @@ async def test_parallel_task_batch_streams_progress_and_persists_children(
             _task("One", "first", model="model-a"),
             _task("Two", "second", model="model-b"),
         ],
-        workspace="/workspace",
+        workspace=str(workspace),
         permission_presets={"run_commands": False},
         permission_rules=[
             {"action": "deny", "permission": "bash", "pattern": "*"},
@@ -93,8 +96,8 @@ async def test_parallel_task_batch_streams_progress_and_persists_children(
     )
 
     assert [(call[0], call[1], call[2], call[3]) for call in calls] == [
-        ("first", "model-a", "en", "/workspace"),
-        ("second", "model-b", "en", "/workspace"),
+        ("first", "model-a", "en", str(workspace)),
+        ("second", "model-b", "en", str(workspace)),
     ]
     assert all(call[4] is None for call in calls)
     assert all(evaluate("bash", "*", call[5]) == "deny" for call in calls)
@@ -121,6 +124,7 @@ async def test_sequential_task_batch_cancels_pending_after_failure(
     monkeypatch,
     tmp_path,
 ) -> None:
+    (tmp_path / "workspace").mkdir()
     calls: list[str] = []
 
     async def fake_run_generation(job, request, **_kwargs):
@@ -486,3 +490,148 @@ async def test_legacy_permission_and_forged_allow_fall_back_to_headless_ask(
     finish = next(event for event in job.events if event.event == TASK_BATCH_FINISH)
     assert finish.data["tasks"][0]["status"] == "failed"
     assert finish.data["tasks"][0]["error"] == "子任务执行失败。"
+
+
+@pytest.mark.parametrize("mode", ["parallel", "sequential"])
+@pytest.mark.parametrize("project_id", [None, "batch-project"])
+async def test_batch_admits_durable_parent_before_actual_child_checkpoints(
+    session_factory, monkeypatch, tmp_path, mode, project_id,
+) -> None:
+    """Exercise real SQLite admission, not a mocked inherited job contract."""
+    import asyncio
+    from sqlalchemy import select
+    from app.models.session_checkpoint import SessionCheckpoint
+    from app.models.turn_run import TurnRun
+    from app.models.todo import Todo
+    from app.models.project import Project
+    from app.runtime.checkpoint_runtime import admit_turn_checkpoint, finish_turn_checkpoint
+
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    parent = GenerationJob("batch-checkpoints", "batch-parent")
+    async with session_factory() as db, db.begin():
+        if project_id:
+            db.add(Project(id=project_id, name="batch project", worktree=str(workspace)))
+            await db.flush()
+        await create_session(db, id=parent.session_id, directory=str(workspace), project_id=project_id)
+        db.add(Todo(id="parent-todo", session_id=parent.session_id, content="retain task", position=0))
+    child_ids = []
+    # SQLite's in-memory test engine shares a connection; serialize the fake
+    # generations' DB boundaries while keeping the orchestration parallel.
+    admission_lock = asyncio.Lock()
+
+    async def child_generation(job, request, **_kwargs):
+        async with admission_lock:
+            async with session_factory() as db:
+                owner = await db.get(TurnRun, parent.turn_run_id)
+                assert owner is not None and owner.status == "running"
+                assert (await db.get(Session, job.session_id)).project_id == project_id
+                checkpoint = await db.scalar(select(SessionCheckpoint).where(
+                    SessionCheckpoint.turn_run_id == owner.id))
+                assert checkpoint.state == "committing"
+                assert owner.request_message_id is not None
+                assert checkpoint.todo_snapshot[0]["content"] == "retain task"
+            binding = await admit_turn_checkpoint(session_factory, job=job,
+                workspace=request.workspace, request_message_id=None, todo_snapshot=[])
+            child_ids.append(binding.turn_run_id)
+            assert binding.root_turn_id == parent.turn_run_id
+            assert binding.workspace_instance_id == parent.workspace_instance_id
+            await finish_turn_checkpoint(session_factory, job=job, binding=binding,
+                status="completed", response_message_id=None)
+        job.publish(SSEEvent(TEXT_DELTA, {"text": "checked"}))
+
+    monkeypatch.setattr("app.session.task_batch.run_generation", child_generation)
+    await run_task_batch(parent, TaskBatchRequest(session_id=parent.session_id, mode=mode,
+        workspace=str(workspace), tasks=[_task("one", "one"), _task("two", "two")]),
+        session_factory=session_factory, provider_registry=MagicMock(),
+        agent_registry=MagicMock(), tool_registry=MagicMock())
+    assert len(child_ids) == 2
+    assert parent.events[-1].event == DONE
+    async with session_factory() as db:
+        owner = await db.get(TurnRun, parent.turn_run_id)
+        assert owner.status == "completed" and owner.response_message_id is not None
+        rows = list((await db.scalars(select(TurnRun))).all())
+        assert len(rows) == 3 and all(row.status == "completed" for row in rows)
+        assert all(row.parent_turn_id == owner.id for row in rows if row.id != owner.id)
+        assert all(row.state == "finalized" for row in (await db.scalars(select(SessionCheckpoint))).all())
+
+
+async def test_batch_cancellation_settles_parallel_children_before_parent_terminalization(
+    session_factory, monkeypatch, tmp_path,
+) -> None:
+    import asyncio
+    from app.models.turn_run import TurnRun
+
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    parent = GenerationJob("cancel-batch", "cancel-parent")
+    started, sibling_settled = asyncio.Event(), asyncio.Event()
+
+    async def child_generation(job, request, **_kwargs):
+        if request.text == "cancel":
+            await started.wait()
+            raise asyncio.CancelledError
+        started.set()
+        try:
+            await asyncio.Event().wait()
+        finally:
+            async with session_factory() as db:
+                owner = await db.get(TurnRun, parent.turn_run_id)
+                assert owner.status == "running"
+            sibling_settled.set()
+
+    monkeypatch.setattr("app.session.task_batch.run_generation", child_generation)
+    with pytest.raises(asyncio.CancelledError):
+        await run_task_batch(parent, TaskBatchRequest(session_id=parent.session_id, mode="parallel",
+            workspace=str(workspace), tasks=[_task("one", "cancel"), _task("two", "wait")]),
+            session_factory=session_factory, provider_registry=MagicMock(),
+            agent_registry=MagicMock(), tool_registry=MagicMock())
+    assert sibling_settled.is_set()
+    async with session_factory() as db:
+        assert (await db.get(TurnRun, parent.turn_run_id)).status == "cancelled"
+    assert not any(event.event == DONE for event in parent.events)
+
+
+async def test_batch_failed_child_closes_parent_turn_as_failed(session_factory, monkeypatch, tmp_path):
+    from sqlalchemy import select
+    from app.models.session_checkpoint import SessionCheckpoint
+    from app.models.turn_run import TurnRun
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    parent = GenerationJob("failed-batch", "failed-parent")
+
+    async def child_generation(job, request, **_kwargs):
+        raise RuntimeError("fixture child failure")
+
+    monkeypatch.setattr("app.session.task_batch.run_generation", child_generation)
+    await run_task_batch(parent, TaskBatchRequest(session_id=parent.session_id,
+        workspace=str(workspace), tasks=[_task("one", "fail")]),
+        session_factory=session_factory, provider_registry=MagicMock(),
+        agent_registry=MagicMock(), tool_registry=MagicMock())
+    async with session_factory() as db:
+        assert (await db.get(TurnRun, parent.turn_run_id)).status == "failed"
+        checkpoint = await db.scalar(select(SessionCheckpoint).where(
+            SessionCheckpoint.turn_run_id == parent.turn_run_id))
+        assert checkpoint.state == "finalized"
+    assert parent.events[-1].event == DONE
+
+
+async def test_batch_checkpoint_admission_failure_never_dispatches_children(
+    session_factory, monkeypatch, tmp_path,
+) -> None:
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    child_generation = AsyncMock()
+    monkeypatch.setattr("app.session.task_batch.run_generation", child_generation)
+    monkeypatch.setattr("app.session.task_batch.admit_turn_checkpoint",
+        AsyncMock(side_effect=RuntimeError("fixture ledger unavailable")))
+    parent = GenerationJob("failed-admit", "failed-admit-parent")
+    await run_task_batch(parent, TaskBatchRequest(session_id=parent.session_id,
+        workspace=str(workspace), tasks=[_task("one", "must not run")]),
+        session_factory=session_factory, provider_registry=MagicMock(),
+        agent_registry=MagicMock(), tool_registry=MagicMock())
+    child_generation.assert_not_called()
+    assert parent.events[-1].data["code"] == "task_batch_failed"
+    async with session_factory() as db:
+        rows = (await db.execute(Session.__table__.select())).mappings().all()
+    assert not any(row["parent_id"] == parent.session_id for row in rows)

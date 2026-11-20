@@ -27,7 +27,7 @@ MAX_OVERLOAD_RETRIES = 3  # Separate limit for 529 to prevent amplification
 _OVERFLOW_PATTERNS = [
     "context_length_exceeded",
     "maximum context length",
-    "max_tokens",
+    "context length exceeded",
     "too many tokens",
     "context window",
     "input too long",
@@ -47,6 +47,11 @@ def is_context_overflow(error: Exception) -> bool:
     These errors can be recovered from via reactive compaction
     (inspired by Claude Code's reactive compact pattern).
     """
+    code = getattr(error, "code", None)
+    if isinstance(code, str) and code.startswith("model_"):
+        # A structured cloud category is authoritative. Never infer overflow
+        # from arbitrary diagnostics attached to a different safe category.
+        return code == "model_context_too_long"
     error_str = str(error).lower()
     return any(pattern in error_str for pattern in _OVERFLOW_PATTERNS)
 
@@ -73,6 +78,8 @@ def is_retryable(error: Exception) -> str | None:
 
     Returns a human-readable reason string if retryable, None otherwise.
     """
+    if getattr(error, "retryable", None) is False:
+        return None
     error_str = str(error).lower()
 
     # Context overflow — NEVER retryable (handled by reactive compact)

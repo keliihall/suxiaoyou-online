@@ -24,12 +24,12 @@ const CommandInput = React.forwardRef<
   React.ComponentRef<typeof CommandPrimitive.Input>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
-  <div className="flex items-center border-b border-[var(--border-default)] px-3">
-    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+  <div className="flex items-center border-b border-[var(--border-default)] px-3 focus-within:ring-2 focus-within:ring-inset focus-within:ring-[var(--ring)]">
+    <Search className="mr-2 h-4 w-4 shrink-0 text-[var(--text-secondary)]" />
     <CommandPrimitive.Input
       ref={ref}
       className={cn(
-        "flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-[var(--text-tertiary)] disabled:cursor-not-allowed disabled:opacity-50",
+        "flex min-h-11 w-full rounded-[var(--radius-control)] bg-transparent py-3 text-ui-body text-[var(--text-primary)] outline-none placeholder:text-[var(--text-tertiary)] disabled:cursor-not-allowed disabled:text-[var(--text-secondary)]",
         className,
       )}
       {...props}
@@ -84,7 +84,7 @@ const CommandItem = React.forwardRef<
   <CommandPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[selected=true]:bg-[var(--surface-secondary)] data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50",
+      "ui-menu-item relative flex cursor-pointer select-none items-center rounded-md px-3 py-2 text-ui-body outline-none data-[selected=true]:bg-[var(--surface-tertiary)] data-[selected=true]:text-[var(--text-primary)] data-[disabled=true]:pointer-events-none data-[disabled=true]:text-[var(--text-secondary)]",
       className,
     )}
     {...props}

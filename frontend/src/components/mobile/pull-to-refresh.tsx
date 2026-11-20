@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, type ReactNode } from "react";
 import { Loader2, ArrowDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const PULL_THRESHOLD = 80;
 const MAX_PULL = 120;
@@ -18,6 +19,7 @@ interface PullToRefreshProps {
  * When the user pulls down past the threshold, triggers onRefresh.
  */
 export function PullToRefresh({ onRefresh, children }: PullToRefreshProps) {
+  const { t } = useTranslation("chat");
   const [pullDistance, setPullDistance] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const touchStartY = useRef(0);
@@ -70,11 +72,13 @@ export function PullToRefresh({ onRefresh, children }: PullToRefreshProps) {
   const showIndicator = pullDistance > 10 || refreshing;
 
   return (
-    <div className="relative flex-1 overflow-hidden">
+    <div className="relative min-h-0 flex-1 overflow-hidden" aria-busy={refreshing}>
+      <span className="sr-only" role="status">{refreshing ? t("refresh") : ""}</span>
       {/* Pull indicator */}
       {showIndicator && (
         <div
           className="absolute inset-x-0 top-0 z-10 flex items-center justify-center pointer-events-none transition-opacity"
+          aria-hidden="true"
           style={{ height: Math.max(pullDistance, refreshing ? 48 : 0) }}
         >
           {refreshing ? (
@@ -94,7 +98,7 @@ export function PullToRefresh({ onRefresh, children }: PullToRefreshProps) {
       {/* Scrollable content */}
       <div
         ref={scrollRef}
-        className="flex-1 h-full overflow-y-auto"
+        className="h-full min-h-0 flex-1 overflow-y-auto overscroll-y-contain"
         style={{
           transform: showIndicator ? `translateY(${pullDistance}px)` : undefined,
           transition: pulling.current ? "none" : "transform 0.3s ease-out",
@@ -102,6 +106,10 @@ export function PullToRefresh({ onRefresh, children }: PullToRefreshProps) {
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onTouchCancel={() => {
+          pulling.current = false;
+          setPullDistance(0);
+        }}
       >
         {children}
       </div>

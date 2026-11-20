@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { FolderOpen, X } from "lucide-react";
@@ -12,6 +12,7 @@ import { API, queryKeys } from "@/lib/constants";
 import { browseDirectory } from "@/lib/upload";
 import { isRemoteMode } from "@/lib/remote-connection";
 import { MobileDirectoryBrowser } from "@/components/mobile/directory-browser";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface WorkspaceToggleProps {
   /** When provided, workspace changes are persisted to this session via PATCH. */
@@ -20,6 +21,14 @@ interface WorkspaceToggleProps {
   directory?: string | null;
   /** Whether the workspace is currently being indexed. Shows spinner when true. */
   isIndexing?: boolean;
+  /** Keeps directory dialog state mounted while its menu closes. */
+  children?: (workspace: {
+    currentPath: string | null | undefined;
+    browseLabel: string;
+    isIndexing: boolean;
+    browse: () => Promise<void>;
+    clear: () => Promise<void>;
+  }) => ReactNode;
 }
 
 function getDisplayName(path: string | null | undefined): string | null {
@@ -29,7 +38,7 @@ function getDisplayName(path: string | null | undefined): string | null {
   return parts[parts.length - 1] || null;
 }
 
-export function WorkspaceToggle({ sessionId, directory, isIndexing }: WorkspaceToggleProps) {
+export function WorkspaceToggle({ sessionId, directory, isIndexing, children }: WorkspaceToggleProps) {
   const { t } = useTranslation("chat");
   const queryClient = useQueryClient();
   const [browsingDirs, setBrowsingDirs] = useState(false);
@@ -42,7 +51,7 @@ export function WorkspaceToggle({ sessionId, directory, isIndexing }: WorkspaceT
   // Resolved values depending on context
   const currentPath = sessionId ? directory : globalWorkspace;
   const displayName = getDisplayName(currentPath);
-  const pillLabel = displayName ?? t("workspaceNone");
+  const browseLabel = displayName ? `${t("workspaceSet")}: ${currentPath}` : t("workspaceSet");
 
   // Handle directory selection from either native picker (desktop) or mobile browser
   const applySelectedPath = useCallback(async (path: string) => {
@@ -62,7 +71,7 @@ export function WorkspaceToggle({ sessionId, directory, isIndexing }: WorkspaceT
       return;
     }
     try {
-      const path = await browseDirectory(t("workspaceSet"));
+      const path = await browseDirectory(t("workspaceSet"), currentPath);
       if (path) {
         await applySelectedPath(path);
       }
@@ -70,7 +79,7 @@ export function WorkspaceToggle({ sessionId, directory, isIndexing }: WorkspaceT
       console.error("Failed to browse directory:", err);
       toast.error("Failed to open folder picker");
     }
-  }, [remote, t, applySelectedPath]);
+  }, [remote, t, applySelectedPath, currentPath]);
 
   const handleClear = useCallback(async () => {
     if (sessionId) {
@@ -83,45 +92,60 @@ export function WorkspaceToggle({ sessionId, directory, isIndexing }: WorkspaceT
   }, [sessionId, queryClient, setGlobalWorkspace]);
 
   return (
-    <>
-      {displayName ? (
+    <TooltipProvider delayDuration={150}>
+      {children ? children({ currentPath, browseLabel, isIndexing: !!isIndexing, browse: handleBrowse, clear: handleClear }) : displayName ? (
         <div
-          className="inline-flex items-center rounded-full bg-[var(--surface-tertiary)] text-[var(--text-primary)] max-w-[220px]"
-          title={currentPath ?? undefined}
+          className="inline-flex max-w-full items-center rounded-xl text-[var(--text-secondary)] sm:max-w-[280px]"
         >
-          <button
-            type="button"
-            onClick={handleBrowse}
-            className="inline-flex items-center gap-1.5 pl-3 pr-1 py-1.5 text-[13px] min-w-0"
-          >
-            {isIndexing ? (
-              <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-            ) : (
-              <FolderOpen className="h-4 w-4 shrink-0" />
-            )}
-            <span className="truncate">{pillLabel}</span>
-            {isIndexing && (
-              <span className="text-[11px] text-[var(--text-tertiary)] shrink-0">Indexing…</span>
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={handleClear}
-            aria-label={t("workspaceClear")}
-            className="flex items-center justify-center pr-2 pl-1 py-1.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={handleBrowse}
+                aria-label={browseLabel}
+                aria-busy={isIndexing || undefined}
+                data-testid="workspace-select"
+                className="inline-flex min-h-11 min-w-0 items-center gap-2 rounded-xl px-3 py-1.5 text-[13px] transition-colors hover:bg-[var(--surface-tertiary)] hover:text-[var(--text-primary)]"
+              >
+                {isIndexing ? (
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden="true" />
+                ) : (
+                  <FolderOpen className="h-4 w-4 shrink-0" aria-hidden="true" />
+                )}
+                <span className="truncate">{displayName}</span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>{browseLabel}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={handleClear}
+                aria-label={t("workspaceClear")}
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[var(--text-tertiary)] transition-colors hover:bg-[var(--surface-tertiary)] hover:text-[var(--text-primary)]"
+              >
+                <X className="h-3.5 w-3.5" aria-hidden="true" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>{t("workspaceClear")}</TooltipContent>
+          </Tooltip>
         </div>
       ) : (
-        <button
-          type="button"
-          onClick={handleBrowse}
-          className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] transition-colors max-w-[220px] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-tertiary)]"
-        >
-          <FolderOpen className="h-4 w-4 shrink-0" />
-          <span className="truncate">{pillLabel}</span>
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={handleBrowse}
+              aria-label={browseLabel}
+              data-testid="workspace-select"
+              className="icon-action flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-tertiary)] hover:text-[var(--text-primary)]"
+            >
+              <FolderOpen className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>{browseLabel}</TooltipContent>
+        </Tooltip>
       )}
       {remote && (
         <MobileDirectoryBrowser
@@ -131,6 +155,6 @@ export function WorkspaceToggle({ sessionId, directory, isIndexing }: WorkspaceT
           initialPath={currentPath}
         />
       )}
-    </>
+    </TooltipProvider>
   );
 }

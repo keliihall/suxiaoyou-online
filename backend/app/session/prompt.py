@@ -1484,8 +1484,9 @@ class SessionPrompt:
     # Main agent while-loop
     # ------------------------------------------------------------------
 
-    # Compaction failure threshold (consecutive failures before the session bails).
-    _MAX_CONSECUTIVE_COMPACT_FAILURES = 3
+    # A failed summary may already have dispatched billable inference. Stop at
+    # that boundary rather than replaying the original step and summary call.
+    _MAX_CONSECUTIVE_COMPACT_FAILURES = 1
 
     async def _loop(self) -> None:
         """Main agent while-loop: step → LLM → tools → repeat."""
@@ -1583,6 +1584,12 @@ class SessionPrompt:
                 continue
 
             if result == "stop":
+                # AGENT_ERROR is terminal for ordinary streams. Continuing a
+                # failed step via a todo/empty-output nudge or queued steer
+                # would issue more model requests after clients closed SSE.
+                # Goal controllers retain their own recovery/control policy.
+                if self.job.goal_id is None and self.finish_reason in {"error", "failed"}:
+                    break
                 if await self._handle_stop_result():
                     if await self._apply_pending_steers():
                         continue
@@ -1986,18 +1993,22 @@ class SessionPrompt:
                 async with self.session_factory() as db:
                     async with db.begin():
                         collapse_msgs = await get_message_history_for_llm(
-                            db, self.job.session_id
+                            db, self.job.session_id,
+                            provider_id=getattr(getattr(self, "provider", None), "id", None),
+                            model_id=self.model_id,
+                            process_language=self.request.language,
+                            turn_run_id=self.job.turn_run_id,
+                            include_source_ids=True,
                         )
                 collapsed, tokens_saved = context_collapse(
                     collapse_msgs,
                     language=self.request.language,
                 )
-                if tokens_saved > 0:
-                    await _persist_context_collapse(
-                        self.job.session_id,
-                        collapsed,
-                        session_factory=self.session_factory,
-                    )
+                if tokens_saved > 0 and await _persist_context_collapse(
+                    self.job.session_id,
+                    collapsed,
+                    session_factory=self.session_factory,
+                ):
                     logger.info(
                         "Context collapse freed ~%d tokens, "
                         "skipping full compaction",
@@ -2006,6 +2017,7 @@ class SessionPrompt:
                     skip_full_compaction = True
                     compaction_succeeded = True
                     compaction_mode = "context_collapse"
+                    self._consecutive_compact_failures = 0
                 else:
                     # Nothing to collapse — mark exhausted so we go straight to
                     # full compaction next time.
@@ -2045,7 +2057,7 @@ class SessionPrompt:
                     )
 
             try:
-                await run_compaction(
+                compacted = await run_compaction(
                     self.job.session_id,
                     job=self.job,
                     session_factory=self.session_factory,
@@ -2053,6 +2065,54 @@ class SessionPrompt:
                     agent_registry=self.agent_registry,
                     model_id=self.model_id,
                 )
+                if not compacted or not isinstance(compacted.summary, str) or not compacted.summary.strip():
+                    # Pause/abort/budget gates may deliberately prevent the
+                    # summary call. Preserve their control state rather than
+                    # reporting a provider failure or reopening admission.
+                    controlled_stop = self.job.abort_event.is_set()
+                    if controlled_stop:
+                        self.finish_reason = "aborted"
+                    elif self.job.goal_id is not None:
+                        from app.session.goal_guard import (
+                            read_goal_budget_gate,
+                            read_goal_execution_gate,
+                        )
+
+                        gate = await read_goal_execution_gate(
+                            self.session_factory,
+                            session_id=self.job.goal_session_id or self.job.session_id,
+                            goal_id=self.job.goal_id,
+                            goal_run_id=self.job.goal_run_id,
+                        )
+                        if not gate.allowed or not self.job.execution_admission_open:
+                            controlled_stop = True
+                            self.finish_reason = gate.status if not gate.allowed else "paused"
+                        else:
+                            used_tokens, used_cost = self.job.goal_run_usage
+                            budget = await read_goal_budget_gate(
+                                self.session_factory,
+                                session_id=self.job.goal_session_id or self.job.session_id,
+                                goal_id=self.job.goal_id,
+                                local_tokens_used=used_tokens,
+                                local_cost_microusd=used_cost,
+                                warning_ratio=_cfg().goal_budget_warning_ratio,
+                            )
+                            if not budget.allowed:
+                                controlled_stop = True
+                                self.finish_reason = "budget_limited"
+                    if controlled_stop:
+                        await self._dispatch_required_hook(
+                            "PostCompact",
+                            {"step": self.step, "outcome": "stopped", "mode": compaction_mode},
+                            message_id=self.assistant_msg_id,
+                            checkpoint_id=(
+                                self.checkpoint_binding.checkpoint_id
+                                if self.checkpoint_binding is not None
+                                else None
+                            ),
+                        )
+                        return True
+                    raise RuntimeError("Compaction produced no complete summary")
                 self._consecutive_compact_failures = 0
                 compaction_succeeded = True
             except Exception:
@@ -2065,14 +2125,15 @@ class SessionPrompt:
                     exc_info=True,
                 )
                 if self._consecutive_compact_failures >= self._MAX_CONSECUTIVE_COMPACT_FAILURES:
+                    self.finish_reason = "error"
                     self.job.publish(SSEEvent(AGENT_ERROR, {
                         "error_type": "compaction_failed",
                         "code": "compaction_failed",
                         "error_message": localize(
                             self.job.language,
-                            "上下文连续压缩失败，请新建对话后继续。",
+                            "上下文压缩未完成，请新建对话后继续。",
                             (
-                                "Context compression failed repeatedly. "
+                                "Context compression did not complete. "
                                 "Start a new conversation."
                             ),
                         ),
@@ -2732,60 +2793,9 @@ async def _persist_context_collapse(
     collapsed_messages: list[dict[str, Any]],
     *,
     session_factory: async_sessionmaker[AsyncSession],
-) -> None:
-    """Persist context collapse by deleting old messages and inserting a boundary.
-
-    The first message in ``collapsed_messages`` is expected to be the
-    synthetic boundary marker from ``context_collapse()``.
-    """
-    if not collapsed_messages:
-        return
-
-    boundary = collapsed_messages[0]
-
+) -> bool:
+    """Persist only the model-context projection, preserving the transcript."""
+    from app.session.context_projection import save_context_collapse
     async with session_factory() as db:
         async with db.begin():
-            # Get all existing messages ordered by time
-            stmt = (
-                select(Message)
-                .where(Message.session_id == session_id)
-                .order_by(Message.time_created.asc())
-            )
-            result = await db.execute(stmt)
-            db_messages = list(result.scalars().all())
-
-            if not db_messages:
-                return
-
-            # Calculate how many DB messages to delete.
-            # collapsed_messages = [boundary_marker] + kept_messages
-            # Original had len(db_messages) messages total.
-            # kept_messages count = len(collapsed_messages) - 1 (boundary marker)
-            kept_count = len(collapsed_messages) - 1
-            delete_count = len(db_messages) - kept_count
-            if delete_count <= 0:
-                return
-
-            # Delete the oldest messages (and their parts via cascade)
-            for msg in db_messages[:delete_count]:
-                await db.delete(msg)
-
-            # Insert the boundary marker as a synthetic user message
-            if boundary.get("content"):
-                boundary_msg = Message(
-                    session_id=session_id,
-                    data={"role": "user", "agent": "system", "system": True},
-                )
-                db.add(boundary_msg)
-                await db.flush()
-
-                boundary_part = Part(
-                    message_id=boundary_msg.id,
-                    session_id=session_id,
-                    data={
-                        "type": "text",
-                        "text": boundary["content"],
-                        "synthetic": True,
-                    },
-                )
-                db.add(boundary_part)
+            return await save_context_collapse(db, session_id, collapsed_messages)

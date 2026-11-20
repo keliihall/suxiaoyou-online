@@ -2,6 +2,7 @@
 
 import { desktopAPI } from "./tauri-api";
 import { getRemoteConfig } from "./remote-connection";
+import { IS_CLOUD } from "./cloud-session";
 
 /** Whether we are running inside a desktop shell (Tauri). */
 export const IS_DESKTOP =
@@ -43,6 +44,7 @@ const WEB_DEV_BACKEND_TOKEN =
  * first failure stays rejected with the same stale error.
  */
 export function getBackendUrl(): Promise<string> {
+  if (IS_CLOUD) return Promise.resolve(typeof window === "undefined" ? "" : window.location.origin);
   if (_backendUrl) return Promise.resolve(_backendUrl);
   if (_backendUrlPromise) return _backendUrlPromise;
 
@@ -149,6 +151,7 @@ export function getBackendToken(): Promise<string> {
 
 /** Synchronous accessor for places that cannot await (e.g. SSE query string). */
 export function getBackendTokenSync(): string | null {
+  if (IS_CLOUD) return null;
   if (!IS_DESKTOP) return WEB_DEV_BACKEND_TOKEN || null;
   return _backendToken;
 }
@@ -197,6 +200,7 @@ if (IS_DESKTOP && typeof window !== "undefined") {
  * Use this only when you can't await (e.g., in constant definitions).
  */
 export function getBackendUrlSync(): string {
+  if (IS_CLOUD) return typeof window === "undefined" ? "" : window.location.origin;
   if (IS_DESKTOP) {
     if (!_backendUrl) {
       throw new Error("Desktop backend URL is not ready yet");
@@ -229,6 +233,7 @@ export const API = {
     EDIT: "/api/chat/edit",
     COMPACT: "/api/chat/compact",
     STREAM: (streamId: string) => {
+      if (IS_CLOUD) return `/api/chat/stream/${encodeURIComponent(streamId)}`;
       // Remote mode: use tunnel URL instead of localhost
       const rc = getRemoteConfig();
       if (rc) return `${rc.url}/api/chat/stream/${streamId}`;
@@ -303,6 +308,8 @@ export const API = {
       IMPORT: "/api/office-v2/user-templates/import",
       APPROVE: (templateRef: string) =>
         `/api/office-v2/user-templates/${encodeURIComponent(templateRef)}/approve` as const,
+      REVALIDATE: (templateRef: string) =>
+        `/api/office-v2/user-templates/${encodeURIComponent(templateRef)}/revalidate` as const,
       DELETE: (templateRef: string) =>
         `/api/office-v2/user-templates/${encodeURIComponent(templateRef)}` as const,
       PAGE: (

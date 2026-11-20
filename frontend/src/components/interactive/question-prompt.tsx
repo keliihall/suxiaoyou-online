@@ -94,15 +94,15 @@ function LegacyQuestionPrompt({
   return (
     <div className={isMobile ? "px-3 pb-[max(env(safe-area-inset-bottom),8px)]" : "px-4 pb-3"}>
       <div className={isMobile ? "" : "mx-auto max-w-3xl xl:max-w-4xl"}>
-        <div className={`rounded-${isMobile ? "2xl" : "xl"} border-2 border-[var(--brand-primary)]/40 bg-${isMobile ? "[var(--surface-primary)] shadow-lg" : "[var(--brand-primary)]/5"} p-4 animate-slide-up`}>
+        <div className="max-h-[50dvh] overflow-y-auto rounded-[var(--radius-card)] border border-[var(--border-default)] bg-[var(--surface-primary)] p-4 animate-slide-up">
           <div className="flex items-start gap-3">
             <HelpCircle className="h-5 w-5 text-[var(--brand-primary)] shrink-0 mt-0.5" />
-            <div className="flex-1 space-y-3">
+            <div className="min-w-0 flex-1 space-y-3">
               <div>
                 <h3 className={`${isMobile ? "text-base" : "text-sm"} font-semibold text-[var(--text-primary)]`}>
                   {t("agentAsking")}
                 </h3>
-                <div className={`${isMobile ? "text-base" : "text-sm"} text-[var(--text-secondary)] mt-1 prose prose-sm prose-invert max-w-none [&>p]:m-0`}>
+                <div className={`${isMobile ? "text-base" : "text-sm"} text-[var(--text-secondary)] mt-1 prose prose-sm dark:prose-invert max-w-none [&>p]:m-0`}>
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {questionText || t("agentQuestionMissing")}
                   </ReactMarkdown>
@@ -130,7 +130,7 @@ function LegacyQuestionPrompt({
                         setAnswer(opt.label);
                         onRespond(opt.label);
                       }}
-                      className={`w-full text-left rounded-${isMobile ? "xl" : "lg"} border border-[var(--border-default)] bg-[var(--surface-secondary)] px-3 ${isMobile ? "py-3 min-h-[48px]" : "py-2"} text-sm hover:bg-[var(--surface-tertiary)] active:scale-[0.98] transition-all`}
+                      className={`w-full text-left rounded-[var(--radius-control)] border border-[var(--border-default)] bg-[var(--surface-secondary)] px-3 ${isMobile ? "py-3 min-h-[48px]" : "py-2"} text-sm hover:bg-[var(--surface-tertiary)] active:scale-[0.98] transition-all`}
                     >
                       <span className="font-medium text-[var(--text-primary)]">
                         {opt.label}
@@ -145,14 +145,15 @@ function LegacyQuestionPrompt({
                 </div>
               )}
 
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <input
                   type="text"
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
                   placeholder={t("typeAnswer")}
-                  className={`flex-1 rounded-${isMobile ? "xl" : "lg"} border border-[var(--border-default)] bg-[var(--surface-secondary)] px-3 ${isMobile ? "py-3 text-base" : "py-2 text-sm"} outline-none focus:ring-1 focus:ring-[var(--ring)]`}
+                  aria-label={t("typeAnswer")}
+                  className={`min-w-0 flex-1 rounded-[var(--radius-control)] border border-[var(--border-default)] bg-[var(--surface-secondary)] px-3 py-3 text-base sm:py-2 sm:text-sm outline-none focus:ring-1 focus:ring-[var(--ring)]`}
                 />
                 <Button
                   size={isMobile ? "default" : "sm"}
@@ -276,7 +277,7 @@ function MultiQuestionPrompt({
   if (isMobile) {
     return (
       <div className="px-3 pb-[max(env(safe-area-inset-bottom),8px)]">
-        <div className="rounded-2xl border-2 border-[var(--brand-primary)]/40 bg-[var(--surface-primary)] shadow-lg animate-slide-up overflow-hidden">
+        <div className="rounded-[var(--radius-card)] border border-[var(--border-default)] bg-[var(--surface-primary)] shadow-[var(--shadow-sm)] animate-slide-up overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-default)]">
             <div className="flex items-center gap-2">
@@ -315,7 +316,7 @@ function MultiQuestionPrompt({
                     <div className="flex items-center gap-2 min-w-0">
                       <span className={`h-6 w-6 rounded-full text-xs font-semibold flex items-center justify-center shrink-0 ${
                         isAnswered
-                          ? "bg-[var(--color-success)] text-white"
+                          ? "bg-[var(--color-success)]/10 text-[var(--color-success)]"
                           : "bg-[var(--surface-secondary)] text-[var(--text-tertiary)]"
                       }`}>
                         {isAnswered ? "\u2713" : i + 1}
@@ -395,7 +396,7 @@ function MultiQuestionPrompt({
             <button
               onClick={handleSubmit}
               disabled={!allAnswered}
-              className="w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-[var(--text-primary)] text-[var(--surface-primary)] text-base font-medium active:scale-[0.97] transition-all disabled:opacity-30"
+              className="w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-[var(--brand-primary)] text-[var(--brand-primary-text)] text-base font-medium active:scale-[0.97] transition-all disabled:bg-[var(--surface-tertiary)] disabled:text-[var(--text-secondary)] disabled:cursor-not-allowed"
             >
               <Send className="h-4 w-4" />
               {t("questionSubmitAll", "Submit answers")}
@@ -410,10 +411,10 @@ function MultiQuestionPrompt({
   return (
     <div className="px-4 pb-3">
       <div className="mx-auto max-w-3xl xl:max-w-4xl">
-        <div className="rounded-xl border-2 border-[var(--brand-primary)]/40 bg-[var(--brand-primary)]/5 animate-slide-up overflow-hidden">
+        <div className="max-h-[50dvh] overflow-y-auto rounded-[var(--radius-card)] border border-[var(--border-default)] bg-[var(--surface-primary)] animate-slide-up">
           {/* Tab bar */}
           <div
-            className="flex border-b border-[var(--border-default)]"
+            className="flex overflow-x-auto border-b border-[var(--border-default)]"
             role="tablist"
           >
             {questions.map((q, i) => {
@@ -431,7 +432,7 @@ function MultiQuestionPrompt({
                   role="tab"
                   aria-selected={isActive}
                   onClick={() => setActiveTab(i)}
-                  className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${
+                  className={`shrink-0 px-4 py-2.5 text-sm font-medium transition-colors relative ${
                     isActive
                       ? "text-[var(--text-primary)] border-b-2 border-[var(--brand-primary)]"
                       : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
@@ -463,9 +464,9 @@ function MultiQuestionPrompt({
               </ReactMarkdown>
             </div>
 
-            <div className={`flex gap-4 ${hasPreview ? "" : ""}`}>
+            <div className="flex min-w-0 flex-col gap-4 sm:flex-row">
               {/* Options */}
-              <div className={`space-y-1.5 ${hasPreview ? "flex-1" : "w-full"}`}>
+              <div className={`space-y-1.5 ${hasPreview ? "min-w-0 flex-1" : "w-full"}`}>
                 {currentQ.options?.map((opt, i) => (
                   <OptionRow
                     key={`${opt.label}-${i}`}
@@ -512,9 +513,9 @@ function MultiQuestionPrompt({
 
               {/* Preview panel */}
               {hasPreview && (
-                <div className="flex-1 rounded-lg border border-[var(--border-default)] bg-[var(--surface-secondary)] p-3 max-h-64 overflow-y-auto">
+                <div className="min-w-0 flex-1 rounded-lg border border-[var(--border-default)] bg-[var(--surface-secondary)] p-3 max-h-64 overflow-y-auto">
                   {selectedPreview ? (
-                    <div className="text-sm text-[var(--text-secondary)] prose prose-sm prose-invert max-w-none [&>p]:m-0 font-mono">
+                    <div className="text-sm text-[var(--text-secondary)] prose prose-sm dark:prose-invert max-w-none [&>p]:m-0 font-mono">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {selectedPreview}
                       </ReactMarkdown>
@@ -571,7 +572,7 @@ function OptionRow({
 }) {
   return (
     <label
-      className={`flex items-start gap-3 cursor-pointer rounded-${isMobile ? "xl" : "lg"} border px-3 ${isMobile ? "py-3 min-h-[48px]" : "py-2"} text-sm transition-all active:scale-[0.98] ${
+      className={`flex items-start gap-3 cursor-pointer rounded-[var(--radius-control)] border px-3 ${isMobile ? "py-3 min-h-[48px]" : "py-2"} text-sm transition-all active:scale-[0.98] ${
         selected
           ? "border-[var(--brand-primary)] bg-[var(--brand-primary)]/10"
           : "border-[var(--border-default)] bg-[var(--surface-secondary)] hover:bg-[var(--surface-tertiary)]"
@@ -625,7 +626,7 @@ function OtherOption({
   return (
     <div>
       <label
-        className={`flex items-start gap-3 cursor-pointer rounded-${isMobile ? "xl" : "lg"} border px-3 ${isMobile ? "py-3 min-h-[48px]" : "py-2"} text-sm transition-all active:scale-[0.98] ${
+        className={`flex items-start gap-3 cursor-pointer rounded-[var(--radius-control)] border px-3 ${isMobile ? "py-3 min-h-[48px]" : "py-2"} text-sm transition-all active:scale-[0.98] ${
           selected
             ? "border-[var(--brand-primary)] bg-[var(--brand-primary)]/10"
             : "border-[var(--border-default)] bg-[var(--surface-secondary)] hover:bg-[var(--surface-tertiary)]"
@@ -649,7 +650,8 @@ function OtherOption({
           value={otherText}
           onChange={(e) => onTextChange(e.target.value)}
           placeholder={t("questionOtherPlaceholder", "Type your answer...")}
-          className={`mt-1.5 w-full rounded-${isMobile ? "xl" : "lg"} border border-[var(--border-default)] bg-[var(--surface-secondary)] px-3 ${isMobile ? "py-3 text-base" : "py-2 text-sm"} outline-none focus:ring-1 focus:ring-[var(--ring)]`}
+          aria-label={t("questionOtherPlaceholder", "Type your answer...")}
+          className={`mt-1.5 w-full rounded-[var(--radius-control)] border border-[var(--border-default)] bg-[var(--surface-secondary)] px-3 py-3 text-base sm:py-2 sm:text-sm outline-none focus:ring-1 focus:ring-[var(--ring)]`}
           autoFocus
         />
       )}

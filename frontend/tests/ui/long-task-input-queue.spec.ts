@@ -167,9 +167,13 @@ test.describe("long-task follow-up queue", () => {
     const composer = page.getByPlaceholder("The task is running — add a follow-up");
     await expect(composer).toBeEditable();
     await expect(page.getByRole("button", { name: "Stop" })).toBeVisible();
+    await expect(page.getByTestId("chat-primary-action")).toHaveCount(1);
+    await expect(page.getByTestId("chat-primary-action")).toHaveAttribute("data-action", "stop");
+    await expect(page.getByRole("button", { name: "Queue follow-up", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Send message", exact: true })).toHaveCount(0);
 
     await composer.fill("Run the validation suite after the current task");
-    await page.getByRole("button", { name: "Queue follow-up" }).click();
+    await page.getByPlaceholder("The task is running — add a follow-up").press("Enter");
     await expect.poll(() => inputs.posts.length).toBe(1);
     expect(inputs.posts[0]?.mode).toBe("queue");
     await expect(page.getByTestId("pending-inputs")).toContainText(
@@ -182,7 +186,7 @@ test.describe("long-task follow-up queue", () => {
     await expect(page.getByTestId("input-delivery-mode")).toHaveCount(0);
 
     await composer.fill("Prioritize the data-loss check first");
-    await page.getByRole("button", { name: "Queue follow-up" }).click();
+    await page.getByPlaceholder("The task is running — add a follow-up").press("Enter");
     await expect.poll(() => inputs.posts.length).toBe(2);
     expect(inputs.posts[1]?.mode).toBe("queue");
     await expect(page.getByTestId("pending-inputs")).toContainText(
@@ -251,7 +255,7 @@ test.describe("long-task follow-up queue", () => {
 
     const composer = page.getByPlaceholder("The task is running — add a follow-up");
     await composer.fill("Run this after the current task");
-    await page.getByRole("button", { name: "Queue follow-up" }).click();
+    await page.getByPlaceholder("The task is running — add a follow-up").press("Enter");
     await expect.poll(() => inputs.posts.length).toBe(1);
 
     const queue = page.getByTestId("pending-inputs");
@@ -317,7 +321,7 @@ test.describe("long-task follow-up queue", () => {
     await installSessionInputApi(page);
 
     await page.goto("/c/new");
-    await page.getByRole("button", { name: /Auto-edit/i }).click();
+    await page.getByTestId("composer-more").click();
     await page.getByRole("button", { name: /Ask first/i }).click();
     await page.getByPlaceholder(/Describe the result you want/i).fill(
       "Trigger permission flow after a long wait",
@@ -328,7 +332,7 @@ test.describe("long-task follow-up queue", () => {
 
     const composer = page.getByPlaceholder("The task is running — add a follow-up");
     await composer.fill("Keep this queued while confirmation recovers");
-    await page.getByRole("button", { name: "Queue follow-up" }).click();
+    await page.getByPlaceholder("The task is running — add a follow-up").press("Enter");
     const queue = page.getByTestId("pending-inputs");
     await expect(queue).toContainText("Keep this queued while confirmation recovers");
 
@@ -397,7 +401,7 @@ test.describe("long-task follow-up queue", () => {
     await page.getByPlaceholder("The task is running — add a follow-up").fill(
       "Send normally if the previous task already finished",
     );
-    await page.getByRole("button", { name: "Queue follow-up" }).click();
+    await page.getByPlaceholder("The task is running — add a follow-up").press("Enter");
 
     await expect.poll(() => inputs.posts.length).toBe(1);
     await expect.poll(() => apiState.promptBodies.length).toBeGreaterThanOrEqual(2);

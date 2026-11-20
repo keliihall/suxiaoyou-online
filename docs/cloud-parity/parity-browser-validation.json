@@ -1,0 +1,31 @@
+{
+  "session_id": "01M7ENSFGQ9ARGVCE8PZCSQRVS",
+  "real_provider": "DeepSeek",
+  "sse_no_transform": true,
+  "sse_gzip_disabled": true,
+  "browser_permission_button_observed": true,
+  "allow_once_clicked": true,
+  "write_read_verified": true,
+  "browser_code_preview_verified": true,
+  "file": "/tenant/workspaces/suxiaoyou_written/cloud-approval-second-1215.txt",
+  "browser_download_observed": {
+    "filename": "cloud-approval-second-1215.txt",
+    "origin": "http://localhost:3018"
+  },
+  "question_tool_ui_shown": true,
+  "question_survived_browser_refresh": true,
+  "question_option_b_clicked": true,
+  "question_answer_b_verified": true,
+  "plan_review_shown": true,
+  "plan_file_absent_before_acceptance": true,
+  "plan_accept_auto_clicked": true,
+  "plan_accepted_file_bytes_verified": true,
+  "mobile_real_history_and_task": true,
+  "mobile_session_id": "01M7ENSFGQ9ARGVCE8PZCSQRVS",
+  "mobile_viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "real_fts_ingest": true,
+  "real_mention_filename_search": true
+}

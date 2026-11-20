@@ -1,0 +1,588 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-11-15T13:29:20.978655+00:00",
+  "scope": "苏小有 Online UI 统一与可访问性优化",
+  "design_sources": [
+    {
+      "title": "Vercel Geist · Colors",
+      "url": "https://vercel.com/geist/colors",
+      "application": "背景、边框、文本、交互与状态使用语义 token"
+    },
+    {
+      "title": "Vercel Geist · Typography",
+      "url": "https://vercel.com/geist/typography",
+      "application": "正文和控件以 14px 为默认，建立清晰文字层级"
+    },
+    {
+      "title": "Carbon · Spacing",
+      "url": "https://www.carbondesignsystem.com/building-blocks/foundations/spacing/overview",
+      "application": "采用 4/8/12/16/24/32/48px 间距尺度"
+    },
+    {
+      "title": "Material 3 · Foundations",
+      "url": "https://m3.material.io/foundations/",
+      "application": "共享设计 token 与组件状态"
+    },
+    {
+      "title": "WCAG 2.2 · Target Size Minimum",
+      "url": "https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum",
+      "application": "项目触屏控件目标 44px，高于 AA 最小 24px"
+    },
+    {
+      "title": "WAI · Modal Dialog Pattern",
+      "url": "https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/",
+      "application": "弹窗焦点移入、循环、Escape 关闭和关闭后恢复"
+    }
+  ],
+  "visual_contract": {
+    "surfaces": "冷灰分层背景、白色卡片、蓝色主操作；深色石墨主题",
+    "accent_light": "#2563EB",
+    "accent_dark": "#6B9EFF",
+    "default_ui_font_px": 14,
+    "business_secondary_font_px": [
+      12,
+      13
+    ],
+    "spacing_px": [
+      4,
+      8,
+      12,
+      16,
+      24,
+      32,
+      48
+    ],
+    "radius_px": {
+      "control": 10,
+      "card": 16,
+      "panel": 20
+    },
+    "controls_px": {
+      "default": 40,
+      "small": 32,
+      "large": 48,
+      "touch_minimum": 44
+    },
+    "font_policy": "使用系统及现有中文字体，保留用户显式外观配置",
+    "copy_policy": "辅助说明保留为源码注释；保留功能标签、业务数据、错误与必要确认"
+  },
+  "surfaces": [
+    "登录",
+    "工作台侧栏与导航",
+    "新建对话与输入区",
+    "聊天右侧工作栏",
+    "设置",
+    "插件",
+    "自动化",
+    "云端访问",
+    "用量与额度",
+    "用户与额度管理",
+    "模型路由与个人模型",
+    "Mac 节点配置弹窗",
+    "移动端任务、新建任务、设置和目录选择"
+  ],
+  "validation": {
+    "typescript": "passed",
+    "targeted_eslint": "passed",
+    "git_diff_check": "passed",
+    "automated": {
+      "unique_tests_passed": 28,
+      "cloud_tests": 21,
+      "workbench_regression_tests": 7,
+      "browser": "Playwright Chromium",
+      "business_api": "isolated fixtures; no production task submission",
+      "final_mobile_focus_recheck": "1 passed after final focus-outline fix; 28 unique regression tests overall"
+    },
+    "real_browser": {
+      "tool": "Orca embedded browser",
+      "widths_px": [
+        320,
+        390,
+        768,
+        1192
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "result": "无页面横向溢出；宽表格仅在表格区域滚动；3018 真实目录加载、Tab/Shift+Tab 循环、Escape 和焦点恢复均通过",
+      "final_mobile_focus": "320px: workspace parent overflow visible, 10px trigger radius, focus-visible 2px outline with 2px offset; all four edges visible"
+    },
+    "contrast": {
+      "scope": "默认主题下选定的状态文字、工具状态及实心危险操作按钮；浏览器实际计算颜色",
+      "light_min_ratio": 4.83,
+      "dark_min_ratio": 6.26,
+      "target_min_ratio": 4.5
+    },
+    "behavior_preservation": [
+      "登录与过期会话",
+      "用户/额度管理",
+      "写入后不可回读的模型密钥",
+      "连接测试与历史用量",
+      "图片计量",
+      "Mac 节点凭据",
+      "设置返回",
+      "工作区文件/预览/恢复控制"
+    ],
+    "latest_browser_regression": {
+      "unique_tests_passed": 66,
+      "cloud": 51,
+      "desktop_workbench": 15,
+      "desktop_regression_evidence": "navigation-login-captcha-audit.json",
+      "audit": "minimal-entry-audit.json"
+    },
+    "latest_login_regression": {
+      "passed": 8,
+      "failed": 0,
+      "audit": "login-brand-audit.json"
+    }
+  },
+  "runtime": {
+    "url": "http://localhost:3018",
+    "web_dist": ".next-ui-login-circle",
+    "build_id": "tyaa-czIGk05gNXiW_eHA",
+    "build_exit_code": 0,
+    "build_asset_http_status": 200,
+    "status": "running",
+    "preview_3318_stopped": true,
+    "existing_tenant_containers": {
+      "before": 5,
+      "after": 5,
+      "all_previous_still_running": true,
+      "modified": false
+    },
+    "docker_image": {
+      "status": "not_updated",
+      "reason": "构建宿主4GB内存限制；两次构建编译worker遭global OOM / SIGKILL，保留五个运行用户容器，未进一步重试",
+      "current_tag_image": {
+        "tag": "suxiaoyou-cloud-web:local",
+        "id": "sha256:b12e5edf418110c01aa682c31066bd513d0fd51fd1c1e228e004cf14183c67f6",
+        "size_bytes": 2416459651,
+        "platform": "linux/arm64",
+        "runtime_node_options_present": false,
+        "contains_this_ui_revision": false
+      },
+      "deployed_container": false
+    },
+    "docker_build_attempts": [
+      {
+        "attempt": 1,
+        "heap_mib": 640,
+        "exit_code": 130,
+        "reason": "为纳入最终外部点击焦点修复，主动取消构建"
+      },
+      {
+        "attempt": 2,
+        "heap_mib": 640,
+        "exit_code": 1,
+        "reason": "global OOM / SIGKILL",
+        "node_anon_rss_kib": 919536
+      },
+      {
+        "attempt": 3,
+        "heap_mib": 600,
+        "semi_space_mib": 8,
+        "exit_code": 1,
+        "reason": "global OOM / SIGKILL；有界重试后停止",
+        "node_anon_rss_kib": 883088
+      }
+    ],
+    "api": "http://127.0.0.1:8018",
+    "readiness_status": 200,
+    "docker_image_updated": false,
+    "public_deployment_performed": false,
+    "api_restarted_for_captcha_migration": true,
+    "worker_restarted": false,
+    "only_web_restarted": true,
+    "api_and_worker_restarted": false,
+    "health": {
+      "/livez": 200,
+      "/readyz": 200
+    },
+    "existing_tenant_containers_modified": false
+  },
+  "implementation": {
+    "foundations": "frontend/src/styles/design-system.css",
+    "palette": "frontend/src/app/globals.css",
+    "cloud_styles": "frontend/src/app/cloud/cloud.css",
+    "new_cloud_appearance_provider": "frontend/src/components/providers/cloud-appearance-provider.tsx",
+    "foundation_sha256": "1c3e0255ff7baf52ae3412dd7814dd2789fa5f24d75d91f9a34a6568ad4aaa68"
+  },
+  "private_evidence": "frontend/test-results/ui-unification (git ignored; includes session UI screenshots)",
+  "previous_runtime": {
+    "url": "http://localhost:3018",
+    "web_dist": ".next-ui-unified-final",
+    "api_and_worker_restarted": false,
+    "docker_image": {
+      "tag": "suxiaoyou-cloud-web:local",
+      "id": "sha256:4b1f30752df50666ef5562537d1ff983c0deebbca8c68d4739f6affff2128b20",
+      "size_bytes": 2415962411,
+      "platform": "linux/arm64",
+      "build_exit_code": 0,
+      "build_heap_mib": 768,
+      "runtime_node_options_present": false,
+      "deployed_container": false
+    },
+    "build_id": "TJa0TDi7TgQApDVV2KReO",
+    "build_asset_http_status": 200
+  },
+  "latest_followup_audit": "login-brand-audit.json",
+  "runtime_history": [
+    {
+      "build_id": "lGxrsImO66Lx4qvagFS1Q",
+      "build_asset_http_status": 200,
+      "web_dist": ".next-ui-readability-live",
+      "url": "http://localhost:3018",
+      "build_exit_code": 0,
+      "status": "running",
+      "api_and_worker_restarted": false,
+      "preview_3318_stopped": true,
+      "docker_image": {
+        "tag": "suxiaoyou-cloud-web:local",
+        "id": "sha256:b12e5edf418110c01aa682c31066bd513d0fd51fd1c1e228e004cf14183c67f6",
+        "size_bytes": 2416459651,
+        "platform": "linux/arm64",
+        "build_exit_code": 0,
+        "build_heap_mib": 640,
+        "runtime_node_options_present": false,
+        "deployed_container": false
+      },
+      "docker_build_attempts": [
+        {
+          "attempt": 1,
+          "exit_code": 1,
+          "reason": "npm ci ECONNRESET"
+        },
+        {
+          "attempt": 2,
+          "exit_code": 130,
+          "reason": "取消旧源码上下文，以纳入两处辅助文案修复"
+        },
+        {
+          "attempt": 3,
+          "heap_mib": 768,
+          "exit_code": 1,
+          "reason": "系统 OOM / SIGKILL"
+        },
+        {
+          "attempt": 4,
+          "heap_mib": 512,
+          "exit_code": 1,
+          "reason": "V8 heap不足 / SIGABRT"
+        },
+        {
+          "attempt": 5,
+          "heap_mib": 640,
+          "exit_code": 0
+        }
+      ],
+      "existing_tenant_containers": {
+        "before": 5,
+        "after": 5,
+        "all_previous_still_running": true,
+        "modified": false
+      }
+    },
+    {
+      "url": "http://localhost:3018",
+      "web_dist": ".next-ui-compact-final",
+      "build_id": "GUYeZmCcvea6lbmh58BCF",
+      "build_exit_code": 0,
+      "build_asset_http_status": 200,
+      "status": "running",
+      "api_and_worker_restarted": false,
+      "preview_3318_stopped": true,
+      "existing_tenant_containers": {
+        "before": 5,
+        "after": 5,
+        "all_previous_still_running": true,
+        "modified": false
+      },
+      "docker_image": {
+        "status": "not_updated",
+        "reason": "构建宿主4GB内存限制；两次构建编译worker遭global OOM / SIGKILL，保留五个运行用户容器，未进一步重试",
+        "current_tag_image": {
+          "tag": "suxiaoyou-cloud-web:local",
+          "id": "sha256:b12e5edf418110c01aa682c31066bd513d0fd51fd1c1e228e004cf14183c67f6",
+          "size_bytes": 2416459651,
+          "platform": "linux/arm64",
+          "runtime_node_options_present": false,
+          "contains_this_ui_revision": false
+        },
+        "deployed_container": false
+      },
+      "docker_build_attempts": [
+        {
+          "attempt": 1,
+          "heap_mib": 640,
+          "exit_code": 130,
+          "reason": "为纳入最终外部点击焦点修复，主动取消构建"
+        },
+        {
+          "attempt": 2,
+          "heap_mib": 640,
+          "exit_code": 1,
+          "reason": "global OOM / SIGKILL",
+          "node_anon_rss_kib": 919536
+        },
+        {
+          "attempt": 3,
+          "heap_mib": 600,
+          "semi_space_mib": 8,
+          "exit_code": 1,
+          "reason": "global OOM / SIGKILL；有界重试后停止",
+          "node_anon_rss_kib": 883088
+        }
+      ]
+    },
+    {
+      "url": "http://localhost:3018",
+      "web_dist": ".next-ui-login-centered",
+      "build_id": "wv4xP6Xm8luj0DsHkU69Y",
+      "build_exit_code": 0,
+      "build_asset_http_status": 200,
+      "status": "running",
+      "preview_3318_stopped": true,
+      "existing_tenant_containers": {
+        "before": 5,
+        "after": 5,
+        "all_previous_still_running": true,
+        "modified": false
+      },
+      "docker_image": {
+        "status": "not_updated",
+        "reason": "构建宿主4GB内存限制；两次构建编译worker遭global OOM / SIGKILL，保留五个运行用户容器，未进一步重试",
+        "current_tag_image": {
+          "tag": "suxiaoyou-cloud-web:local",
+          "id": "sha256:b12e5edf418110c01aa682c31066bd513d0fd51fd1c1e228e004cf14183c67f6",
+          "size_bytes": 2416459651,
+          "platform": "linux/arm64",
+          "runtime_node_options_present": false,
+          "contains_this_ui_revision": false
+        },
+        "deployed_container": false
+      },
+      "docker_build_attempts": [
+        {
+          "attempt": 1,
+          "heap_mib": 640,
+          "exit_code": 130,
+          "reason": "为纳入最终外部点击焦点修复，主动取消构建"
+        },
+        {
+          "attempt": 2,
+          "heap_mib": 640,
+          "exit_code": 1,
+          "reason": "global OOM / SIGKILL",
+          "node_anon_rss_kib": 919536
+        },
+        {
+          "attempt": 3,
+          "heap_mib": 600,
+          "semi_space_mib": 8,
+          "exit_code": 1,
+          "reason": "global OOM / SIGKILL；有界重试后停止",
+          "node_anon_rss_kib": 883088
+        }
+      ],
+      "api": "http://127.0.0.1:8018",
+      "readiness_status": 200,
+      "docker_image_updated": false,
+      "public_deployment_performed": false,
+      "api_restarted_for_captcha_migration": true,
+      "worker_restarted": false
+    },
+    {
+      "url": "http://localhost:3018",
+      "web_dist": ".next-ui-minimal-entry",
+      "build_id": "PimiHqMzwcsX0Zi2l3spl",
+      "build_exit_code": 0,
+      "build_asset_http_status": 200,
+      "status": "running",
+      "preview_3318_stopped": true,
+      "existing_tenant_containers": {
+        "before": 5,
+        "after": 5,
+        "all_previous_still_running": true,
+        "modified": false
+      },
+      "docker_image": {
+        "status": "not_updated",
+        "reason": "构建宿主4GB内存限制；两次构建编译worker遭global OOM / SIGKILL，保留五个运行用户容器，未进一步重试",
+        "current_tag_image": {
+          "tag": "suxiaoyou-cloud-web:local",
+          "id": "sha256:b12e5edf418110c01aa682c31066bd513d0fd51fd1c1e228e004cf14183c67f6",
+          "size_bytes": 2416459651,
+          "platform": "linux/arm64",
+          "runtime_node_options_present": false,
+          "contains_this_ui_revision": false
+        },
+        "deployed_container": false
+      },
+      "docker_build_attempts": [
+        {
+          "attempt": 1,
+          "heap_mib": 640,
+          "exit_code": 130,
+          "reason": "为纳入最终外部点击焦点修复，主动取消构建"
+        },
+        {
+          "attempt": 2,
+          "heap_mib": 640,
+          "exit_code": 1,
+          "reason": "global OOM / SIGKILL",
+          "node_anon_rss_kib": 919536
+        },
+        {
+          "attempt": 3,
+          "heap_mib": 600,
+          "semi_space_mib": 8,
+          "exit_code": 1,
+          "reason": "global OOM / SIGKILL；有界重试后停止",
+          "node_anon_rss_kib": 883088
+        }
+      ],
+      "api": "http://127.0.0.1:8018",
+      "readiness_status": 200,
+      "docker_image_updated": false,
+      "public_deployment_performed": false,
+      "api_restarted_for_captcha_migration": true,
+      "worker_restarted": false,
+      "only_web_restarted": true,
+      "api_and_worker_restarted": false,
+      "health": {
+        "/livez": 200,
+        "/readyz": 200
+      },
+      "existing_tenant_containers_modified": false
+    },
+    {
+      "url": "http://localhost:3018",
+      "web_dist": ".next-ui-login-brand",
+      "build_id": "7IzSTfYxdLsljdzuo48s0",
+      "build_exit_code": 0,
+      "build_asset_http_status": 200,
+      "status": "running",
+      "preview_3318_stopped": true,
+      "existing_tenant_containers": {
+        "before": 5,
+        "after": 5,
+        "all_previous_still_running": true,
+        "modified": false
+      },
+      "docker_image": {
+        "status": "not_updated",
+        "reason": "构建宿主4GB内存限制；两次构建编译worker遭global OOM / SIGKILL，保留五个运行用户容器，未进一步重试",
+        "current_tag_image": {
+          "tag": "suxiaoyou-cloud-web:local",
+          "id": "sha256:b12e5edf418110c01aa682c31066bd513d0fd51fd1c1e228e004cf14183c67f6",
+          "size_bytes": 2416459651,
+          "platform": "linux/arm64",
+          "runtime_node_options_present": false,
+          "contains_this_ui_revision": false
+        },
+        "deployed_container": false
+      },
+      "docker_build_attempts": [
+        {
+          "attempt": 1,
+          "heap_mib": 640,
+          "exit_code": 130,
+          "reason": "为纳入最终外部点击焦点修复，主动取消构建"
+        },
+        {
+          "attempt": 2,
+          "heap_mib": 640,
+          "exit_code": 1,
+          "reason": "global OOM / SIGKILL",
+          "node_anon_rss_kib": 919536
+        },
+        {
+          "attempt": 3,
+          "heap_mib": 600,
+          "semi_space_mib": 8,
+          "exit_code": 1,
+          "reason": "global OOM / SIGKILL；有界重试后停止",
+          "node_anon_rss_kib": 883088
+        }
+      ],
+      "api": "http://127.0.0.1:8018",
+      "readiness_status": 200,
+      "docker_image_updated": false,
+      "public_deployment_performed": false,
+      "api_restarted_for_captcha_migration": true,
+      "worker_restarted": false,
+      "only_web_restarted": true,
+      "api_and_worker_restarted": false,
+      "health": {
+        "/livez": 200,
+        "/readyz": 200
+      },
+      "existing_tenant_containers_modified": false
+    },
+    {
+      "url": "http://localhost:3018",
+      "web_dist": ".next-ui-login-pill",
+      "build_id": "yNQpy3JpWfWfNHmwltbBA",
+      "build_exit_code": 0,
+      "build_asset_http_status": 200,
+      "status": "running",
+      "preview_3318_stopped": true,
+      "existing_tenant_containers": {
+        "before": 5,
+        "after": 5,
+        "all_previous_still_running": true,
+        "modified": false
+      },
+      "docker_image": {
+        "status": "not_updated",
+        "reason": "构建宿主4GB内存限制；两次构建编译worker遭global OOM / SIGKILL，保留五个运行用户容器，未进一步重试",
+        "current_tag_image": {
+          "tag": "suxiaoyou-cloud-web:local",
+          "id": "sha256:b12e5edf418110c01aa682c31066bd513d0fd51fd1c1e228e004cf14183c67f6",
+          "size_bytes": 2416459651,
+          "platform": "linux/arm64",
+          "runtime_node_options_present": false,
+          "contains_this_ui_revision": false
+        },
+        "deployed_container": false
+      },
+      "docker_build_attempts": [
+        {
+          "attempt": 1,
+          "heap_mib": 640,
+          "exit_code": 130,
+          "reason": "为纳入最终外部点击焦点修复，主动取消构建"
+        },
+        {
+          "attempt": 2,
+          "heap_mib": 640,
+          "exit_code": 1,
+          "reason": "global OOM / SIGKILL",
+          "node_anon_rss_kib": 919536
+        },
+        {
+          "attempt": 3,
+          "heap_mib": 600,
+          "semi_space_mib": 8,
+          "exit_code": 1,
+          "reason": "global OOM / SIGKILL；有界重试后停止",
+          "node_anon_rss_kib": 883088
+        }
+      ],
+      "api": "http://127.0.0.1:8018",
+      "readiness_status": 200,
+      "docker_image_updated": false,
+      "public_deployment_performed": false,
+      "api_restarted_for_captcha_migration": true,
+      "worker_restarted": false,
+      "only_web_restarted": true,
+      "api_and_worker_restarted": false,
+      "health": {
+        "/livez": 200,
+        "/readyz": 200
+      },
+      "existing_tenant_containers_modified": false
+    }
+  ]
+}

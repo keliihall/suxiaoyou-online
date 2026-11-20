@@ -20,8 +20,11 @@ import { OllamaPanel } from "@/components/settings/ollama-panel";
 import { RapidMLXPanel } from "@/components/settings/rapid-mlx-panel";
 import { ByokPanel } from "@/components/settings/providers/byok-panel";
 import { CustomEndpointPanel } from "@/components/settings/providers/custom-endpoint-panel";
+import { ChatGPTSubPanel } from "@/components/settings/providers/chatgpt-sub-panel";
+import { IS_CLOUD } from "@/lib/cloud-session";
+import Link from "next/link";
 
-type ProviderMode = "byok" | "ollama" | "rapid-mlx" | "custom";
+type ProviderMode = "byok" | "ollama" | "rapid-mlx" | "custom" | "chatgpt";
 
 interface OllamaRuntimeStatus {
   binary_installed: boolean;
@@ -48,6 +51,7 @@ function pickModelForMode(
   if (mode === "custom") {
     return models.find((m) => isCustomEndpointProviderId(m.provider_id)) ?? null;
   }
+  if (mode === "chatgpt") return models.find(model => model.provider_id === "openai-subscription") ?? null;
   return null;
 }
 
@@ -58,6 +62,7 @@ export function ProvidersTab() {
     activeProvider === "byok" ||
     activeProvider === "ollama" ||
     activeProvider === "rapid-mlx" ||
+    (IS_CLOUD && activeProvider === "chatgpt") ||
     activeProvider === "custom"
       ? activeProvider
       : null;
@@ -86,6 +91,12 @@ export function ProvidersTab() {
   const { data: rapidMlxRuntimeStatus } = useQuery({
     queryKey: ["rapidMlxRuntime"],
     queryFn: () => api.get<RapidMLXRuntimeStatus>(API.RAPID_MLX.STATUS),
+    retry: false,
+  });
+  const { data: subscription } = useQuery({
+    queryKey: queryKeys.openaiSubscription,
+    queryFn: () => api.get<{ is_connected: boolean }>(API.CONFIG.OPENAI_SUBSCRIPTION),
+    enabled: IS_CLOUD,
     retry: false,
   });
 
@@ -136,13 +147,14 @@ export function ProvidersTab() {
     icon: typeof Eye;
     connected: boolean;
   }> = [
+    ...(IS_CLOUD ? [{ mode: "chatgpt" as const, label: "ChatGPT", icon: Cpu, connected: !!subscription?.is_connected }] : []),
     {
       mode: "byok",
       label: t("ownApiKey"),
       icon: Eye,
       connected:
         (providers ?? []).some(
-          (p) => p.is_configured && !p.id.startsWith("custom_"),
+          (p) => p.is_configured && (!p.id.startsWith("custom_") || (IS_CLOUD && p.id === "custom_cloud")),
         ),
     },
     { mode: "ollama", label: "Ollama", icon: Cpu, connected: ollamaConnected },
@@ -161,23 +173,24 @@ export function ProvidersTab() {
   ];
 
   return (
-    <div className="space-y-6">
-      <p className="text-xs text-[var(--text-secondary)]">
+    <div className="settings-section space-y-6">
+      {/* Auxiliary copy retained in source: <p className="text-xs text-[var(--text-secondary)]">
         {t("providerModeDesc")}
-      </p>
+      </p> */}
 
       {/* Provider cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {modes.map(({ mode, label, icon: Icon, connected }) => (
           <button
             key={mode}
+            aria-pressed={viewingProvider === mode}
             onClick={() => {
               setViewingProvider(mode);
               if (connected) activateProviderMode(mode);
             }}
-            className={`flex flex-col items-center gap-2 rounded-xl border p-4 transition-colors relative ${
+            className={`flex flex-col items-center min-h-28 gap-3 rounded-2xl border bg-[var(--surface-primary)] p-5 transition-colors relative ${
               viewingProvider === mode
-                ? "border-[var(--brand-primary)] bg-[var(--brand-primary)]/5"
+                ? "border-[var(--border-heavy)] bg-[var(--surface-secondary)]"
                 : "border-[var(--border-default)] hover:bg-[var(--surface-secondary)]"
             }`}
           >
@@ -189,7 +202,7 @@ export function ProvidersTab() {
               <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[var(--color-success)]" />
             )}
             {activeProvider === mode && mounted && connected && (
-              <span className="absolute bottom-1 text-ui-3xs font-medium text-[var(--brand-primary)]">
+              <span className="absolute bottom-2 text-[12px] font-medium text-[var(--brand-primary)]">
                 {t("activeProvider")}
               </span>
             )}
@@ -197,7 +210,8 @@ export function ProvidersTab() {
         ))}
       </div>
 
-      {viewingProvider === "byok" && (
+      {(viewingProvider === "byok" || viewingProvider === "custom") && IS_CLOUD && <div className="surface-card flex flex-wrap gap-3 rounded-2xl border border-[var(--border-default)] p-5"><Link className="ui-control inline-flex items-center rounded-xl border border-[var(--border-default)] px-4 py-2 text-[13px] font-medium text-[var(--brand-primary)] hover:bg-[var(--brand-soft)]" href="/cloud?manage=1&tab=models">配置个人模型与 API Key</Link><Link className="ui-control inline-flex items-center rounded-xl border border-[var(--border-default)] px-4 py-2 text-[13px] font-medium text-[var(--brand-primary)] hover:bg-[var(--brand-soft)]" href="/cloud?manage=1">账户与共享模型</Link></div>}
+      {viewingProvider === "byok" && !IS_CLOUD && (
         <ByokPanel
           providers={providers}
           onSaved={() => activateProviderMode("byok")}
@@ -205,7 +219,8 @@ export function ProvidersTab() {
       )}
       {viewingProvider === "ollama" && <OllamaPanel />}
       {viewingProvider === "rapid-mlx" && <RapidMLXPanel />}
-      {viewingProvider === "custom" && (
+      {viewingProvider === "chatgpt" && IS_CLOUD && <ChatGPTSubPanel keyStatus={undefined} />}
+      {viewingProvider === "custom" && !IS_CLOUD && (
         <CustomEndpointPanel
           providers={providers}
           localStatus={localStatus}

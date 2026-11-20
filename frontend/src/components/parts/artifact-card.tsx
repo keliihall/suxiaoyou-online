@@ -137,59 +137,65 @@ export function ArtifactCard({ data }: ArtifactCardProps) {
   );
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
+    <div
       className={cn(
-        "flex items-center gap-3 w-full rounded-xl border px-4 py-3",
+        "flex w-full max-w-full items-center gap-2 rounded-xl border px-2 py-2",
         "bg-[var(--surface-secondary)] hover:bg-[var(--surface-tertiary)]",
-        "hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5 transition-all duration-150",
+        "transition-colors duration-150",
         "text-left group",
         isError
           ? "border-[var(--color-destructive)]/30"
           : "border-[var(--border-default)]",
       )}
     >
-      {/* Icon */}
-      <div
-        className={cn(
-          "flex items-center justify-center h-9 w-9 rounded-lg shrink-0",
-          "bg-[var(--surface-tertiary)]",
-        )}
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={!content}
+        aria-label={`${t("previewFile")} ${title}`}
+        className="flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-lg px-2 py-1 text-left"
       >
-        {isRunning ? (
-          <Loader2 className="h-4 w-4 text-[var(--text-tertiary)] animate-spin" />
-        ) : (
-          <TypeIcon className="h-4 w-4 text-[var(--brand-primary)]" />
-        )}
-      </div>
-
-      {/* Title + type */}
-      <div className="flex-1 min-w-0">
-        <p
+        {/* Icon */}
+        <div
           className={cn(
-            "text-sm font-medium text-[var(--text-primary)] truncate",
-            isRunning && "shimmer-text",
+            "flex items-center justify-center h-9 w-9 rounded-lg shrink-0",
+            "bg-[var(--surface-tertiary)]",
           )}
         >
-          {title}
-        </p>
-        <p className="text-xs text-[var(--text-tertiary)] mt-0.5">{typeLabel}</p>
-      </div>
+          {isRunning ? (
+            <Loader2 className="h-4 w-4 text-[var(--text-tertiary)] animate-spin" />
+          ) : (
+            <TypeIcon className="h-4 w-4 text-[var(--brand-primary)]" />
+          )}
+        </div>
+
+        {/* Title + type */}
+        <div className="flex-1 min-w-0">
+          <p
+            className={cn(
+              "text-sm font-medium text-[var(--text-primary)] truncate",
+              isRunning && "shimmer-text",
+            )}
+          >
+            {title}
+          </p>
+          <p className="text-xs text-[var(--text-tertiary)] mt-0.5">{typeLabel}</p>
+        </div>
+      </button>
 
       {/* Download */}
       {!isRunning && !isError && content && (
-        <span
-          role="button"
-          tabIndex={0}
+        <button
+          type="button"
+          disabled={downloading}
+          aria-busy={downloading}
           onClick={handleDownload}
-          onKeyDown={(e) => e.key === "Enter" && handleDownload(e as unknown as React.MouseEvent)}
           className={cn(
-            "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium shrink-0",
+            "flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium",
             "text-[var(--text-secondary)] bg-[var(--surface-tertiary)]",
             "hover:bg-[var(--surface-primary)] hover:text-[var(--text-primary)]",
             "transition-colors cursor-pointer",
-            downloading && "opacity-60 pointer-events-none",
+            downloading && "cursor-wait pointer-events-none",
           )}
         >
           {downloading ? (
@@ -198,8 +204,8 @@ export function ArtifactCard({ data }: ArtifactCardProps) {
             <Download className="h-3.5 w-3.5" />
           )}
           <span>{downloading ? t("exporting") : t("download")}</span>
-        </span>
+        </button>
       )}
-    </button>
+    </div>
   );
 }

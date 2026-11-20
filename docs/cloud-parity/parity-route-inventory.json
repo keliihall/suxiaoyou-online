@@ -1,0 +1,752 @@
+{
+  "kind": "actual-built-runtime-route-inventory",
+  "runtime_image": "sha256:d2a754e0528386f7e3c6a6ec2a91417f626fb236629a3f38cc6899ff26d5eb86",
+  "comparison": "OpenAPI-expanded current shared original application routers, including additive Office revalidation; route presence does not prove full behavioral acceptance",
+  "original_method_path_count": 179,
+  "online_method_path_count": 183,
+  "missing": [],
+  "added": [
+    [
+      "GET",
+      "/api/cloud-runtime/files/context"
+    ],
+    [
+      "POST",
+      "/api/cloud-runtime/files/directories"
+    ],
+    [
+      "POST",
+      "/api/cloud-runtime/files/directories/create"
+    ],
+    [
+      "POST",
+      "/api/cloud-runtime/files/upload"
+    ]
+  ],
+  "managed_overrides": {
+    "/api/config/api-key": "central shared or BYOK model route",
+    "/api/config/providers/*": "central shared or BYOK model route",
+    "/api/config/custom*": "central custom route, encrypted headers and public mode",
+    "/api/config/local": "cloud reachable HTTPS compatible route or private Ollama",
+    "/api/remote*": "cloud login and tenant runtime controls"
+  },
+  "original_routes": [
+    {
+      "method": "DELETE",
+      "path": "/api/automations/{task_id}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/chat/inputs/{session_id}/{item_id}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/config/api-key"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/config/custom/{endpoint_id}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/config/local"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/config/ollama"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/config/openai-subscription"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/config/providers/{provider_id}/key"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/connectors/{connector_id}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/office-v2/user-templates/{template_ref}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/ollama/models/{name}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/ollama/uninstall"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/rapid-mlx/uninstall"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/sessions/{session_id}"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/sessions/{session_id}/goal"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/workspace-memory"
+    },
+    {
+      "method": "GET",
+      "path": "/api/agents"
+    },
+    {
+      "method": "GET",
+      "path": "/api/agents/{name}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/automations"
+    },
+    {
+      "method": "GET",
+      "path": "/api/automations/loop-presets"
+    },
+    {
+      "method": "GET",
+      "path": "/api/automations/templates"
+    },
+    {
+      "method": "GET",
+      "path": "/api/automations/{task_id}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/automations/{task_id}/runs"
+    },
+    {
+      "method": "GET",
+      "path": "/api/chat/active"
+    },
+    {
+      "method": "GET",
+      "path": "/api/chat/inputs/{session_id}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/chat/stream/{stream_id}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/config/api-key"
+    },
+    {
+      "method": "GET",
+      "path": "/api/config/local"
+    },
+    {
+      "method": "GET",
+      "path": "/api/config/ollama"
+    },
+    {
+      "method": "GET",
+      "path": "/api/config/openai-subscription"
+    },
+    {
+      "method": "GET",
+      "path": "/api/config/openai-subscription/callback"
+    },
+    {
+      "method": "GET",
+      "path": "/api/config/providers"
+    },
+    {
+      "method": "GET",
+      "path": "/api/connectors"
+    },
+    {
+      "method": "GET",
+      "path": "/api/connectors/oauth/callback"
+    },
+    {
+      "method": "GET",
+      "path": "/api/connectors/{connector_id}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/file-versions"
+    },
+    {
+      "method": "GET",
+      "path": "/api/fts/index/{workspace}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/fts/status"
+    },
+    {
+      "method": "GET",
+      "path": "/api/google/callback"
+    },
+    {
+      "method": "GET",
+      "path": "/api/google/status"
+    },
+    {
+      "method": "GET",
+      "path": "/api/mcp/oauth/callback"
+    },
+    {
+      "method": "GET",
+      "path": "/api/mcp/status"
+    },
+    {
+      "method": "GET",
+      "path": "/api/messages/{session_id}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/messages/{session_id}/turn-index"
+    },
+    {
+      "method": "GET",
+      "path": "/api/messages/{session_id}/{message_id}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/models"
+    },
+    {
+      "method": "GET",
+      "path": "/api/office-v2/context"
+    },
+    {
+      "method": "GET",
+      "path": "/api/office-v2/page"
+    },
+    {
+      "method": "GET",
+      "path": "/api/office-v2/user-templates"
+    },
+    {
+      "method": "GET",
+      "path": "/api/office-v2/user-templates/{template_ref}/page"
+    },
+    {
+      "method": "GET",
+      "path": "/api/office-v2/validation"
+    },
+    {
+      "method": "GET",
+      "path": "/api/ollama/models"
+    },
+    {
+      "method": "GET",
+      "path": "/api/ollama/models/library"
+    },
+    {
+      "method": "GET",
+      "path": "/api/ollama/models/{name}/info"
+    },
+    {
+      "method": "GET",
+      "path": "/api/ollama/status"
+    },
+    {
+      "method": "GET",
+      "path": "/api/plugins/status"
+    },
+    {
+      "method": "GET",
+      "path": "/api/plugins/{name}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/rapid-mlx/status"
+    },
+    {
+      "method": "GET",
+      "path": "/api/runtime/checkpoints"
+    },
+    {
+      "method": "GET",
+      "path": "/api/runtime/context"
+    },
+    {
+      "method": "GET",
+      "path": "/api/runtime/worktrees/inspect"
+    },
+    {
+      "method": "GET",
+      "path": "/api/security/audit"
+    },
+    {
+      "method": "GET",
+      "path": "/api/security/hooks"
+    },
+    {
+      "method": "GET",
+      "path": "/api/security/overview"
+    },
+    {
+      "method": "GET",
+      "path": "/api/sessions"
+    },
+    {
+      "method": "GET",
+      "path": "/api/sessions/search"
+    },
+    {
+      "method": "GET",
+      "path": "/api/sessions/{session_id}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/sessions/{session_id}/export-md"
+    },
+    {
+      "method": "GET",
+      "path": "/api/sessions/{session_id}/export-pdf"
+    },
+    {
+      "method": "GET",
+      "path": "/api/sessions/{session_id}/files"
+    },
+    {
+      "method": "GET",
+      "path": "/api/sessions/{session_id}/goal"
+    },
+    {
+      "method": "GET",
+      "path": "/api/sessions/{session_id}/goal/usage"
+    },
+    {
+      "method": "GET",
+      "path": "/api/sessions/{session_id}/todos"
+    },
+    {
+      "method": "GET",
+      "path": "/api/skills"
+    },
+    {
+      "method": "GET",
+      "path": "/api/skills/store/search"
+    },
+    {
+      "method": "GET",
+      "path": "/api/skills/{skill_name}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/tools"
+    },
+    {
+      "method": "GET",
+      "path": "/api/tools/{tool_id}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/usage"
+    },
+    {
+      "method": "GET",
+      "path": "/api/workspace-memory"
+    },
+    {
+      "method": "GET",
+      "path": "/api/workspace-memory/list"
+    },
+    {
+      "method": "GET",
+      "path": "/health"
+    },
+    {
+      "method": "GET",
+      "path": "/livez"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/models"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/automations/{task_id}"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/chat/inputs/{session_id}/{item_id}"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/config/custom/{endpoint_id}"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/sessions/{session_id}"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/sessions/{session_id}/goal"
+    },
+    {
+      "method": "POST",
+      "path": "/api/artifacts/export-pdf"
+    },
+    {
+      "method": "POST",
+      "path": "/api/automations"
+    },
+    {
+      "method": "POST",
+      "path": "/api/automations/from-template"
+    },
+    {
+      "method": "POST",
+      "path": "/api/automations/{task_id}/run"
+    },
+    {
+      "method": "POST",
+      "path": "/api/chat/abort"
+    },
+    {
+      "method": "POST",
+      "path": "/api/chat/compact"
+    },
+    {
+      "method": "POST",
+      "path": "/api/chat/edit"
+    },
+    {
+      "method": "POST",
+      "path": "/api/chat/goal"
+    },
+    {
+      "method": "POST",
+      "path": "/api/chat/inputs"
+    },
+    {
+      "method": "POST",
+      "path": "/api/chat/prompt"
+    },
+    {
+      "method": "POST",
+      "path": "/api/chat/respond"
+    },
+    {
+      "method": "POST",
+      "path": "/api/chat/stream/{stream_id}"
+    },
+    {
+      "method": "POST",
+      "path": "/api/chat/task-batch"
+    },
+    {
+      "method": "POST",
+      "path": "/api/config/api-key"
+    },
+    {
+      "method": "POST",
+      "path": "/api/config/custom"
+    },
+    {
+      "method": "POST",
+      "path": "/api/config/local"
+    },
+    {
+      "method": "POST",
+      "path": "/api/config/ollama"
+    },
+    {
+      "method": "POST",
+      "path": "/api/config/openai-subscription/login"
+    },
+    {
+      "method": "POST",
+      "path": "/api/config/openai-subscription/manual-callback"
+    },
+    {
+      "method": "POST",
+      "path": "/api/config/providers/{provider_id}/key"
+    },
+    {
+      "method": "POST",
+      "path": "/api/config/providers/{provider_id}/toggle"
+    },
+    {
+      "method": "POST",
+      "path": "/api/connectors"
+    },
+    {
+      "method": "POST",
+      "path": "/api/connectors/{connector_id}/approve-local-startup"
+    },
+    {
+      "method": "POST",
+      "path": "/api/connectors/{connector_id}/auth-callback"
+    },
+    {
+      "method": "POST",
+      "path": "/api/connectors/{connector_id}/connect"
+    },
+    {
+      "method": "POST",
+      "path": "/api/connectors/{connector_id}/disable"
+    },
+    {
+      "method": "POST",
+      "path": "/api/connectors/{connector_id}/disconnect"
+    },
+    {
+      "method": "POST",
+      "path": "/api/connectors/{connector_id}/enable"
+    },
+    {
+      "method": "POST",
+      "path": "/api/connectors/{connector_id}/reconnect"
+    },
+    {
+      "method": "POST",
+      "path": "/api/connectors/{connector_id}/token"
+    },
+    {
+      "method": "POST",
+      "path": "/api/file-versions/{version_id}/restore"
+    },
+    {
+      "method": "POST",
+      "path": "/api/files/attach"
+    },
+    {
+      "method": "POST",
+      "path": "/api/files/browse"
+    },
+    {
+      "method": "POST",
+      "path": "/api/files/browse-directory"
+    },
+    {
+      "method": "POST",
+      "path": "/api/files/content"
+    },
+    {
+      "method": "POST",
+      "path": "/api/files/content-binary"
+    },
+    {
+      "method": "POST",
+      "path": "/api/files/ingest"
+    },
+    {
+      "method": "POST",
+      "path": "/api/files/list-directory"
+    },
+    {
+      "method": "POST",
+      "path": "/api/files/native-source-content"
+    },
+    {
+      "method": "POST",
+      "path": "/api/files/native-source-info"
+    },
+    {
+      "method": "POST",
+      "path": "/api/files/open-file-default"
+    },
+    {
+      "method": "POST",
+      "path": "/api/files/open-system"
+    },
+    {
+      "method": "POST",
+      "path": "/api/files/pptx-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/files/reveal-file-system"
+    },
+    {
+      "method": "POST",
+      "path": "/api/files/reveal-system"
+    },
+    {
+      "method": "POST",
+      "path": "/api/files/search"
+    },
+    {
+      "method": "POST",
+      "path": "/api/files/upload"
+    },
+    {
+      "method": "POST",
+      "path": "/api/fts/index/{workspace}"
+    },
+    {
+      "method": "POST",
+      "path": "/api/google/auth-start"
+    },
+    {
+      "method": "POST",
+      "path": "/api/mcp/{name}/auth-callback"
+    },
+    {
+      "method": "POST",
+      "path": "/api/mcp/{name}/auth-start"
+    },
+    {
+      "method": "POST",
+      "path": "/api/mcp/{name}/disconnect"
+    },
+    {
+      "method": "POST",
+      "path": "/api/mcp/{name}/reconnect"
+    },
+    {
+      "method": "POST",
+      "path": "/api/models/refresh"
+    },
+    {
+      "method": "POST",
+      "path": "/api/office-v2/render"
+    },
+    {
+      "method": "POST",
+      "path": "/api/office-v2/user-templates/import"
+    },
+    {
+      "method": "POST",
+      "path": "/api/office-v2/user-templates/{template_ref}/approve"
+    },
+    {
+      "method": "POST",
+      "path": "/api/office-v2/user-templates/{template_ref}/revalidate"
+    },
+    {
+      "method": "POST",
+      "path": "/api/ollama/models/pull"
+    },
+    {
+      "method": "POST",
+      "path": "/api/ollama/setup"
+    },
+    {
+      "method": "POST",
+      "path": "/api/ollama/start"
+    },
+    {
+      "method": "POST",
+      "path": "/api/ollama/stop"
+    },
+    {
+      "method": "POST",
+      "path": "/api/ollama/warmup"
+    },
+    {
+      "method": "POST",
+      "path": "/api/plugins/{name}/disable"
+    },
+    {
+      "method": "POST",
+      "path": "/api/plugins/{name}/enable"
+    },
+    {
+      "method": "POST",
+      "path": "/api/rapid-mlx/cached"
+    },
+    {
+      "method": "POST",
+      "path": "/api/rapid-mlx/remove"
+    },
+    {
+      "method": "POST",
+      "path": "/api/rapid-mlx/start"
+    },
+    {
+      "method": "POST",
+      "path": "/api/rapid-mlx/stop"
+    },
+    {
+      "method": "POST",
+      "path": "/api/runtime/rewind/execute"
+    },
+    {
+      "method": "POST",
+      "path": "/api/runtime/rewind/preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/runtime/worktrees/create-bind"
+    },
+    {
+      "method": "POST",
+      "path": "/api/runtime/worktrees/gc"
+    },
+    {
+      "method": "POST",
+      "path": "/api/runtime/worktrees/release"
+    },
+    {
+      "method": "POST",
+      "path": "/api/security/emergency-stop"
+    },
+    {
+      "method": "POST",
+      "path": "/api/security/hooks/revoke"
+    },
+    {
+      "method": "POST",
+      "path": "/api/sessions"
+    },
+    {
+      "method": "POST",
+      "path": "/api/sessions/{session_id}/compact"
+    },
+    {
+      "method": "POST",
+      "path": "/api/sessions/{session_id}/goal"
+    },
+    {
+      "method": "POST",
+      "path": "/api/sessions/{session_id}/goal/pause"
+    },
+    {
+      "method": "POST",
+      "path": "/api/sessions/{session_id}/goal/resume"
+    },
+    {
+      "method": "POST",
+      "path": "/api/skills/install"
+    },
+    {
+      "method": "POST",
+      "path": "/api/skills/{skill_name}/disable"
+    },
+    {
+      "method": "POST",
+      "path": "/api/skills/{skill_name}/enable"
+    },
+    {
+      "method": "POST",
+      "path": "/api/workspace-memory/export"
+    },
+    {
+      "method": "POST",
+      "path": "/api/workspace-memory/refresh"
+    },
+    {
+      "method": "POST",
+      "path": "/shutdown"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/chat/completions"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/security/tools/{tool_id}"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/workspace-memory"
+    }
+  ],
+  "baseline_ref_for_capability_audit": "aef0a6f145222c3e5ccdf65c434f9fb0b4e48f5c"
+}

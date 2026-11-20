@@ -19,10 +19,15 @@ from typing import Any
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlalchemy.orm import selectinload
 
 from app.agent.agent import AgentRegistry
 from app.i18n import localize, synthetic_process_instruction
 from app.models.message import Message, Part
+from app.models.session_context_projection import SessionContextProjection
+from app.session.context_projection import (
+    clear_collapse_anchor, get_or_create_projection, pruned_part_ids, select_context_messages,
+)
 from app.provider.registry import ProviderRegistry
 from app.session.manager import create_message, create_part
 from app.streaming.events import (
@@ -117,11 +122,17 @@ async def run_compaction(
         model_id=model_id,
     )
     job.publish(SSEEvent(COMPACTION_PHASE, {
-        "session_id": session_id, "phase": "summarize", "status": "completed",
+        "session_id": session_id, "phase": "summarize",
+        "status": "completed" if result.summary else "failed",
     }))
 
     if job.abort_event.is_set():
         logger.info("Compaction aborted during summarize for session %s", session_id)
+        return result
+
+    # Pruning alone does not provide the durable summary anchor required by
+    # the orchestrator. Do not announce a failed summary as completed.
+    if not result.summary:
         return result
 
     if result.summary:
@@ -169,6 +180,9 @@ async def run_compaction(
                     session_id=session_id,
                     data={"type": "compaction", "auto": True},
                 )
+                # The newly committed summary supersedes an older collapse;
+                # pruning markers remain disposable model-only state.
+                await clear_collapse_anchor(db, session_id)
 
     job.publish(SSEEvent(COMPACTED, {
         "session_id": session_id,
@@ -185,18 +199,19 @@ async def _phase1_prune(
     *,
     session_factory: async_sessionmaker[AsyncSession],
 ) -> int:
-    """Mark old tool outputs as truncated to reduce context size."""
+    """Prune the model projection while keeping every stored tool output."""
     pruned_parts = 0
     async with session_factory() as db:
         async with db.begin():
-            # Get all messages ordered by time
-            stmt = (
-                select(Message)
-                .where(Message.session_id == session_id)
-                .order_by(Message.time_created.asc())
-            )
-            result = await db.execute(stmt)
-            messages = list(result.scalars().all())
+            # Summary/collapse anchors affect only the model-context view.
+            messages = list((await db.scalars(
+                select(Message).where(Message.session_id == session_id)
+                .options(selectinload(Message.parts))
+                .order_by(Message.time_created.asc(), Message.id.asc())
+            )).all())
+            projection = await db.get(SessionContextProjection, session_id)
+            messages, _ = select_context_messages(messages, projection)
+            marked_ids = pruned_part_ids(projection)
 
             if len(messages) <= SKIP_RECENT_TURNS * 2:
                 return 0  # Not enough history to prune
@@ -208,16 +223,7 @@ async def _phase1_prune(
             token_budget = PROTECTED_TOKEN_BUDGET
 
             for msg in messages_to_prune:
-                # Get tool parts for this message
-                part_stmt = (
-                    select(Part)
-                    .where(Part.message_id == msg.id)
-                    .order_by(Part.time_created.asc())
-                )
-                part_result = await db.execute(part_stmt)
-                parts = list(part_result.scalars().all())
-
-                for part in parts:
+                for part in msg.parts:
                     if not part.data or part.data.get("type") != "tool":
                         continue
 
@@ -228,7 +234,7 @@ async def _phase1_prune(
 
                     state = part.data.get("state", {})
                     output = state.get("output", "")
-                    if not output or state.get("time_compacted"):
+                    if not output or state.get("time_compacted") or part.id in marked_ids:
                         continue
 
                     output_tokens = estimate_tokens(output)
@@ -237,15 +243,12 @@ async def _phase1_prune(
                         token_budget -= output_tokens
                         continue  # Protected
 
-                    # Mark as compacted
-                    updated_data = dict(part.data)
-                    updated_state = dict(state)
-                    updated_state["output"] = "[truncated]"
-                    updated_state["time_compacted"] = "auto"
-                    updated_data["state"] = updated_state
-                    part.data = updated_data
+                    marked_ids.add(part.id)
                     pruned_parts += 1
 
+            if pruned_parts:
+                projection = await get_or_create_projection(db, session_id)
+                projection.pruned_tool_part_ids = sorted(marked_ids)
             await db.flush()
     return pruned_parts
 
@@ -352,8 +355,11 @@ async def _phase2_summarize(
 
         summary = ""
         usage_data: dict[str, Any] = {}
+        finish_reason: str | None = None
+        stream_error: Exception | None = None
         last_reported = 0
         first_chunk = None
+        provider_stream = None
         if job.goal_id is not None:
             # Pair the final durable checks and the Provider's first iterator
             # step with the same runtime lock used by pause/edit/archive. A
@@ -403,29 +409,53 @@ async def _phase2_summarize(
 
             chunks = admitted_chunks()
         else:
-            chunks = provider.stream_chat(
+            chunks = provider_stream = provider.stream_chat(
                 model_id,
                 messages,
                 system=compaction_agent.system_prompt,
                 max_tokens=max_tokens,
             )
 
-        async for chunk in chunks:
-            if job.abort_event.is_set():
-                logger.info("Compaction summarize stream aborted for session %s", session_id)
-                return None
-            if chunk.type == "text-delta":
-                summary += chunk.data.get("text", "")
-                # Emit progress every ~200 chars to avoid flooding
-                if len(summary) - last_reported >= 200:
-                    job.publish(SSEEvent(COMPACTION_PROGRESS, {
-                        "session_id": session_id,
-                        "phase": "summarize",
-                        "chars": len(summary),
-                    }))
-                    last_reported = len(summary)
-            elif chunk.type == "usage":
-                usage_data = chunk.data
+        try:
+            async for chunk in chunks:
+                if job.abort_event.is_set():
+                    break
+                if chunk.type == "text-delta":
+                    if finish_reason is not None:
+                        stream_error = RuntimeError("Compaction content after finish")
+                        break
+                    summary += chunk.data.get("text", "")
+                    # Emit progress every ~200 chars to avoid flooding
+                    if len(summary) - last_reported >= 200:
+                        job.publish(SSEEvent(COMPACTION_PROGRESS, {
+                            "session_id": session_id,
+                            "phase": "summarize",
+                            "chars": len(summary),
+                        }))
+                        last_reported = len(summary)
+                elif chunk.type == "usage":
+                    usage_data = chunk.data
+                elif chunk.type == "finish":
+                    finish_reason = chunk.data.get("reason")
+                    if finish_reason != "stop":
+                        stream_error = RuntimeError("Compaction summary was not completed")
+                elif chunk.type in {"error", "tool-call"}:
+                    # Never install partial text as the new history anchor.
+                    # Provider diagnostics may contain private request content.
+                    stream_error = RuntimeError("Compaction provider did not complete")
+                    break
+        except Exception as error:
+            stream_error = error
+        finally:
+            # Closing the goal wrapper does not close its underlying Provider
+            # iterator automatically when an error chunk ends consumption.
+            for stream in (chunks, provider_stream if provider_stream is not chunks else None):
+                close = getattr(stream, "aclose", None)
+                if close is not None:
+                    try:
+                        await close()
+                    except Exception as error:
+                        stream_error = stream_error or error
 
         # Persist usage as a synthetic assistant message so the usage API picks it up
         if usage_data:
@@ -476,10 +506,19 @@ async def _phase2_summarize(
                 usage_data.get("total", 0), cost, session_id,
             )
 
-        return summary.strip() if summary.strip() else None
+        if job.abort_event.is_set():
+            logger.info("Compaction summarize stream aborted for session %s", session_id)
+            return None
+        # Keep confirmed usage even when an error follows its receipt. A
+        # truncated, empty or unterminated response cannot replace history.
+        if stream_error is not None:
+            raise RuntimeError("Compaction stream failed") from stream_error
+        if finish_reason != "stop" or not summary.strip():
+            raise RuntimeError("Compaction summary is incomplete")
+        return summary.strip()
 
     except Exception as e:
-        logger.warning("Failed to generate compaction summary: %s", e)
+        logger.warning("Failed to generate compaction summary (%s)", type(e).__name__)
         job.publish(SSEEvent(COMPACTION_ERROR, {
             "session_id": session_id,
             "code": "compaction_failed",

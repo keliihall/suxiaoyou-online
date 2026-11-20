@@ -4,15 +4,15 @@ import { useState, useEffect } from "react";
 import { Sun, Moon, Monitor, Eye, EyeOff } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useTranslation } from "react-i18next";
-import { Separator } from "@/components/ui/separator";
 import { IS_DESKTOP } from "@/lib/constants";
 import { TextPart } from "@/components/parts/text-part";
 import { AppearanceCustomize } from "@/components/settings/appearance-customize";
 import frontendPackage from "../../../package.json";
+import { userStorage } from "@/lib/cloud-session";
 
 export function GeneralTab() {
   const { t, i18n } = useTranslation('settings');
-  const { theme, resolvedTheme, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [appVersion, setAppVersion] = useState(frontendPackage.version);
 
@@ -29,20 +29,20 @@ export function GeneralTab() {
 
   const [showPreview, setShowPreview] = useState(false);
   const [proseFont, setProseFont] = useState<"serif" | "sans">("serif");
+  /* Auxiliary appearance status retained in source:
   const activeAppearance = mounted
-    ? resolvedTheme === "light"
-      ? t("light")
-      : t("dark")
+    ? resolvedTheme === "light" ? t("light") : t("dark")
     : null;
+  */
 
   return (
     <div className="space-y-8">
       {/* Theme Section */}
-      <section>
+      <section className="surface-card p-5 sm:p-6">
         <h2 className="text-ui-title-sm font-semibold text-[var(--text-primary)] mb-3">
           {t('appearance')}
         </h2>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-3">
           {[
             { value: "light", label: t('light'), icon: Sun },
             { value: "dark", label: t('dark'), icon: Moon },
@@ -51,9 +51,10 @@ export function GeneralTab() {
             <button
               key={value}
               onClick={() => setTheme(value)}
-              className={`flex flex-col items-center gap-2 rounded-xl border p-4 transition-colors ${
+              aria-pressed={mounted && theme === value}
+              className={`flex flex-col items-center gap-3 rounded-xl border bg-[var(--surface-primary)] p-5 transition-colors ${
                 mounted && theme === value
-                  ? "border-[var(--brand-primary)] bg-[var(--brand-primary)]/5"
+                  ? "border-[var(--border-heavy)] bg-[var(--surface-secondary)]"
                   : "border-[var(--border-default)] hover:bg-[var(--surface-secondary)]"
               }`}
             >
@@ -62,18 +63,17 @@ export function GeneralTab() {
             </button>
           ))}
         </div>
-        {activeAppearance && (
-          <p className="mt-3 text-ui-caption text-[var(--text-tertiary)]">
-            {theme === "system"
-              ? t("appearanceActiveSystem", { appearance: activeAppearance })
-              : t("appearanceActive", { appearance: activeAppearance })}
-          </p>
-        )}
+        {/* Auxiliary appearance status retained in source:
+          {activeAppearance && <p>{theme === "system"
+            ? t("appearanceActiveSystem", { appearance: activeAppearance })
+            : t("appearanceActive", { appearance: activeAppearance })}</p>}
+        */}
 
         {/* 排版预览 */}
         <button
           onClick={() => setShowPreview(!showPreview)}
-          className="mt-3 flex items-center gap-1.5 text-ui-caption text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
+          aria-expanded={showPreview}
+          className="mt-4 flex min-h-10 items-center gap-2 text-[13px] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
         >
           {showPreview ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
           {t("typographyPreview")}
@@ -84,7 +84,7 @@ export function GeneralTab() {
 
         {showPreview && (
           <>
-            <div className="mt-3 grid grid-cols-2 gap-2">
+            <div className="mt-3 grid grid-cols-2 gap-3">
               {([
                 { value: "serif", label: t("serifFont") },
                 { value: "sans", label: t("sansSerifFont") },
@@ -92,9 +92,10 @@ export function GeneralTab() {
                 <button
                   key={value}
                   onClick={() => setProseFont(value)}
+                  aria-pressed={proseFont === value}
                   className={`rounded-lg border px-3 py-2 text-ui-caption font-medium transition-colors ${
                     proseFont === value
-                      ? "border-[var(--brand-primary)] bg-[var(--brand-primary)]/5"
+                      ? "border-[var(--border-heavy)] bg-[var(--surface-secondary)]"
                       : "border-[var(--border-default)] hover:bg-[var(--surface-secondary)]"
                   }`}
                 >
@@ -119,27 +120,26 @@ export function GeneralTab() {
         )}
       </section>
 
-      <Separator />
-
       {/* Language Section */}
-      <section>
+      <section className="surface-card p-5 sm:p-6">
         <h2 className="text-ui-title-sm font-semibold text-[var(--text-primary)] mb-3">
           {t('language')}
         </h2>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-3">
           {[
             { value: "en", label: t("languageEnglish") },
             { value: "zh", label: t("languageChinese") },
           ].map(({ value, label }) => (
             <button
               key={value}
+              aria-pressed={mounted && i18n.language.startsWith(value)}
               onClick={() => {
                 i18n.changeLanguage(value);
-                localStorage.setItem("suxiaoyou-language", value);
+                userStorage.setItem("suxiaoyou-language", value);
               }}
-              className={`flex flex-col items-center gap-2 rounded-xl border p-4 transition-colors ${
+              className={`flex flex-col items-center gap-3 rounded-xl border bg-[var(--surface-primary)] p-5 transition-colors ${
                 mounted && i18n.language.startsWith(value)
-                  ? "border-[var(--brand-primary)] bg-[var(--brand-primary)]/5"
+                  ? "border-[var(--border-heavy)] bg-[var(--surface-secondary)]"
                   : "border-[var(--border-default)] hover:bg-[var(--surface-secondary)]"
               }`}
             >
@@ -149,16 +149,14 @@ export function GeneralTab() {
         </div>
       </section>
 
-      <Separator />
-
       {/* About */}
-      <section>
+      <section className="surface-card p-5 sm:p-6">
         <h2 className="text-ui-title-sm font-semibold text-[var(--text-primary)] mb-3">
           {t('about')}
         </h2>
         <div className="text-ui-caption text-[var(--text-secondary)] space-y-1">
           <p>{t('aboutVersion', { version: appVersion })}</p>
-          <p>{t('aboutDesc')}</p>
+          {/* Auxiliary copy retained in source: <p>{t('aboutDesc')}</p> */}
           <p>{t('aboutCopyright')}</p>
         </div>
       </section>

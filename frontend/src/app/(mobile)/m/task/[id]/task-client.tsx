@@ -3,9 +3,17 @@
 import { Suspense, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChatView } from "@/components/chat/chat-view";
+import { AnimatePresence } from "framer-motion";
+import { ArtifactPanel } from "@/components/artifacts/artifact-panel";
+import { ActivityPanel } from "@/components/activity/activity-panel";
+import { PlanReviewPanel } from "@/components/plan-review/plan-review-panel";
+import { useArtifactStore } from "@/stores/artifact-store";
+import { useActivityStore } from "@/stores/activity-store";
+import { usePlanReviewStore } from "@/stores/plan-review-store";
 import { api } from "@/lib/api";
 import { API } from "@/lib/constants";
 import { isRemoteMode } from "@/lib/remote-connection";
+import { IS_CLOUD } from "@/lib/cloud-session";
 import { useChatStore } from "@/stores/chat-store";
 import {
   isKnownTerminalStream,
@@ -17,9 +25,12 @@ function TaskClientInner({ sessionId }: { sessionId: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const artifactIsOpen = useArtifactStore((state) => state.isOpen);
+  const activityIsOpen = useActivityStore((state) => state.isOpen);
+  const planReviewIsOpen = usePlanReviewStore((state) => state.isOpen);
 
   useEffect(() => {
-    if (!isRemoteMode()) {
+    if (!IS_CLOUD && !isRemoteMode()) {
       router.replace("/m/settings");
     }
   }, [router]);
@@ -27,6 +38,13 @@ function TaskClientInner({ sessionId }: { sessionId: string }) {
   const resolvedId = sessionId === "_"
     ? searchParams.get("sessionId") ?? ""
     : sessionId;
+
+  // Plan content belongs to this task, including when only the query changes.
+  useEffect(() => {
+    const closePlanReview = () => usePlanReviewStore.getState().close();
+    closePlanReview();
+    return closePlanReview;
+  }, [resolvedId]);
 
   // If navigated with a stream_id (e.g., from new task page), seed the
   // chatStore and attach the stream immediately so we don't wait for the
@@ -89,8 +107,13 @@ function TaskClientInner({ sessionId }: { sessionId: string }) {
   // No custom header — ChatHeader inside ChatView handles everything.
   // In remote mode, ChatHeader shows back button instead of sidebar toggle.
   return (
-    <div className="flex flex-col h-full pt-[env(safe-area-inset-top)]">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[var(--surface-chat)] pt-[env(safe-area-inset-top)]">
       <ChatView sessionId={resolvedId} />
+      <AnimatePresence>
+        {artifactIsOpen && <ArtifactPanel key="mobile-artifact" />}
+        {activityIsOpen && <ActivityPanel key="mobile-activity" />}
+        {planReviewIsOpen && <PlanReviewPanel key="mobile-plan-review" />}
+      </AnimatePresence>
     </div>
   );
 }

@@ -57,30 +57,31 @@ export default function SettingsPageClient({ initialTab }: SettingsPageClientPro
   );
 
   return (
-    <div className="flex-1 overflow-y-auto scrollbar-auto">
-      <div className="mx-auto max-w-3xl px-4 py-8 lg:py-10">
+    <div className="flex-1 overflow-y-auto bg-[var(--surface-chat)] scrollbar-auto">
+      <div className="page-shell mx-auto w-full max-w-5xl px-5 pb-10 pt-20 sm:px-8 lg:py-10">
         {/* Header — mobile back button + current section title */}
-        <div className="flex items-center gap-3 mb-6">
+        <div className="page-header mb-8 flex min-h-12 items-center gap-3 border-b border-[var(--border-subtle)] pb-6">
           <Button variant="ghost" size="icon" className="h-8 w-8 lg:hidden" asChild>
             <Link href="/c/new">
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
-          <h1 className="text-ui-xl font-semibold text-[var(--text-primary)]">
+          <h1 className="text-[26px] font-semibold tracking-tight text-[var(--text-primary)]">
             {activeLabel}
           </h1>
         </div>
 
         {/* Mobile tab pills — desktop uses the SettingsSidebar instead */}
-        <div className="flex gap-1 overflow-x-auto pb-4 lg:hidden">
+        <div className="segmented-nav mb-6 flex gap-1 overflow-x-auto rounded-xl bg-[var(--surface-secondary)] p-1 lg:hidden">
           {SETTINGS_TABS.map(({ id, icon: Icon, labelKey }) => (
             <button
               key={id}
               onClick={() => navigateTab(id)}
+              aria-pressed={activeTab === id}
               className={cn(
-                "flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium transition-colors shrink-0",
+                "flex min-h-11 items-center gap-2 whitespace-nowrap rounded-lg px-3 text-[13px] font-medium transition-colors shrink-0",
                 activeTab === id
-                  ? "bg-[var(--brand-primary)] text-[var(--brand-primary-text)]"
+                  ? "bg-[var(--surface-primary)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]"
                   : "text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)]",
               )}
             >
@@ -91,7 +92,7 @@ export default function SettingsPageClient({ initialTab }: SettingsPageClientPro
         </div>
 
         {/* Tab content */}
-        <div className="min-w-0">
+        <div className="page-content min-w-0">
           {activeTab === "general" && <GeneralTab />}
           {activeTab === "providers" && <ProvidersTab />}
           {activeTab === "permissions" && <PermissionsTab />}

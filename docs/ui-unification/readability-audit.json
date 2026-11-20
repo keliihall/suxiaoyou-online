@@ -1,0 +1,316 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-11-15T07:13:55.335223+00:00",
+  "scope": "苏小有 Online 全用户界面可读性与简洁化复查",
+  "principles": [
+    "简洁：删除重复标题、装饰与辅助说明，保留必要标签、错误、业务数据及确认",
+    "统一：语义颜色、字体、边框、控件状态与焦点规则",
+    "可读：深浅主题分别核验文字、输入框和按钮，不用整体透明度弱化禁用控件"
+  ],
+  "page_coverage": {
+    "account": [
+      "登录",
+      "用量与额度",
+      "个人模型",
+      "管理后台：用户与额度",
+      "管理后台：用量与核查",
+      "管理后台：全部任务",
+      "管理后台：模型路由",
+      "管理后台：操作审计"
+    ],
+    "workbench": [
+      "新对话",
+      "历史会话",
+      "文件预览",
+      "活动面板",
+      "计划面板",
+      "插件",
+      "自动化",
+      "云端访问"
+    ],
+    "settings": [
+      "通用",
+      "模型供应商",
+      "权限",
+      "安全",
+      "自动化",
+      "插件",
+      "用量",
+      "记忆"
+    ],
+    "mobile": [
+      "任务列表",
+      "新任务",
+      "设置",
+      "历史任务",
+      "文件/活动/计划面板",
+      "目录选择",
+      "侧栏导航"
+    ],
+    "dialogs": [
+      "创建/编辑用户",
+      "创建/编辑模型路由",
+      "只写API Key和请求头",
+      "个人对话/图像模型",
+      "Mac节点",
+      "连接测试空态",
+      "图片测试空态",
+      "删除确认",
+      "取消任务确认",
+      "不确定用量核查",
+      "自动化创建/编辑"
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "viewports_css_px": [
+      320,
+      390,
+      1192,
+      1280,
+      1440
+    ]
+  },
+  "fixes": [
+    "注册自定义 text-ui-* 字号的 Tailwind 类别，避免样式合并删除按钮前景色",
+    "提高次级文字、占位符和禁用状态可读性；输入控件边界与卡片边界分开",
+    "用显式主题 token 修复原生 select/input 的 color-scheme 编译结果",
+    "统一主操作、危险操作、悬停、禁用及键盘焦点状态",
+    "修复问答组件动态 Tailwind 类名和浅色主题强制 prose-invert",
+    "精简重复标题、卡片嵌套、装饰底色和默认阴影；插件改为分类列表",
+    "取消动态渐变透明文字，改用静态清晰文字；修正代码语法颜色",
+    "恢复移动历史任务的文件、活动和计划面板，面板标题与关闭动作统一",
+    "消息操作栏支持触屏与键盘，手机输入区收为两排工具，空态高约246px",
+    "已有内容的生成中或失败产物仍可预览；移动计划面板随会话切换/卸载清理"
+  ],
+  "validation": {
+    "typescript": "passed",
+    "targeted_eslint": "passed",
+    "git_diff_check": "passed",
+    "unit_tests": {
+      "passed": 2,
+      "file": "frontend/tests/unit/ui-class-merge.test.ts"
+    },
+    "browser_regression": {
+      "unique_tests_passed": 44,
+      "cloud": 30,
+      "desktop_workbench": 14,
+      "browser": "Playwright Chromium",
+      "flaky": 0,
+      "data_mode": "isolated API fixtures; production task/configuration writes were not performed",
+      "final_copy_recheck": "6/6 contrast matrix cases passed after moving two auxiliary notes to code comments"
+    },
+    "contrast": {
+      "method": "实际浏览器计算前景色、祖先背景、透明度及输入占位文字；状态样本按样式去重",
+      "scope": "默认深浅主题中的已覆盖HTML文字和表单状态；不是完整WCAG认证",
+      "state_snapshots": 88,
+      "style_samples": 1484,
+      "failures": 0,
+      "manual_review_samples": 0,
+      "normal_text_target": 4.5,
+      "large_or_disabled_project_floor": 3,
+      "actual_min_ratio_light": 4.56,
+      "actual_min_ratio_dark": 4.55,
+      "states": [
+        "login-light",
+        "login-hover-light",
+        "login-dark",
+        "login-hover-dark",
+        "admin-用户与额度-light",
+        "admin-用量与核查-light",
+        "admin-全部任务-light",
+        "admin-模型路由-light",
+        "admin-操作审计-light",
+        "create-user-light",
+        "create-model-light",
+        "edit-disabled-model-id-light",
+        "account-usage-light",
+        "personal-model-light",
+        "admin-用户与额度-dark",
+        "admin-用量与核查-dark",
+        "admin-全部任务-dark",
+        "admin-模型路由-dark",
+        "admin-操作审计-dark",
+        "create-user-dark",
+        "create-model-dark",
+        "edit-disabled-model-id-dark",
+        "account-usage-dark",
+        "personal-model-dark",
+        "workbench--c-new-light",
+        "workbench--c-new-dark",
+        "workbench--plugins-light",
+        "workbench--plugins-dark",
+        "workbench--automations-light",
+        "workbench--automations-dark",
+        "workbench--remote-light",
+        "workbench--remote-dark",
+        "workbench--settings-tab-general-light",
+        "workbench--settings-tab-general-dark",
+        "workbench--settings-tab-providers-light",
+        "workbench--settings-tab-providers-dark",
+        "workbench--settings-tab-permissions-light",
+        "workbench--settings-tab-permissions-dark",
+        "workbench--settings-tab-security-light",
+        "workbench--settings-tab-security-dark",
+        "workbench--settings-tab-automations-light",
+        "workbench--settings-tab-automations-dark",
+        "workbench--settings-tab-plugins-light",
+        "workbench--settings-tab-plugins-dark",
+        "workbench--settings-tab-usage-light",
+        "workbench--settings-tab-usage-dark",
+        "workbench--settings-tab-memory-light",
+        "workbench--settings-tab-memory-dark",
+        "mobile--c-new-light",
+        "mobile--c-new-dark",
+        "mobile--m-light",
+        "mobile--m-dark",
+        "mobile--m-new-light",
+        "mobile--m-new-dark",
+        "mobile--m-settings-light",
+        "mobile--m-settings-dark",
+        "mobile--plugins-light",
+        "mobile--plugins-dark",
+        "mobile--automations-light",
+        "mobile--automations-dark",
+        "mobile--settings-tab-providers-light",
+        "mobile--settings-tab-providers-dark",
+        "history-1440-light",
+        "preview-1440-light",
+        "activity-1440-light",
+        "plan-1440-light",
+        "history-1440-dark",
+        "preview-1440-dark",
+        "activity-1440-dark",
+        "plan-1440-dark",
+        "history-320-light",
+        "preview-320-light",
+        "activity-320-light",
+        "plan-320-light",
+        "history-320-dark",
+        "preview-320-dark",
+        "activity-320-dark",
+        "plan-320-dark",
+        "cancel-confirm-light",
+        "uncertain-usage-light",
+        "reconcile-form-light",
+        "delete-confirm-light",
+        "image-test-form-light",
+        "cancel-confirm-dark",
+        "uncertain-usage-dark",
+        "reconcile-form-dark",
+        "delete-confirm-dark",
+        "image-test-form-dark"
+      ]
+    },
+    "live_browser": {
+      "tool": "Orca embedded browser",
+      "url": "http://localhost:3018",
+      "actual_backend": true,
+      "result": "真实账户、模型配置弹窗、工作台、设置、插件、自动化及窄屏抽查通过；无页面级横溢，宽表仅在表格内滚动",
+      "route_editor_actual_contrast": {
+        "light_min": 4.56,
+        "dark_min": 5.53,
+        "failures": 0
+      },
+      "mobile_composer_height_px": 245.7,
+      "touch_controls_target_px": 44,
+      "api_worker_or_tenant_restart": false,
+      "model_tasks_or_configuration_submitted": false,
+      "real_mobile_history": {
+        "width_px": 320,
+        "file_preview": "passed; actual authenticated file content loaded",
+        "activity_panel": "passed; actual completed tool history and usage loaded",
+        "horizontal_overflow": false,
+        "file_contrast_min": {
+          "light": 4.8,
+          "dark": 4.55
+        },
+        "activity_contrast_min": {
+          "light": 5.17,
+          "dark": 5.44
+        },
+        "auxiliary_scope_note_visible": false
+      },
+      "health": {
+        "web_page_http": 200,
+        "cloud_livez_http": 200,
+        "cloud_readyz_http": 200,
+        "authenticated_tenant_health_http": 200,
+        "unauthenticated_tenant_health_http": 401
+      }
+    }
+  },
+  "implementation": {
+    "sha256": {
+      "frontend/src/styles/design-system.css": "496ba6c749017bd9c68565cc65d29a452bedfd2ea8c990ca6333767abedacf29",
+      "frontend/src/app/globals.css": "792ea5218078617a80ce1147756973bbfde29cc137d9da5f8ff223792534ac4c",
+      "frontend/src/app/cloud/cloud.css": "2e3c64b89e7bc267e5c1ee1f48e9f70ef333c8c1a3b27423a0c5a03b510ca873",
+      "frontend/src/lib/utils.ts": "4d7020cbed7ec382618cefdc2a6ef65a3a8a5da3966f630b2dc0020477fc4185",
+      "frontend/src/components/parts/artifact-card.tsx": "5407e979f39401a3f1759b4575ef21998c594b6b6f22ac44fb6da85dd2b5005e",
+      "frontend/src/components/messages/message-content.tsx": "160ae36c2f68c6df202d16ffc516bca91ecebd530b9a89cb4629751307b5510f",
+      "frontend/src/app/(mobile)/m/task/[id]/task-client.tsx": "8029ae5c91ec5084b95048196c1d490b887702533d624812788b9f6cd591f68a",
+      "frontend/src/components/activity/activity-panel.tsx": "70aa7313c51556e038315c7b7b901b0913a940348b380a422352b62af721c2ee",
+      "frontend/src/components/chat/session-stats.tsx": "c5640ed62deca6637afe43fd5322bf8e724daf6bd0002fb492b63f1c3bb54ca9"
+    }
+  },
+  "runtime": {
+    "build_id": "lGxrsImO66Lx4qvagFS1Q",
+    "build_asset_http_status": 200,
+    "web_dist": ".next-ui-readability-live",
+    "url": "http://localhost:3018",
+    "build_exit_code": 0,
+    "status": "superseded",
+    "api_and_worker_restarted": false,
+    "preview_3318_stopped": true,
+    "docker_image": {
+      "tag": "suxiaoyou-cloud-web:local",
+      "id": "sha256:b12e5edf418110c01aa682c31066bd513d0fd51fd1c1e228e004cf14183c67f6",
+      "size_bytes": 2416459651,
+      "platform": "linux/arm64",
+      "build_exit_code": 0,
+      "build_heap_mib": 640,
+      "runtime_node_options_present": false,
+      "deployed_container": false
+    },
+    "docker_build_attempts": [
+      {
+        "attempt": 1,
+        "exit_code": 1,
+        "reason": "npm ci ECONNRESET"
+      },
+      {
+        "attempt": 2,
+        "exit_code": 130,
+        "reason": "取消旧源码上下文，以纳入两处辅助文案修复"
+      },
+      {
+        "attempt": 3,
+        "heap_mib": 768,
+        "exit_code": 1,
+        "reason": "系统 OOM / SIGKILL"
+      },
+      {
+        "attempt": 4,
+        "heap_mib": 512,
+        "exit_code": 1,
+        "reason": "V8 heap不足 / SIGABRT"
+      },
+      {
+        "attempt": 5,
+        "heap_mib": 640,
+        "exit_code": 0
+      }
+    ],
+    "existing_tenant_containers": {
+      "before": 5,
+      "after": 5,
+      "all_previous_still_running": true,
+      "modified": false
+    },
+    "superseded_by": "compact-home-audit.json"
+  },
+  "private_evidence": "frontend/test-results/ui-readability (git ignored; includes real-session UI screenshots; not published)",
+  "status": "complete",
+  "latest_followup_audit": "compact-home-audit.json"
+}

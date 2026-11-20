@@ -14,7 +14,10 @@ import httpx
 from openai import AsyncOpenAI
 
 from app.provider.base import BaseProvider
-from app.schemas.provider import ModelInfo, ProviderStatus, StreamChunk
+from app.schemas.provider import (
+    SAFE_PROVIDER_ERRORS, ModelInfo, ProviderStatus, StreamChunk,
+    safe_provider_error_data, safe_provider_error_metadata,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -262,6 +265,26 @@ class OpenAICompatProvider(BaseProvider):
                 )
 
         except Exception as e:
+            if self.id == "custom_cloud" or getattr(self, "_cloud_gateway_managed", False):
+                from app.cloud.gateway_errors import admission_chunk
+                if (rejected := admission_chunk(e)) is not None:
+                    yield StreamChunk(type="error", data=rejected)
+                    return
+                safe_code = getattr(e, "code", None)
+                if isinstance(safe_code, str) and safe_code in SAFE_PROVIDER_ERRORS:
+                    yield StreamChunk(type="error", data={
+                        **safe_provider_error_data(safe_code, **safe_provider_error_metadata(e)),
+                        "status_code": safe_provider_error_metadata(e).get("upstream_status"),
+                    })
+                    return
+                if self.id == "custom_cloud":
+                    # A tenant->gateway disconnect can happen after the
+                    # gateway dispatched a paid vendor request. Never let an
+                    # opaque SDK timeout become a desktop-style retry loop.
+                    from app.cloud.providers import _provider_error_code
+                    yield StreamChunk(type="error", data=safe_provider_error_data(
+                        _provider_error_code(e), **safe_provider_error_metadata(e)))
+                    return
             logger.error("Stream error for model %s: %s", model, e, exc_info=True)
             yield StreamChunk(type="error", data={"message": str(e)})
 

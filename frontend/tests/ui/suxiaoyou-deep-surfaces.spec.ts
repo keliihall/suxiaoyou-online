@@ -376,6 +376,10 @@ test.describe("苏小有 deep claimed-feature GUI surfaces", () => {
     const state = await setupMockedApp(page);
 
     await page.goto("/c/session-alpha");
+    const railToggle = page.getByTestId("sidebar-collapse-toggle");
+    if (await railToggle.isVisible() && await railToggle.getAttribute("aria-expanded") === "false") {
+      await railToggle.click();
+    }
     const alpha = page.getByRole("option", {
       name: /Quarterly planning notes/i,
     });

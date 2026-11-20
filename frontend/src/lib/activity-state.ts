@@ -9,11 +9,19 @@ export interface ActivityCompletionState {
   isTerminal?: boolean;
 }
 
+function latestStepFinish(data: ActivityCompletionState): StepFinishPart | undefined {
+  for (let index = data.stepParts.length - 1; index >= 0; index -= 1) {
+    const part = data.stepParts[index];
+    // A new step supersedes the previous attempt's terminal boundary.
+    if (part.type === "step-start") return undefined;
+    if (part.type === "step-finish") return part as StepFinishPart;
+  }
+  return undefined;
+}
+
 export function hasTerminalStepFinish(data: ActivityCompletionState): boolean {
-  return data.stepParts.some(
-    (part) => part.type === "step-finish" &&
-      (part as StepFinishPart).reason !== "tool_use",
-  );
+  const finish = latestStepFinish(data);
+  return finish !== undefined && finish.reason !== "tool_use";
 }
 
 /**
@@ -22,14 +30,7 @@ export function hasTerminalStepFinish(data: ActivityCompletionState): boolean {
  * task-level failure styling, while a genuinely failed response still does.
  */
 export function isActivityFailed(data: ActivityCompletionState): boolean {
-  for (let index = data.stepParts.length - 1; index >= 0; index -= 1) {
-    const part = data.stepParts[index];
-    if (part.type !== "step-finish") continue;
-    const reason = (part as StepFinishPart).reason;
-    if (reason === "tool_use") continue;
-    return reason === "error";
-  }
-  return false;
+  return latestStepFinish(data)?.reason === "error";
 }
 
 export function hasRunningActivityTools(data: ActivityCompletionState): boolean {
@@ -44,6 +45,9 @@ export function hasRunningActivityTools(data: ActivityCompletionState): boolean 
  */
 export function isActivityComplete(data: ActivityCompletionState): boolean {
   if (data.isAwaitingConfirmation) return false;
-  if (data.isTerminal || hasTerminalStepFinish(data)) return true;
+  // An explicitly live response may already contain output from an earlier
+  // attempt. That output does not complete the step that is now running.
+  if (data.isTerminal !== undefined) return data.isTerminal;
+  if (hasTerminalStepFinish(data)) return true;
   return !!data.hasVisibleOutput && !hasRunningActivityTools(data);
 }

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+from io import BytesIO
 import json
 import os
 import re
@@ -194,7 +195,7 @@ class UserTemplatePlaceholder:
 
 @dataclass(frozen=True, slots=True)
 class UserTemplateImportCandidate:
-    """Path-free evidence returned after registry import and local rendering."""
+    """Path-free evidence after import or a server-owned immutable revalidation."""
 
     template_ref: str
     revision: int
@@ -214,8 +215,9 @@ class UserTemplateImportCandidate:
 
     def __post_init__(self) -> None:
         validate_user_template_ref(self.template_ref)
-        if self.revision != 1:
-            raise TemplateContractError("initial user template revision must be one")
+        if (not isinstance(self.revision, int) or isinstance(self.revision, bool)
+                or not 1 <= self.revision <= 2_147_483_647):
+            raise TemplateContractError("user template revision is invalid")
         if self.status not in {"needs_confirmation", "needs_review"}:
             raise TemplateContractError("user template import status is invalid")
         if self.allowed_operations != ("instantiate_text",):
@@ -380,12 +382,42 @@ class UserOfficeTemplateService:
     ) -> UserTemplateImportCandidate:
         """Create one immutable registry revision only after all import gates pass."""
 
+        return await self._validate_and_register(stream, filename=filename,
+            display_name=display_name, placeholders=placeholders,
+            template_ref=f"utpl-{generate_ulid().lower()}", revision=1)
+
+    async def revalidate_and_register(
+        self, *, template_ref: str, revision: int, next_revision: int,
+        source_sha256: str, manifest_sha256: str, format_name: UserTemplateFormat,
+        placeholder_schema: tuple[UserTemplatePlaceholder, ...], placeholder_parts: tuple[str, ...],
+        display_name: str,
+    ) -> UserTemplateImportCandidate:
+        """Retain the source revision while generating fresh approval evidence.
+
+        The API owns the next revision/CAS allocation. No path, renderer or
+        source bytes supplied by a caller can replace the verified registry.
+        """
+        self.require_enabled()
+        validate_user_template_ref(template_ref)
+        if (not isinstance(next_revision, int) or isinstance(next_revision, bool)
+                or not revision < next_revision <= 2_147_483_647):
+            raise TemplateContractError("user template next revision is invalid")
+        _record, content, _parts = await asyncio.to_thread(self._verified_registry_contract,
+            template_ref, revision, source_sha256, manifest_sha256, format_name,
+            placeholder_schema, placeholder_parts)
+        return await self._validate_and_register(BytesIO(content), filename="template." + format_name,
+            display_name=display_name, placeholders=placeholder_schema,
+            template_ref=template_ref, revision=next_revision)
+
+    async def _validate_and_register(
+        self, stream: BinaryIO, *, filename: str, display_name: str,
+        placeholders: tuple[UserTemplatePlaceholder, ...], template_ref: str, revision: int,
+    ) -> UserTemplateImportCandidate:
+
         self.require_enabled()
         safe_name, format_name = _validate_filename(filename)
         normalized_display_name = _validate_display_name(display_name)
         schema = normalize_placeholder_schema(placeholders)
-        template_ref = f"utpl-{generate_ulid().lower()}"
-        revision = 1
         temporary = Path(
             tempfile.mkdtemp(prefix="import-", dir=self.import_root)
         ).resolve(strict=True)

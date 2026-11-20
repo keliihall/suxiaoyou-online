@@ -42,8 +42,8 @@ function ModelSelect({ value, onChange }: { value: string; onChange: (v: string)
   return (
     <div>
       <label className="text-xs font-medium text-[var(--text-secondary)] mb-1 block">{t("model")}</label>
-      <select value={value} onChange={(e) => onChange(e.target.value)}
-        className="w-full h-8 rounded-md border border-[var(--border-default)] bg-transparent px-2 text-xs text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--border-focus)]"
+      <select aria-label={t("model")} value={value} onChange={(e) => onChange(e.target.value)}
+        className="ui-control h-10 w-full rounded-xl border border-[var(--control-border)] bg-[var(--surface-primary)] px-3 text-[13px] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--border-focus)]"
       >
         <option value="">{t("modelAuto")}</option>
         {(models || []).filter((m, i, arr) => arr.findIndex((x) => x.id === m.id) === i).map((m) => (
@@ -69,19 +69,20 @@ function WorkspacePicker({ value, onChange }: { value: string; onChange: (v: str
       <div className="flex gap-2">
         <input
           type="text"
+          aria-label={t("workspace")}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={t("workspaceNone")}
           className={inputClass + " flex-1"}
         />
-        <Button type="button" variant="outline" size="sm" className="h-8 px-2 shrink-0" onClick={async () => {
+        <Button type="button" variant="outline" size="sm" className="h-10 px-3 shrink-0" aria-label={t("workspace")} onClick={async () => {
           const path = await browseDirectory(t("workspace"));
           if (path) onChange(path);
         }}>
           <FolderOpen className="h-3.5 w-3.5" />
         </Button>
         {value && (
-          <Button type="button" variant="ghost" size="sm" className="h-8 px-2 shrink-0" onClick={() => onChange("")}>
+          <Button type="button" variant="ghost" size="sm" className="h-10 px-3 shrink-0" aria-label={t("cancel")} onClick={() => onChange("")}>
             <X className="h-3.5 w-3.5" />
           </Button>
         )}
@@ -101,19 +102,19 @@ function TaskModeSelector({ value, onChange }: { value: "scheduled" | "loop"; on
     <div>
       <label className="text-xs font-medium text-[var(--text-secondary)] mb-1.5 block">{t("taskMode")}</label>
       <div className="flex gap-2">
-        <button type="button" onClick={() => onChange("scheduled")}
-          className={`flex-1 h-8 rounded-md text-xs font-medium border transition-colors ${
+        <button type="button" onClick={() => onChange("scheduled")} aria-pressed={value === "scheduled"}
+          className={`ui-control flex-1 min-h-10 rounded-xl text-[13px] font-medium border transition-colors ${
             value === "scheduled"
-              ? "border-[var(--border-focus)] bg-[var(--surface-secondary)] text-[var(--text-primary)]"
+              ? "border-[var(--border-heavy)] bg-[var(--surface-secondary)] text-[var(--text-primary)]"
               : "border-[var(--border-default)] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
           }`}
         >
           <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{t("scheduled")}</span>
         </button>
-        <button type="button" onClick={() => onChange("loop")}
-          className={`flex-1 h-8 rounded-md text-xs font-medium border transition-colors ${
+        <button type="button" onClick={() => onChange("loop")} aria-pressed={value === "loop"}
+          className={`ui-control flex-1 min-h-10 rounded-xl text-[13px] font-medium border transition-colors ${
             value === "loop"
-              ? "border-[var(--border-focus)] bg-[var(--surface-secondary)] text-[var(--text-primary)]"
+              ? "border-[var(--border-heavy)] bg-[var(--surface-secondary)] text-[var(--text-primary)]"
               : "border-[var(--border-default)] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
           }`}
         >
@@ -142,7 +143,7 @@ function LoopIterationsSlider({ value, onChange }: { value: number; onChange: (v
         />
         <span className="text-xs font-mono text-[var(--text-primary)] w-8 text-right">{value}</span>
       </div>
-      <p className="text-ui-3xs text-[var(--text-tertiary)] mt-1">{t("loopHint")}</p>
+      {/* Auxiliary copy retained in source: <p className="text-ui-3xs text-[var(--text-tertiary)] mt-1">{t("loopHint")}</p> */}
     </div>
   );
 }
@@ -193,7 +194,7 @@ export function CreateAutomationDialog({ onClose }: { onClose: () => void }) {
     <DialogOverlay onClose={onClose}>
       <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-default)]">
         <h2 className="text-sm font-semibold text-[var(--text-primary)]">{t("createNew")}</h2>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
+        <Button variant="ghost" size="icon" className="icon-action h-10 w-10 rounded-xl" aria-label={t("cancel")} onClick={onClose}>
           <X className="h-4 w-4" />
         </Button>
       </div>
@@ -202,21 +203,21 @@ export function CreateAutomationDialog({ onClose }: { onClose: () => void }) {
         <AutomationReadOnlyNotice compact />
         <div>
           <label className="text-xs font-medium text-[var(--text-secondary)] mb-1 block">{t("name")}</label>
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)}
+          <input aria-label={t("name")} type="text" value={name} onChange={(e) => setName(e.target.value)}
             placeholder={t("namePlaceholder")} className={inputClass} />
         </div>
 
         <div>
           <label className="text-xs font-medium text-[var(--text-secondary)] mb-1 block">{t("description")}</label>
-          <input type="text" value={description} onChange={(e) => setDescription(e.target.value)}
+          <input aria-label={t("description")} type="text" value={description} onChange={(e) => setDescription(e.target.value)}
             placeholder={t("descriptionPlaceholder")} className={inputClass} />
         </div>
 
         <div>
           <label className="text-xs font-medium text-[var(--text-secondary)] mb-1 block">{t("prompt")}</label>
-          <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)}
+          <textarea aria-label={t("prompt")} value={prompt} onChange={(e) => setPrompt(e.target.value)}
             placeholder={t("promptPlaceholder")} rows={4}
-            className="w-full rounded-md border border-[var(--border-default)] bg-transparent px-3 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--border-focus)] resize-none"
+            className="ui-control w-full rounded-xl border border-[var(--control-border)] bg-[var(--surface-primary)] px-3 py-3 text-[13px] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--border-focus)] resize-none"
           />
         </div>
 
@@ -238,8 +239,8 @@ export function CreateAutomationDialog({ onClose }: { onClose: () => void }) {
       </div>
 
       <div className="flex justify-end gap-2 px-4 py-3 border-t border-[var(--border-default)]">
-        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={onClose}>{t("cancel")}</Button>
-        <Button size="sm" className="h-7 text-xs" onClick={handleSubmit}
+        <Button variant="ghost" size="sm" className="h-10 rounded-xl px-4 text-[13px]" onClick={onClose}>{t("cancel")}</Button>
+        <Button size="sm" className="h-10 rounded-xl px-4 text-[13px]" onClick={handleSubmit}
           disabled={!name.trim() || !prompt.trim() || createMut.isPending}
         >
           {createMut.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
@@ -302,7 +303,7 @@ export function EditAutomationDialog({ automationId, onClose }: { automationId: 
     <DialogOverlay onClose={onClose}>
       <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-default)]">
         <h2 className="text-sm font-semibold text-[var(--text-primary)]">{t("editAutomation")}</h2>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
+        <Button variant="ghost" size="icon" className="icon-action h-10 w-10 rounded-xl" aria-label={t("cancel")} onClick={onClose}>
           <X className="h-4 w-4" />
         </Button>
       </div>
@@ -311,19 +312,19 @@ export function EditAutomationDialog({ automationId, onClose }: { automationId: 
         <AutomationReadOnlyNotice compact />
         <div>
           <label className="text-xs font-medium text-[var(--text-secondary)] mb-1 block">{t("name")}</label>
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
+          <input aria-label={t("name")} type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
         </div>
 
         <div>
           <label className="text-xs font-medium text-[var(--text-secondary)] mb-1 block">{t("description")}</label>
-          <input type="text" value={description} onChange={(e) => setDescription(e.target.value)}
+          <input aria-label={t("description")} type="text" value={description} onChange={(e) => setDescription(e.target.value)}
             placeholder={t("descriptionPlaceholder")} className={inputClass} />
         </div>
 
         <div>
           <label className="text-xs font-medium text-[var(--text-secondary)] mb-1 block">{t("prompt")}</label>
-          <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={4}
-            className="w-full rounded-md border border-[var(--border-default)] bg-transparent px-3 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--border-focus)] resize-none"
+          <textarea aria-label={t("prompt")} value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={4}
+            className="ui-control w-full rounded-xl border border-[var(--control-border)] bg-[var(--surface-primary)] px-3 py-3 text-[13px] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--border-focus)] resize-none"
           />
         </div>
 
@@ -352,8 +353,8 @@ export function EditAutomationDialog({ automationId, onClose }: { automationId: 
       </div>
 
       <div className="flex justify-end gap-2 px-4 py-3 border-t border-[var(--border-default)]">
-        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={onClose}>{t("cancel")}</Button>
-        <Button size="sm" className="h-7 text-xs" onClick={handleSave}
+        <Button variant="ghost" size="sm" className="h-10 rounded-xl px-4 text-[13px]" onClick={onClose}>{t("cancel")}</Button>
+        <Button size="sm" className="h-10 rounded-xl px-4 text-[13px]" onClick={handleSave}
           disabled={!name.trim() || !prompt.trim() || updateMut.isPending}
         >
           {updateMut.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}

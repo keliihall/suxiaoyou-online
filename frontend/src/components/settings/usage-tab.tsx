@@ -78,14 +78,14 @@ function SummaryCard({
   sub?: string;
 }) {
   return (
-    <div className="rounded-xl border border-[var(--border-default)] p-4">
+    <div className="surface-card rounded-2xl border border-[var(--border-default)] p-4">
       <div className="flex items-center gap-2 mb-2">
         <Icon className="h-4 w-4 text-[var(--text-tertiary)]" />
         <span className="text-xs text-[var(--text-tertiary)] uppercase tracking-wider">
           {label}
         </span>
       </div>
-      <p className="text-2xl font-semibold text-[var(--text-primary)] font-mono">
+      <p className="text-2xl font-semibold tabular-nums text-[var(--text-primary)]">
         {value}
       </p>
       {sub && (
@@ -106,8 +106,10 @@ function KeyInsights({
   const totalCost = data.by_model.reduce((sum, m) => sum + m.total_cost, 0);
   const topCostShare = topModel && totalCost > 0 ? (topModel.total_cost / totalCost) * 100 : 0;
 
+  if (!topModel || topCostShare <= 0) return null;
+
   return (
-    <div className="rounded-xl border border-[var(--border-default)] p-4 space-y-2">
+    <div className="surface-card rounded-2xl border border-[var(--border-default)] p-4 space-y-2">
       <div className="flex items-center gap-2">
         <Sparkles className="h-4 w-4 text-[var(--text-tertiary)]" />
         <h2 className="text-sm font-semibold text-[var(--text-primary)]">{t("keyInsights")}</h2>
@@ -176,7 +178,7 @@ function TokenBreakdownBar({ tokens }: { tokens: TokenBreakdown }) {
 function ChartTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg border border-[var(--border-default)] bg-[var(--surface-primary)] px-3 py-2 shadow-[var(--shadow-md)]">
+    <div className="surface-card rounded-2xl border border-[var(--border-default)] bg-[var(--surface-primary)] px-3 py-2 shadow-[var(--shadow-md)]">
       <p className="text-xs font-medium text-[var(--text-primary)] mb-1">{label}</p>
       {payload.map((entry: any) => (
         <p key={entry.name} className="text-xs text-[var(--text-secondary)]">
@@ -266,14 +268,15 @@ export function UsageTab() {
     <div>
       {/* Period selector */}
       <div className="flex justify-end mb-6">
-        <div className="flex gap-1">
+        <div className="segmented-nav flex gap-1">
           {[7, 30, 90].map((d) => (
             <button
               key={d}
               onClick={() => setDays(d)}
+              aria-pressed={days === d}
               className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
                 days === d
-                  ? "bg-[var(--brand-primary)] text-[var(--brand-primary-text)]"
+                  ? "bg-[var(--surface-primary)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]"
                   : "text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)]"
               }`}
             >
@@ -377,13 +380,14 @@ export function UsageTab() {
                   <h2 className="text-sm font-semibold text-[var(--text-primary)]">
                     {t("dailyTrend")}
                   </h2>
-                  <div className="flex gap-1">
+                  <div className="segmented-nav flex gap-1">
                     <button
                       type="button"
                       onClick={() => setTrendMetric("cost")}
+                      aria-pressed={trendMetric === "cost"}
                       className={`px-2.5 py-1 text-xs rounded-md transition-colors ${
                         trendMetric === "cost"
-                          ? "bg-[var(--brand-primary)] text-[var(--brand-primary-text)]"
+                          ? "bg-[var(--surface-primary)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]"
                           : "text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)]"
                       }`}
                     >
@@ -392,9 +396,10 @@ export function UsageTab() {
                     <button
                       type="button"
                       onClick={() => setTrendMetric("tokens")}
+                      aria-pressed={trendMetric === "tokens"}
                       className={`px-2.5 py-1 text-xs rounded-md transition-colors ${
                         trendMetric === "tokens"
-                          ? "bg-[var(--brand-primary)] text-[var(--brand-primary-text)]"
+                          ? "bg-[var(--surface-primary)] text-[var(--text-primary)] shadow-[var(--shadow-sm)]"
                           : "text-[var(--text-secondary)] hover:bg-[var(--surface-secondary)]"
                       }`}
                     >
@@ -414,7 +419,7 @@ export function UsageTab() {
                 <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-3">
                   {t("modelUsage")}
                 </h2>
-                <div className="rounded-xl border border-[var(--border-default)] overflow-hidden">
+                <div role="region" aria-label={t("modelUsage")} tabIndex={0} className="surface-card overflow-x-auto rounded-2xl border border-[var(--border-default)]">
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="bg-[var(--surface-secondary)]">
@@ -478,7 +483,7 @@ export function UsageTab() {
                                       style={{ width: `${Math.min(100, share)}%` }}
                                     />
                                   </div>
-                                  <span className="text-ui-3xs text-[var(--text-tertiary)] font-mono w-9 text-right">
+                                  <span className="text-[12px] text-[var(--text-tertiary)] font-mono w-9 text-right">
                                     {share.toFixed(0)}%
                                   </span>
                                 </div>

@@ -28,6 +28,7 @@ import { StreamLeaseRegistry, type StreamLease } from "@/lib/stream-lifecycle";
 import {
   streamErrorToastId,
   streamErrorTranslationKey,
+  streamErrorRequestId,
 } from "@/lib/stream-error";
 import {
   canMarkInteractionContinuing,
@@ -1007,15 +1008,20 @@ export async function startStream(sessionId: string, streamId: string): Promise<
       data.tool &&
       (
         deliveredFiles ||
-        ["write", "edit", "image_generate", "office", "code_execute", "bash", "artifact"].includes(data.tool)
+        ["present_file", "write", "edit", "image_generate", "office", "code_execute", "bash", "artifact"].includes(data.tool)
       )
     ) {
+      const fileScope = useWorkspaceStore.getState().fileScope;
+      const fileRevision = useWorkspaceStore.getState().beginFileRequest();
       api.get<{ files: Array<{ name: string; path: string; type: string }> }>(
-        API.SESSIONS.FILES(sessionId),
+        `${API.SESSIONS.FILES(sessionId)}?scope=${fileScope}`,
       ).then((res) => {
-        if (!isFocusedSession() || !isCurrentGeneration()) return;
+        // DONE releases the stream lease before this HTTP request may resolve.
+        // Files have their own request revision; a later refresh, scope change,
+        // or session hydration invalidates it without losing the last delivery.
+        if (!isFocusedSession() || useWorkspaceStore.getState().fileScope !== fileScope) return;
         if (res.files) {
-          useWorkspaceStore.getState().setWorkspaceFiles(
+          useWorkspaceStore.getState().commitFileRequest(fileRevision,
             res.files.map((f) => ({ name: f.name, path: f.path, type: f.type as WorkspaceFile["type"] })),
           );
         }
@@ -1349,6 +1355,8 @@ export async function startStream(sessionId: string, streamId: string): Promise<
     error_message?: string | null;
     error_type?: string | null;
     code?: string | null;
+    request_id?: string | null;
+    upstream_status?: number | null;
   }) => {
     // Close the dead connection synchronously. The server ends the response
     // right after this single error event, so the
@@ -1359,9 +1367,13 @@ export async function startStream(sessionId: string, streamId: string): Promise<
 
     const rawMessage = data.error_message ?? "";
     const translationKey = streamErrorTranslationKey(data);
-    const message = translationKey
+    const baseMessage = translationKey
       ? i18n.t(translationKey, { ns: "chat" })
       : i18n.t("streamErrorGeneric", { ns: "chat" });
+    const requestId = streamErrorRequestId(data);
+    const message = requestId
+      ? `${baseMessage} ${i18n.t("streamErrorReference", { ns: "chat", requestId })}`
+      : baseMessage;
     // A missing job almost always means the local backend restarted out from
     // under an in-flight generation. The conversation is safe in the DB, so
     // recover quietly rather than alarming the user with an opaque toast.
@@ -1379,7 +1391,7 @@ export async function startStream(sessionId: string, streamId: string): Promise<
         id: streamErrorToastId(sessionId, data, translationKey),
       });
     }
-    console.warn("SSE agent error:", rawMessage || message);
+    console.warn("SSE agent error:", message);
     textBuffer.flush();
     reasoningBuffer.flush();
     finishCurrentGeneration();

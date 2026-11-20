@@ -39,7 +39,7 @@ export function SourcesFooter({ sources }: SourcesFooterProps) {
             />
           )}
           <span>{t("sources")}</span>
-          <span className="text-[10px] text-[var(--text-tertiary)] bg-[var(--surface-tertiary)] rounded-full px-1.5 py-0.5 leading-none min-w-[18px] text-center">
+          <span className="text-xs text-[var(--text-tertiary)] bg-[var(--surface-tertiary)] rounded-full px-1.5 py-0.5 leading-none min-w-[18px] text-center">
             {sources.length}
           </span>
           <ChevronUp
@@ -56,7 +56,7 @@ export function SourcesFooter({ sources }: SourcesFooterProps) {
         align="start"
         sideOffset={8}
         collisionPadding={16}
-        className="w-[320px] max-h-[300px] overflow-y-auto p-2 space-y-0.5 scrollbar-auto"
+        className="w-[min(320px,calc(100vw-32px))] max-h-[min(300px,60dvh)] overflow-y-auto p-2 space-y-0.5 scrollbar-auto"
       >
         {sources.map((source) => (
           <a
@@ -79,7 +79,7 @@ export function SourcesFooter({ sources }: SourcesFooterProps) {
             )}
             <div className="min-w-0 flex-1">
               <div className="truncate font-medium">{source.title}</div>
-              <div className="truncate text-[10px] text-[var(--text-tertiary)]">{source.domain}</div>
+              <div className="truncate text-xs text-[var(--text-tertiary)]">{source.domain}</div>
             </div>
           </a>
         ))}

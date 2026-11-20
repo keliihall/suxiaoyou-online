@@ -33,8 +33,10 @@ export interface WorkspaceTodo {
 export interface WorkspaceFile {
   name: string;
   path: string;
-  type: "instructions" | "generated" | "uploaded" | "referenced";
+  type: "instructions" | "generated" | "uploaded" | "referenced" | "working" | "deliverable";
 }
+
+export type WorkspaceFileScope = "deliverables" | "all";
 
 export interface WorkspaceAgentTask {
   task_id: string;
@@ -60,6 +62,8 @@ interface WorkspaceStore {
   todos: WorkspaceTodo[];
   taskBatch: WorkspaceTaskBatch | null;
   workspaceFiles: WorkspaceFile[];
+  fileScope: WorkspaceFileScope;
+  fileRequestRevision: number;
   scratchpadContent: string;
   /** Current session's workspace directory (set by ChatView on session load). */
   activeWorkspacePath: string | null;
@@ -74,6 +78,9 @@ interface WorkspaceStore {
   setTaskBatch: (batch: WorkspaceTaskBatch | null) => void;
   addWorkspaceFile: (file: WorkspaceFile) => void;
   setWorkspaceFiles: (files: WorkspaceFile[]) => void;
+  setFileScope: (scope: WorkspaceFileScope) => void;
+  beginFileRequest: () => number;
+  commitFileRequest: (revision: number, files: WorkspaceFile[]) => void;
   setScratchpadContent: (content: string) => void;
   setActiveWorkspacePath: (path: string | null) => void;
   resetForSession: () => void;
@@ -89,6 +96,8 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   todos: [],
   taskBatch: null,
   workspaceFiles: [],
+  fileScope: "deliverables",
+  fileRequestRevision: 0,
   scratchpadContent: "",
   activeWorkspacePath: null,
 
@@ -137,14 +146,29 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   },
 
   setWorkspaceFiles: (files) => set({ workspaceFiles: files }),
+  setFileScope: (fileScope) => set((s) => ({
+    fileScope,
+    workspaceFiles: [],
+    fileRequestRevision: s.fileRequestRevision + 1,
+  })),
+  beginFileRequest: () => {
+    const revision = get().fileRequestRevision + 1;
+    set({ fileRequestRevision: revision });
+    return revision;
+  },
+  commitFileRequest: (revision, files) => {
+    if (revision === get().fileRequestRevision) set({ workspaceFiles: files });
+  },
   setScratchpadContent: (content) => set({ scratchpadContent: content }),
   setActiveWorkspacePath: (path) => set({ activeWorkspacePath: path && path !== "." ? path : null }),
 
   resetForSession: () =>
-    set({
+    set((s) => ({
       todos: [],
       taskBatch: null,
       workspaceFiles: [],
+      fileScope: "deliverables",
+      fileRequestRevision: s.fileRequestRevision + 1,
       scratchpadContent: "",
       collapsedSections: {
         progress: true,
@@ -153,5 +177,5 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
       },
       activeWorkspacePath: null,
       isOpen: false,
-    }),
+    })),
 }));

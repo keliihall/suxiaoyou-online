@@ -25,14 +25,17 @@ import { useSidebarStore, type OrganizeMode, type SortBy } from "@/stores/sideba
 interface ProjectsToolbarProps {
   projectDirectories?: string[];
   variant?: "projects" | "chats" | "primary";
+  collapsed?: boolean;
+  compact?: boolean;
 }
 
-export function ProjectsToolbar({ projectDirectories = [], variant = "projects" }: ProjectsToolbarProps) {
+export function ProjectsToolbar({ projectDirectories = [], variant = "projects", collapsed = false, compact = false }: ProjectsToolbarProps) {
   const { t } = useTranslation("common");
   const router = useRouter();
   const collapseAllProjects = useSidebarStore((s) => s.collapseAllProjects);
   const expandAllProjects = useSidebarStore((s) => s.expandAllProjects);
   const collapsedProjects = useSidebarStore((s) => s.collapsedProjects);
+  const setOpen = useSidebarStore((s) => s.setOpen);
   const [isPickingDirectory, setIsPickingDirectory] = useState(false);
 
   const allCollapsed =
@@ -55,6 +58,7 @@ export function ProjectsToolbar({ projectDirectories = [], variant = "projects" 
     try {
       const path = await browseDirectory(t("addProject"));
       if (path) {
+        setOpen(false);
         router.push(`/c/new?directory=${encodeURIComponent(path)}`);
       }
     } catch (err) {
@@ -66,6 +70,7 @@ export function ProjectsToolbar({ projectDirectories = [], variant = "projects" 
   };
 
   const handleNewChat = () => {
+    setOpen(false);
     router.push("/c/new");
   };
 
@@ -74,32 +79,50 @@ export function ProjectsToolbar({ projectDirectories = [], variant = "projects" 
       <nav
         aria-label={`${t("addProject")} / ${t("newChat")}`}
         data-testid="sidebar-primary-actions"
-        className="grid shrink-0 grid-cols-2 gap-1 border-b border-[var(--border-subtle)] px-3 pb-2 pt-1"
+        className={cn(
+          "shrink-0 border-b border-[var(--border-subtle)]",
+          collapsed ? "flex flex-col items-center gap-1 px-2 pb-3" : compact ? "flex items-center gap-1 px-3 pb-3" : "grid grid-cols-2 gap-2 px-3 pb-4",
+        )}
       >
-        <button
-          type="button"
-          onClick={handleAddProject}
-          disabled={isPickingDirectory}
-          className="flex min-w-0 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-primary)] disabled:opacity-50"
-          aria-label={t("addProject")}
-        >
-          {isPickingDirectory ? (
-            <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
-          ) : (
-            <FolderPlus className="h-3.5 w-3.5 shrink-0" />
-          )}
-          <span className="truncate">{t("addProject")}</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={handleNewChat}
-          className="flex min-w-0 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-primary)]"
-          aria-label={t("newChat")}
-        >
-          <SquarePen className="h-3.5 w-3.5 shrink-0" />
-          <span className="truncate">{t("newChat")}</span>
-        </button>
+        <Tooltip open={compact || collapsed ? undefined : false}>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={handleAddProject}
+              disabled={isPickingDirectory}
+              className={cn(
+                "flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-xl text-[13px] font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] disabled:cursor-not-allowed disabled:bg-[var(--surface-secondary)] disabled:text-[var(--text-tertiary)]",
+                compact || collapsed ? "h-11 w-11 shrink-0" : "border border-[var(--border-default)] bg-[var(--surface-primary)] px-2",
+              )}
+              aria-label={t("addProject")}
+            >
+              {isPickingDirectory ? (
+                <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
+              ) : (
+                <FolderPlus className="h-3.5 w-3.5 shrink-0" />
+              )}
+              {!compact && !collapsed && <span className="truncate">{t("addProject")}</span>}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side={collapsed ? "right" : "bottom"}>{t("addProject")}</TooltipContent>
+        </Tooltip>
+        <Tooltip open={compact || collapsed ? undefined : false}>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={handleNewChat}
+              className={cn(
+                "flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-xl bg-[var(--brand-primary)] text-[13px] font-medium text-[var(--brand-primary-text)] transition-colors hover:bg-[var(--brand-primary-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--sidebar-bg)]",
+                compact || collapsed ? "h-11 w-11 shrink-0" : "px-2",
+              )}
+              aria-label={t("newChat")}
+            >
+              <SquarePen className="h-3.5 w-3.5 shrink-0" />
+              {!compact && !collapsed && <span className="truncate">{t("newChat")}</span>}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side={collapsed ? "right" : "bottom"}>{t("newChat")}</TooltipContent>
+        </Tooltip>
       </nav>
     );
   }
@@ -120,7 +143,7 @@ export function ProjectsToolbar({ projectDirectories = [], variant = "projects" 
             type="button"
             onClick={handleToggleAll}
             disabled={projectDirectories.length === 0}
-            className="flex h-6 w-6 items-center justify-center rounded-md text-[var(--text-tertiary)] transition-colors hover:bg-[var(--sidebar-active)] hover:text-[var(--text-primary)] disabled:opacity-40"
+            className="icon-action h-10 w-10 rounded-lg text-[var(--text-tertiary)] transition-colors hover:bg-[var(--sidebar-active)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] disabled:cursor-not-allowed disabled:bg-[var(--surface-secondary)] disabled:text-[var(--text-tertiary)]"
             aria-label={toggleLabel}
           >
             {allCollapsed ? (
@@ -167,7 +190,7 @@ function FilterPopover() {
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="flex h-6 w-6 items-center justify-center rounded-md text-[var(--text-tertiary)] transition-colors hover:bg-[var(--sidebar-active)] hover:text-[var(--text-primary)] data-[state=open]:bg-[var(--sidebar-active)] data-[state=open]:text-[var(--text-primary)]"
+              className="icon-action h-10 w-10 rounded-lg text-[var(--text-tertiary)] transition-colors hover:bg-[var(--sidebar-active)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] data-[state=open]:bg-[var(--sidebar-active)] data-[state=open]:text-[var(--text-primary)]"
               aria-label={t("filterSortOrganize")}
             >
               <ListFilter className="h-3 w-3" />
@@ -230,8 +253,9 @@ function FilterRow({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={selected}
       className={cn(
-        "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
+        "ui-control flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]",
         "text-[var(--text-secondary)] hover:bg-[var(--sidebar-active)] hover:text-[var(--text-primary)]",
       )}
     >

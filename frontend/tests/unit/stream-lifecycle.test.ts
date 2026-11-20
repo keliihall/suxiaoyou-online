@@ -223,7 +223,7 @@ test("background streams cannot write global workspace or artifact projections",
   );
   assert.match(
     source,
-    /\.then\(\(res\) => \{\s*if \(!isFocusedSession\(\) \|\| !isCurrentGeneration\(\)\) return;/,
+    /API\.SESSIONS\.FILES\(sessionId\)[\s\S]*?\.then\(\(res\) => \{[\s\S]*?if \(!isFocusedSession\(\) \|\| useWorkspaceStore\.getState\(\)\.fileScope !== fileScope\) return;/,
   );
   assert.match(
     source,

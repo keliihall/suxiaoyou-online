@@ -112,10 +112,13 @@ def inspect_ooxml_package(
     *,
     expected_placeholders: tuple[str, ...] | None,
     limits: TemplateSafetyLimits | None = None,
+    allow_chart_workbooks: bool = False,
 ) -> OOXMLInspection:
     """Fully inspect an in-memory OOXML package without extracting it."""
 
     selected_limits = limits or TemplateSafetyLimits()
+    if not isinstance(allow_chart_workbooks, bool) or (allow_chart_workbooks and format_name != "pptx"):
+        raise TemplateContractError("chart workbook policy is invalid")
     if not isinstance(content, bytes):
         raise TemplateContractError("OOXML template content must be bytes")
     if not 1 <= len(content) <= selected_limits.max_package_bytes:
@@ -160,9 +163,15 @@ def inspect_ooxml_package(
         raise TemplateSecurityError("Office template ZIP is corrupt") from exc
 
     _validate_required_parts(entries, format_name)
-    _validate_dangerous_parts(entries)
+    chart_workbooks = (
+        _validate_chart_workbooks(entries, selected_limits)
+        if allow_chart_workbooks else frozenset()
+    )
+    _validate_dangerous_parts(entries, chart_workbooks=chart_workbooks)
     _validate_content_types(entries, format_name)
-    _validate_relationships(entries, format_name)
+    _validate_relationships(entries, format_name, chart_workbooks=chart_workbooks)
+    if chart_workbooks:
+        _validate_native_chart_graph(entries, chart_workbooks)
     occurrences = (
         Counter()
         if expected_placeholders is None
@@ -229,7 +238,32 @@ def _validate_required_parts(
         )
 
 
-def _validate_dangerous_parts(entries: dict[str, bytes]) -> None:
+def _validate_chart_workbooks(entries: dict[str, bytes], limits: TemplateSafetyLimits) -> frozenset[str]:
+    """Inspect only the native chart data packages emitted by python-pptx.
+
+    This is an explicit authoring policy, never the template import default.
+    Nested packages retain the ordinary no-embedding/no-macro/no-external-link
+    policy, and share entry and expansion budgets with their outer package.
+    Relationships are bound to chart externalData by the outer validator.
+    """
+    approved = frozenset(name for name in entries if re.fullmatch(
+        r"ppt/embeddings/Microsoft_Excel_(?:Sheet|WorkSheet)[1-9][0-9]*\.xlsx", name))
+    remaining_entries = limits.max_entries - len(entries)
+    remaining_bytes = limits.max_total_uncompressed_bytes - sum(map(len, entries.values()))
+    for name in sorted(approved):
+        if remaining_entries < 1 or remaining_bytes < 1:
+            raise TemplateSecurityError("Chart workbook exceeds the shared package budget")
+        nested = inspect_ooxml_package(entries[name], "xlsx", expected_placeholders=None,
+            limits=TemplateSafetyLimits(max_package_bytes=limits.max_package_bytes,
+                max_entries=remaining_entries, max_entry_bytes=limits.max_entry_bytes,
+                max_total_uncompressed_bytes=remaining_bytes,
+                max_compression_ratio=limits.max_compression_ratio))
+        remaining_entries -= len(nested.entries)
+        remaining_bytes -= sum(map(len, nested.entries.values()))
+    return approved
+
+
+def _validate_dangerous_parts(entries: dict[str, bytes], *, chart_workbooks: frozenset[str] = frozenset()) -> None:
     for name, payload in entries.items():
         lowered_name = "/" + name.casefold()
         safe_printer_settings = (
@@ -240,15 +274,76 @@ def _validate_dangerous_parts(entries: dict[str, bytes]) -> None:
             is not None
         )
         if (lowered_name.endswith(".bin") and not safe_printer_settings) or any(
-            marker in lowered_name for marker in _DANGEROUS_PATH_MARKERS
+            marker in lowered_name and not (marker == "/embeddings/" and name in chart_workbooks)
+            for marker in _DANGEROUS_PATH_MARKERS
         ):
             raise TemplateSecurityError(f"Unsafe OOXML part is not allowed: {name}")
         if name.casefold().endswith((".xml", ".rels")):
-            lowered_payload = payload.lower()
-            if b"<!doctype" in lowered_payload or b"<!entity" in lowered_payload:
-                raise TemplateSecurityError(
-                    f"DTD or entity declarations are forbidden: {name}"
-                )
+            # Parse every XML part with the same security policy, including
+            # UTF-16/32 parts where byte-string DTD scans are insufficient.
+            _parse_xml(payload, name)
+
+
+def _validate_native_chart_graph(entries: dict[str, bytes], workbooks: frozenset[str]) -> None:
+    chart_ns = "http://schemas.openxmlformats.org/drawingml/2006/chart"
+    drawing_ns = "http://schemas.openxmlformats.org/drawingml/2006/main"
+    presentation_ns = "http://schemas.openxmlformats.org/presentationml/2006/main"
+    relation_ns = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+    type_root = _parse_xml(entries["[Content_Types].xml"], "[Content_Types].xml")
+    defaults = {e.get("Extension").casefold(): e.get("ContentType") for e in type_root
+        if e.tag == f"{{{_CONTENT_TYPES_NS}}}Default"}
+    overrides = {e.get("PartName")[1:]: e.get("ContentType") for e in type_root
+        if e.tag == f"{{{_CONTENT_TYPES_NS}}}Override"}
+    def content_type(name):
+        return overrides.get(name, defaults.get(name.rsplit(".", 1)[-1].casefold()))
+    def relationships(name):
+        return _parse_xml(entries[name], name)
+    for name in workbooks:
+        if content_type(name) != "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+            raise TemplateSecurityError("Chart workbook content type is invalid")
+    charts = set()
+    for name in entries:
+        if re.fullmatch(r"ppt/charts/_rels/chart[1-9][0-9]*\.xml\.rels", name):
+            if any(_resolve_relationship_target(name, rel.get("Target")) in workbooks
+                   for rel in relationships(name)):
+                charts.add(_relationship_source_name(name))
+    for name in charts:
+        root = _parse_xml(entries[name], name)
+        area = root.find(f"{{{chart_ns}}}chart/{{{chart_ns}}}plotArea")
+        if (content_type(name) != "application/vnd.openxmlformats-officedocument.drawingml.chart+xml"
+                or area is None or not any(child.tag in {f"{{{chart_ns}}}{kind}" for kind in
+                    ("barChart", "lineChart", "pieChart", "scatterChart")} for child in area)):
+            raise TemplateSecurityError("Embedded workbook owner is not a supported native chart")
+    # Require a live presentation -> slide -> graphicFrame/chart chain, not
+    # an orphan chart-shaped XML part constructed merely to own a package.
+    presentation = _parse_xml(entries["ppt/presentation.xml"], "ppt/presentation.xml")
+    slide_ids = {element.get(f"{{{relation_ns}}}id") for element in
+        presentation.findall(f"{{{presentation_ns}}}sldIdLst/{{{presentation_ns}}}sldId")}
+    active_slides = set()
+    presentation_rels = "ppt/_rels/presentation.xml.rels"
+    if presentation_rels in entries:
+        for rel in relationships(presentation_rels):
+            if rel.get("Id") in slide_ids and rel.get("Type") == relation_ns + "/slide":
+                active_slides.add(_resolve_relationship_target(presentation_rels, rel.get("Target")))
+    owned_charts = set()
+    for name in entries:
+        if not re.fullmatch(r"ppt/slides/_rels/slide[1-9][0-9]*\.xml\.rels", name):
+            continue
+        source = _relationship_source_name(name)
+        slide = _parse_xml(entries[source], source)
+        frames = slide.findall(f"{{{presentation_ns}}}cSld/{{{presentation_ns}}}spTree/"
+            f"{{{presentation_ns}}}graphicFrame/{{{drawing_ns}}}graphic/{{{drawing_ns}}}graphicData")
+        chart_ids = {chart.get(f"{{{relation_ns}}}id") for frame in frames if frame.get("uri") == chart_ns
+            for chart in frame.findall(f"{{{chart_ns}}}chart")}
+        for rel in relationships(name):
+            target = _resolve_relationship_target(name, rel.get("Target"))
+            if target in charts:
+                if (source not in active_slides or slide.tag != f"{{{presentation_ns}}}sld"
+                        or rel.get("Type") != relation_ns + "/chart" or rel.get("Id") not in chart_ids):
+                    raise TemplateSecurityError("Native chart is not bound to an active slide graphic frame")
+                owned_charts.add(target)
+    if charts != owned_charts:
+        raise TemplateSecurityError("Native chart has no active slide owner")
 
 
 def _validate_content_types(
@@ -315,9 +410,12 @@ def _validate_content_types(
 def _validate_relationships(
     entries: dict[str, bytes],
     format_name: OfficeTemplateFormat,
+    *,
+    chart_workbooks: frozenset[str] = frozenset(),
 ) -> None:
     names = set(entries)
     root_office_targets: list[str] = []
+    referenced_chart_workbooks: set[str] = set()
     for rels_name, payload in entries.items():
         if not rels_name.casefold().endswith(".rels"):
             continue
@@ -350,12 +448,28 @@ def _validate_relationships(
             if target_mode.casefold() != "internal":
                 raise TemplateSecurityError("Unknown OOXML relationship target mode")
             lowered_type = relationship_type.casefold()
+            normalized_target = _resolve_relationship_target(rels_name, target)
+            chart_package = (
+                relationship_type == "http://schemas.openxmlformats.org/officeDocument/2006/relationships/package"
+                and re.fullmatch(r"ppt/charts/_rels/chart[1-9][0-9]*\.xml\.rels", rels_name) is not None
+                and normalized_target in chart_workbooks
+            )
             if any(
-                lowered_type.endswith(suffix)
+                lowered_type.endswith(suffix) and not (suffix == "/package" and chart_package)
                 for suffix in _DANGEROUS_REL_SUFFIXES
             ):
                 raise TemplateSecurityError("Unsafe OOXML relationship type is not allowed")
-            normalized_target = _resolve_relationship_target(rels_name, target)
+            if normalized_target in chart_workbooks:
+                if not chart_package:
+                    raise TemplateSecurityError("Chart workbook has an unexpected owner")
+                chart = _parse_xml(entries[_relationship_source_name(rels_name)], rels_name)
+                chart_ns = "http://schemas.openxmlformats.org/drawingml/2006/chart"
+                relation_ns = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+                data = chart.findall(f"{{{chart_ns}}}externalData")
+                if (chart.tag != f"{{{chart_ns}}}chartSpace" or len(data) != 1
+                        or data[0].get(f"{{{relation_ns}}}id") != relationship_id):
+                    raise TemplateSecurityError("Chart workbook is not bound to native chart data")
+                referenced_chart_workbooks.add(normalized_target)
             if normalized_target not in names:
                 raise TemplateSecurityError("OOXML relationship target is missing")
             if rels_name == "_rels/.rels" and lowered_type.endswith(
@@ -370,6 +484,8 @@ def _validate_relationships(
         raise TemplateSecurityError(
             "OOXML root officeDocument relationship does not match its format"
         )
+    if referenced_chart_workbooks != set(chart_workbooks):
+        raise TemplateSecurityError("Chart workbook is not owned by a chart relationship")
 
 
 def _resolve_relationship_target(rels_name: str, target: str) -> str:
@@ -458,6 +574,10 @@ def _parse_xml(payload: bytes, part_name: str) -> etree._Element:
         huge_tree=False,
     )
     try:
-        return etree.parse(BytesIO(payload), parser).getroot()
+        tree = etree.parse(BytesIO(payload), parser)
     except (etree.XMLSyntaxError, ValueError) as exc:
         raise TemplateSecurityError(f"Invalid OOXML XML part: {part_name}") from exc
+    root = tree.getroot()
+    if tree.docinfo.doctype or root is None or any(isinstance(node, etree._Entity) for node in root.iter()):
+        raise TemplateSecurityError(f"DTD or entity declarations are forbidden: {part_name}")
+    return root

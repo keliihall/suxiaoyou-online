@@ -2,10 +2,15 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronRight, FileText, FolderOpen } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, FileText, FolderOpen, MoreHorizontal } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import { useWorkspaceStore, type WorkspaceFile } from "@/stores/workspace-store";
 import { useArtifactStore } from "@/stores/artifact-store";
+import { useChatStore } from "@/stores/chat-store";
+import { api } from "@/lib/api";
+import { API } from "@/lib/constants";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 function FileItem({ file }: { file: WorkspaceFile }) {
@@ -37,7 +42,7 @@ function FileItem({ file }: { file: WorkspaceFile }) {
 
   return (
     <button
-      className="w-full flex items-center gap-2.5 px-4 py-1.5 text-left transition-colors"
+      className="w-full flex min-h-9 items-center gap-2.5 px-4 py-2 text-left transition-colors hover:bg-[var(--surface-secondary)]"
       onClick={handleClick}
     >
       <FileText className="h-4 w-4 shrink-0 text-[var(--text-tertiary)]" />
@@ -80,7 +85,7 @@ function Scratchpad() {
           className={cn(
             "w-full mt-1.5 px-3 py-2 text-[13px] leading-relaxed rounded-lg resize-none",
             "bg-[var(--surface-primary)] text-[var(--text-primary)]",
-            "placeholder:text-[var(--text-quaternary)]",
+            "placeholder:text-[var(--text-tertiary)]",
             "border border-[var(--border-focus)] focus:outline-none",
             "min-h-[80px]",
           )}
@@ -97,43 +102,51 @@ function Scratchpad() {
 export function FilesCard() {
   const { t } = useTranslation("chat");
   const workspaceFiles = useWorkspaceStore((s) => s.workspaceFiles);
-  const scratchpadContent = useWorkspaceStore((s) => s.scratchpadContent);
+  const fileScope = useWorkspaceStore((s) => s.fileScope);
+  const sessionId = useChatStore((s) => s.focusedSessionId);
+  const [loadingFiles, setLoadingFiles] = useState(false);
   const collapsed = useWorkspaceStore((s) => s.collapsedSections["files"]);
   const toggleSection = useWorkspaceStore((s) => s.toggleSection);
-  const hasContent = workspaceFiles.length > 0 || scratchpadContent.trim().length > 0;
-  const latestFile = workspaceFiles[workspaceFiles.length - 1];
+  const toggleWorkingFiles = async () => {
+    if (!sessionId || loadingFiles) return;
+    const scope = fileScope === "all" ? "deliverables" : "all";
+    const store = useWorkspaceStore.getState();
+    store.setFileScope(scope);
+    const revision = store.beginFileRequest();
+    setLoadingFiles(true);
+    try {
+      const res = await api.get<{ files: WorkspaceFile[] }>(`${API.SESSIONS.FILES(sessionId)}?scope=${scope}`);
+      if (useChatStore.getState().focusedSessionId !== sessionId || useWorkspaceStore.getState().fileScope !== scope) return;
+      useWorkspaceStore.getState().commitFileRequest(revision, res.files ?? []);
+    } catch {
+      if (useChatStore.getState().focusedSessionId === sessionId && useWorkspaceStore.getState().fileRequestRevision === revision) {
+        toast.error(t("failedLoadFile"));
+      }
+    } finally {
+      setLoadingFiles(false);
+    }
+  };
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-white/8 bg-white/[0.03] shadow-[0_0_0_1px_rgba(255,255,255,0.02)_inset] backdrop-blur-sm">
+    <div className="surface-card overflow-hidden">
+      <div className="flex items-center pr-3">
       <button
-        className="flex w-full items-start justify-between px-4 py-4 text-left transition-colors hover:bg-white/[0.02]"
+        className="flex min-w-0 flex-1 items-center justify-between px-4 py-4 text-left transition-colors hover:bg-[var(--surface-secondary)]"
         onClick={() => toggleSection("files")}
       >
-        <div className="flex min-w-0 flex-1 items-start gap-3">
-          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl border border-white/8 bg-white/[0.04]">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl border border-[var(--border-default)] bg-[var(--surface-secondary)]">
             <FolderOpen className="h-4 w-4 text-[var(--text-tertiary)]" />
           </div>
           <div className="min-w-0">
             <span className="block text-[13px] font-medium text-[var(--text-primary)]">
               {t("files")}
             </span>
-            <span className="mt-1 block text-[12px] text-[var(--text-tertiary)]">
-              {workspaceFiles.length > 0
-                ? t("generatedFileCount", { count: workspaceFiles.length })
-                : hasContent
-                  ? t("notesAvailable")
-                  : t("noFilesYet")}
-            </span>
-            {latestFile && (
-              <span className="mt-2 block truncate text-[12px] text-[var(--text-secondary)]">
-                {t("latestFile", { name: latestFile.name })}
-              </span>
-            )}
           </div>
         </div>
         <div className="ml-3 flex items-center gap-2">
           {workspaceFiles.length > 0 && (
-            <span className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[10px] font-medium text-[var(--text-tertiary)]">
+            <span className="rounded-full border border-[var(--border-default)] bg-[var(--surface-secondary)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-tertiary)]">
               {workspaceFiles.length}
             </span>
           )}
@@ -145,6 +158,25 @@ export function FilesCard() {
           />
         </div>
       </button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--text-tertiary)] transition-colors hover:bg-[var(--surface-secondary)] hover:text-[var(--text-primary)]"
+            aria-label={t("fileOptions")}
+            title={t("fileOptions")}
+            disabled={!sessionId || loadingFiles}
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onSelect={() => void toggleWorkingFiles()}>
+            <Check className={cn("h-4 w-4", fileScope !== "all" && "invisible")} />
+            {t("showWorkingFiles")}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      </div>
       <AnimatePresence initial={false}>
         {!collapsed && (
           <motion.div
@@ -154,18 +186,14 @@ export function FilesCard() {
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="overflow-hidden"
           >
-            <div className="border-t border-white/6 pb-1 pt-2">
+            <div className="border-t border-[var(--border-subtle)] pb-1 pt-2">
               {workspaceFiles.length > 0 ? (
                 <div className="space-y-0.5">
                   {workspaceFiles.map((file) => (
                     <FileItem key={file.path} file={file} />
                   ))}
                 </div>
-              ) : (
-                <p className="px-4 py-2 text-[12px] text-[var(--text-quaternary)]">
-                  {t("noFilesYet")}
-                </p>
-              )}
+              ) : null}
               <div className="mt-2">
                 <Scratchpad />
               </div>

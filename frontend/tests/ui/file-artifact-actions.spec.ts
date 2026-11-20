@@ -186,14 +186,14 @@ async function installLocalTauriMock(
 
 let mockState: 苏小有MockState;
 
-test.beforeEach(async ({ page, isMobile }) => {
-  test.skip(!!isMobile, "The compact mobile surface uses the same remote-safe action policy");
+test.beforeEach(async ({ page, isMobile }, testInfo) => {
+  test.skip(!!isMobile && testInfo.title.startsWith("local "), "Native desktop application actions require the desktop surface");
   await seed苏小有Storage(page, { force: true });
   mockState = await mock苏小有Api(page);
   await mockOutputFileMessage(page);
 });
 
-test("output file dropdown and right-click menu share remote-safe actions", async ({
+test("browser file cards download directly and keep remote-safe right-click actions", async ({
   page,
 }) => {
   await page.goto("/c/session-artifacts");
@@ -203,23 +203,95 @@ test("output file dropdown and right-click menu share remote-safe actions", asyn
   await expect(card.locator("button button")).toHaveCount(0);
   await expect(card.getByRole("button", { name: "Open preview Office deck" })).toBeVisible();
 
-  const fileActions = card.getByRole("button", { name: "File actions" });
-  await fileActions.focus();
-  await fileActions.press("Enter");
-  await expect(page.getByRole("menuitem", { name: "Open preview" })).toBeVisible();
-  await expect(page.getByRole("menuitem", { name: "Download" })).toBeVisible();
-  await expect(page.getByRole("menuitem", { name: "Open with default app" })).toHaveCount(0);
-  await expect(page.getByRole("menuitem", { name: "Choose another app…" })).toHaveCount(0);
-  await expect(page.getByRole("menuitem", { name: "Copy file path" })).toHaveCount(0);
-  await page.keyboard.press("Escape");
+  await expect(card.getByRole("button", { name: "File actions" })).toHaveCount(0);
+  const directDownload = card.getByRole("button", { name: "Download", exact: true });
+  await directDownload.focus();
+  const directDownloadPromise = page.waitForEvent("download");
+  await directDownload.press("Enter");
+  expect((await directDownloadPromise).suggestedFilename()).toBe("office-deck.pptx");
 
   await card.click({ button: "right" });
   await expect(page.getByRole("menuitem", { name: "Open preview" })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "Open with default app" })).toHaveCount(0);
+  await expect(page.getByRole("menuitem", { name: "Choose another app…" })).toHaveCount(0);
+  await expect(page.getByRole("menuitem", { name: "Copy file path" })).toHaveCount(0);
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("menuitem", { name: "Download" }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toBe("office-deck.pptx");
   expect(mockState.binaryReads).toContain(outputPath);
+});
+
+test("untitled text files keep their filename and download from the preview header", async ({ page }) => {
+  const filePath = "/Users/alex/suxiaoyou-demo/reports/result.md";
+  const content = "# Final result\n\nThis is the actual downloadable file.\n";
+  await mockOutputFileMessage(page, filePath, "");
+  await page.route("**/api/files/content", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ content }),
+    });
+  });
+  await page.route("**/api/files/content-binary", async (route) => {
+    expect(route.request().postDataJSON()).toEqual({
+      path: filePath,
+      workspace: "/Users/alex/suxiaoyou-demo",
+    });
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        content_base64: Buffer.from(content).toString("base64"),
+        name: "result.md",
+        mime_type: "text/markdown",
+        size: Buffer.byteLength(content),
+      }),
+    });
+  });
+  await page.goto("/c/session-artifacts");
+  const card = page.getByTestId("file-artifact-card");
+  await expect(card).toHaveAttribute("data-file-preview", "inline-card");
+  await card.getByRole("button", { name: "Open preview result.md" }).click();
+  await expect(page.getByRole("heading", { name: "Final result" })).toBeVisible();
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByTestId("file-preview-download").click();
+  expect((await downloadPromise).suggestedFilename()).toBe("result.md");
+});
+
+test("archive preview offers an original download without decoding binary as text", async ({ page }) => {
+  const filePath = "/Users/alex/suxiaoyou-demo/output/deliverables.zip";
+  const originalBytes = Buffer.from([0x50, 0x4b, 0x03, 0x04, 0x00, 0xff]);
+  let textReads = 0;
+  await mockOutputFileMessage(page, filePath, "Deliverables");
+  await page.route("**/api/files/content", async (route) => {
+    if (route.request().postDataJSON().path === filePath) textReads += 1;
+    await route.fallback();
+  });
+  await page.route("**/api/files/content-binary", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        content_base64: originalBytes.toString("base64"),
+        name: "deliverables.zip",
+        mime_type: "application/zip",
+        size: originalBytes.length,
+      }),
+    });
+  });
+  await page.goto("/c/session-artifacts");
+  await page.getByRole("button", { name: "Open preview Deliverables" }).click();
+  await expect(page.getByTestId("file-preview-unsupported")).toBeVisible();
+  expect(textReads).toBe(0);
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByTestId("file-preview-download").click();
+  const downloaded = await downloadPromise;
+  expect(downloaded.suggestedFilename()).toBe("deliverables.zip");
+  const downloadedStream = await downloaded.createReadStream();
+  const chunks: Buffer[] = [];
+  for await (const chunk of downloadedStream!) chunks.push(Buffer.from(chunk));
+  expect(Buffer.concat(chunks)).toEqual(originalBytes);
 });
 
 test("local desktop menu opens, reveals, copies, and saves the output file", async ({
@@ -525,9 +597,7 @@ test("generated raster image uses a bounded binary preview and revokes its blob 
     workspace: "/Users/alex/suxiaoyou-demo",
   });
 
-  const previewAside = page.locator("aside").filter({ has: image });
-  const header = previewAside.getByText("Preview image", { exact: true }).locator("xpath=../..");
-  await header.getByRole("button").last().click();
+  await page.getByRole("button", { name: "Close preview", exact: true }).click();
   await expect(image).toHaveCount(0);
   await expect
     .poll(() =>
@@ -550,8 +620,7 @@ test("a missing output file reports a visible save error", async ({ page }) => {
   await page.goto("/c/session-artifacts");
 
   const card = page.getByTestId("file-artifact-card").filter({ hasText: "Office deck" });
-  await card.getByRole("button", { name: "File actions" }).click();
-  await page.getByRole("menuitem", { name: "Download" }).click();
+  await card.getByRole("button", { name: "Download", exact: true }).click();
 
   await expect(page.getByText("Could not save file")).toBeVisible();
 });

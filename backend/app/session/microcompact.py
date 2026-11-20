@@ -293,17 +293,32 @@ def context_collapse(
     if drop_count <= 0:
         return messages, 0
 
+    # With durable provenance, only a real user-message boundary may advance
+    # the projection. Never split a Message expanded into tool-result frames,
+    # or discard the current execution merely to satisfy a count threshold.
+    if any("_source_message_id" in message for message in messages):
+        boundary = next((
+            index for index in range(drop_count, total - min_messages_to_keep + 1)
+            if messages[index].get("role") == "user"
+            and isinstance(messages[index].get("_source_message_id"), str)
+        ), None)
+        if boundary is None:
+            return messages, 0
+    else:
+        boundary = None
+
     # Find a safe boundary: don't split mid-turn.
     # Walk forward from the target drop_count to find a user message
     # boundary (so we don't leave orphaned tool results).
-    boundary = drop_count
-    while boundary < total - min_messages_to_keep:
-        if messages[boundary].get("role") == "user":
-            break
-        boundary += 1
-    else:
-        # Couldn't find a clean boundary — use the original count
+    if boundary is None:
         boundary = drop_count
+        while boundary < total - min_messages_to_keep:
+            if messages[boundary].get("role") == "user":
+                break
+            boundary += 1
+        else:
+            # Legacy pure callers do not persist their result.
+            boundary = drop_count
 
     dropped = messages[:boundary]
     kept = messages[boundary:]

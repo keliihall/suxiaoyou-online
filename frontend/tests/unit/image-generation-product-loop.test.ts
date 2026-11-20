@@ -60,7 +60,7 @@ test("image generation result is a deterministic file card without present_file"
   assert.match(messagePresentation, /GENERATED_FILE_TOOL_PARTS[\s\S]*"image_generate"/);
   assert.match(
     messagePresentation,
-    /part\.tool === "image_generate"[\s\S]*typeof metadata\.file_path === "string"/,
+    /part\.tool === "image_generate"[\s\S]*typeof primary === "string"/,
   );
   assert.match(messageContent, /fileCardsForTool/);
   assert.match(

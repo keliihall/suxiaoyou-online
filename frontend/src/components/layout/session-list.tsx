@@ -234,9 +234,9 @@ export function SessionList() {
     getScrollElement: () => scrollRef.current,
     estimateSize: (index) => {
       const item = flatItems[index];
-      if (item.type === "header") return item.first ? 24 : 32;
-      if (item.type === "project") return 30;
-      return item.snippet ? 44 : 30;
+      if (item.type === "header") return item.first ? 32 : 40;
+      if (item.type === "project") return 40;
+      return item.snippet ? 56 : 40;
     },
     overscan: 10,
   });
@@ -514,9 +514,9 @@ export function SessionList() {
               <p className="text-sm font-medium text-[var(--text-secondary)]">
                 {t('noConversationsYet')}
               </p>
-              <p className="text-xs text-[var(--text-tertiary)] mt-1">
+              {/* Auxiliary copy retained in source: <p className="text-xs text-[var(--text-tertiary)] mt-1">
                 {t('noConversationsHint')}
-              </p>
+              </p> */}
             </div>
           </>
         )}
@@ -532,7 +532,7 @@ export function SessionList() {
         aria-label="Conversation list"
         tabIndex={0}
         onKeyDown={handleListKeyDown}
-        className="flex-1 overflow-y-auto overscroll-contain outline-none pt-2 scrollbar-auto"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain outline-none pb-3 pt-3 scrollbar-auto"
       >
         <div
           className="relative w-full"
@@ -712,7 +712,7 @@ function ProjectRow({
           <button
             type="button"
             onClick={onToggle}
-            className="flex w-full items-center gap-1.5 rounded-lg px-2 py-1 pr-16 text-sm text-[var(--text-secondary)] transition-colors hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-primary)] group-focus-within/project:text-[var(--text-primary)] group-data-[state=open]/project:text-[var(--text-primary)]"
+            className="flex min-h-10 w-full items-center gap-2 rounded-xl px-2 py-2 pr-16 text-[13px] text-[var(--text-secondary)] transition-colors hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-primary)] group-focus-within/project:text-[var(--text-primary)] group-data-[state=open]/project:text-[var(--text-primary)]"
           >
             <ChevronRight
               className={cn(

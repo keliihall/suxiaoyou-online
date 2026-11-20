@@ -1,5 +1,6 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
+import { userStorage } from "@/lib/cloud-session";
 
 import enCommon from "./locales/en/common.json";
 import enChat from "./locales/en/chat.json";
@@ -46,7 +47,7 @@ i18n.use(initReactI18next).init({
 export function getClientLanguagePreference(): "en" | "zh" {
   if (typeof window === "undefined") return "en";
 
-  const stored = window.localStorage.getItem("suxiaoyou-language");
+  const stored = userStorage.getItem("suxiaoyou-language");
   if (stored === "en" || stored === "zh") return stored;
 
   return window.navigator.language.toLowerCase().startsWith("zh") ? "zh" : "en";

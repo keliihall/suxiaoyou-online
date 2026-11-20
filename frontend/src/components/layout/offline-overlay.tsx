@@ -32,11 +32,11 @@ export function OfflineOverlay() {
             <p className="text-sm font-medium text-[var(--text-primary)]">
               {t("offlineUnableToConnect")}
             </p>
-            <p className="text-xs text-[var(--text-secondary)] truncate">
+            {/* Auxiliary copy retained in source: <p className="text-xs text-[var(--text-secondary)] truncate">
               {remote
                 ? t("offlineTunnelHint")
                 : t("offlineBackendHint")}
-            </p>
+            </p> */}
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={handleRetry}>

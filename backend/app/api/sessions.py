@@ -26,6 +26,8 @@ import stat
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath, PureWindowsPath
+from types import SimpleNamespace
+from typing import Literal
 
 from fastapi import Depends, Request
 from fastapi.responses import Response
@@ -44,6 +46,8 @@ from app.dependencies import (
 )
 from app.errors import DomainError, InternalError, NotFound
 from app.models.session_file import SessionFile
+from app.models.message import Message, Part
+from app.session.file_delivery import explicit_delivery_paths
 from app.schemas.session import (
     SessionCompactionRequest,
     SessionCreate,
@@ -407,8 +411,6 @@ def _extract_file_paths_from_messages(
 
             if data.get("type") == "tool":
                 tool_name = str(data.get("tool", ""))
-                if tool_name not in {"code_execute", "write", "edit", "artifact", "bash"}:
-                    continue
                 state = data.get("state") or {}
                 if not isinstance(state, dict):
                     continue
@@ -417,12 +419,18 @@ def _extract_file_paths_from_messages(
                 metadata = state.get("metadata") or {}
                 if isinstance(metadata, dict):
                     file_path = metadata.get("file_path")
-                    if file_path:
+                    if file_path and tool_name in {"code_execute", "write", "edit", "artifact", "bash", "office", "image_generate"}:
                         add_candidate(file_path)
                     written_files = metadata.get("written_files") or []
                     if isinstance(written_files, (list, tuple)):
                         for file_path in written_files:
+                            if isinstance(file_path, dict):
+                                file_path = file_path.get("path") or file_path.get("file_path")
                             add_candidate(file_path)
+                # Generic mutation metadata is reliable process provenance;
+                # output-text heuristics remain restricted to known writers.
+                if tool_name not in {"code_execute", "write", "edit", "artifact", "bash", "office"}:
+                    continue
                 payload = str(state.get("output", ""))
             elif data.get("type") == "text":
                 if message_data.get("role") != "assistant":
@@ -474,8 +482,13 @@ async def _list_session_files(
     session_id: str,
     request: Request,
     db: AsyncSession = Depends(get_db),
+    scope: Literal["deliverables", "all"] = "deliverables",
 ) -> dict:
-    """Return tracked workspace files for ``session_id``."""
+    """Project only this session's explicit deliveries, or its process files.
+
+    Shared workspace contents are never evidence of session membership. Legacy
+    unknown files remain available on demand without inventing delivery intent.
+    """
     session = await get_session(db, session_id)
     if session is None or not session.directory:
         return {"files": []}
@@ -499,62 +512,62 @@ async def _list_session_files(
         .order_by(SessionFile.time_created.asc())
     )
     tracked_files = tracked.scalars().all()
-    files: list[dict[str, str]] = []
-    seen_paths: set[str] = set()
+    files_by_path: dict[str, dict[str, str]] = {}
+
+    def add_file(path: str, file_type: str, tool: str) -> None:
+        resolved = _resolve_owned_path(path, boundary)
+        if resolved is None:
+            return
+        key = _path_key(resolved)
+        previous = files_by_path.get(key)
+        if previous and (previous["type"] == "deliverable" or file_type != "deliverable"):
+            return
+        files_by_path[key] = {
+            "name": resolved.name,
+            "path": str(resolved),
+            "type": file_type,
+            "tool": tool,
+        }
 
     for entry in tracked_files:
-        resolved = _resolve_owned_path(entry.file_path, boundary)
-        if resolved is None:
-            continue
-        key = _path_key(resolved)
-        if key in seen_paths:
-            continue
-        seen_paths.add(key)
-        files.append({
-            "name": resolved.name,
-            "path": str(resolved),
-            "type": entry.file_type,
-            "tool": entry.tool_id,
-        })
+        role = entry.file_type
+        # This historic tool only tracked successful generated images. Ordinary
+        # generated/write rows carry no reliable final-vs-intermediate signal.
+        if role == "generated" and entry.tool_id in {"present_file", "image_generate"}:
+            role = "deliverable"
+        if scope == "all" or role == "deliverable":
+            add_file(entry.file_path, role, entry.tool_id)
 
-    output_dir = _resolve_owned_path(
-        effective_workspace / "suxiaoyou_written",
-        boundary,
-        expect_directory=True,
+    # Query this session's parts directly: delivery recovery must not silently
+    # lose an older presentation when a conversation exceeds a UI history page.
+    query = (
+        select(Part.data, Message.data)
+        .join(Message, Part.message_id == Message.id)
+        .where(Part.session_id == session_id, Message.session_id == session_id)
+        .order_by(Part.time_created.asc(), Part.id.asc())
     )
-    if output_dir is not None:
-        for resolved in _owned_directory_files_by_mtime(output_dir, boundary):
-            key = _path_key(resolved)
-            if key in seen_paths:
-                continue
-            seen_paths.add(key)
-            files.append({
-                "name": resolved.name,
-                "path": str(resolved),
-                "type": "generated",
-                "tool": "artifact",
-            })
-
-    messages = await get_messages(db, session_id, limit=500, offset=0)
-    recovered_paths = _extract_file_paths_from_messages(
-        messages, effective_workspace
-    )
-    for recovered in recovered_paths:
-        resolved = _resolve_owned_path(recovered, boundary)
-        if resolved is None:
+    if scope != "all":
+        query = query.where(Part.data["type"].as_string() == "tool")
+    rows = (await db.execute(query)).all()
+    for data, _message_data in rows:
+        if not isinstance(data, dict) or data.get("type") != "tool":
             continue
-        key = _path_key(resolved)
-        if key in seen_paths:
+        state = data.get("state")
+        if not isinstance(state, dict) or state.get("status") != "completed":
             continue
-        seen_paths.add(key)
-        files.append({
-            "name": resolved.name,
-            "path": str(resolved),
-            "type": "generated",
-            "tool": "code_execute",
-        })
+        tool = str(data.get("tool", ""))
+        for path in explicit_delivery_paths(tool, state.get("metadata"), state.get("input")):
+            add_file(path, "deliverable", tool)
 
-    return {"files": files}
+    if scope == "all":
+        legacy_messages = [
+            SimpleNamespace(data=message_data, parts=[SimpleNamespace(data=data)])
+            for data, message_data in rows
+        ]
+        for path in _extract_file_paths_from_messages(legacy_messages, effective_workspace):
+            add_file(path, "generated", "legacy")
+
+    return {"files": list(files_by_path.values())}
 
 
 async def _compact_session(

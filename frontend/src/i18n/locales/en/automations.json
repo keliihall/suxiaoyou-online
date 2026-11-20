@@ -12,6 +12,8 @@
   "prompt": "Prompt",
   "promptPlaceholder": "Describe what this automation should do...",
   "schedule": "Schedule",
+  "scheduleHour": "Scheduled hour",
+  "scheduleMinute": "Scheduled minute",
   "interval": "Interval",
   "cronHelp": "Format: minute hour day month weekday",
   "every": "Every",
